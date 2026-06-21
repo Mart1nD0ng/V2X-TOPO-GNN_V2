@@ -1,0 +1,41 @@
+# Curriculum / harder-operating-point training (docs/CURRICULUM_TRAINING_DESIGN.md).
+# Same P0/P1/P2 remediations as production_training_v1, but a deliberately HARD
+# operating point: low initial confidence + sparser budget + longer steps, so the
+# realized reliability gap is large (F_init ~ 0.1-0.4) and convergence + the
+# P1-isolation (SGD on/off) are clearly observable.
+curriculum_training_v1_name: curriculum_training_v1
+
+# --- topology constructor (sparser budget => harder consensus) ---
+support_mode: topk
+max_out_degree: 3
+topk_backend: segmented_fast
+gradient_mode: straight_through_full_candidate
+straight_through_temperature: 1.0
+
+# --- scorer / model (P2 ON) ---
+hidden_dim: 64
+message_layers: 2
+init_mode: deterministic
+use_structural_score_bias: false
+learnable_score_gain: true
+score_output_gain: 10.0
+score_standardization: true
+
+# --- loss (P1 scale-invariant ON) ---
+scale_invariant_backward: true
+scale_reference_node_count: 100.0
+reliability_failure_target: 0.0001
+delay_target_rounds: 1.0
+energy_target_j: 0.0001
+
+# --- optimization (override --optimizer sgd for the P1-isolation arm) ---
+optimizer: adam
+learning_rate: 0.005
+max_steps: 150
+seed: 42
+
+# --- environment scale & difficulty ---
+vehicle_count: 10000
+vehicle_profile: production_like_density_v0
+avalanche_profile: small_realistic
+training_profile: hard_low_confidence

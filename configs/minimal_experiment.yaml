@@ -1,0 +1,30 @@
+micro:
+  stability_tier: smoke
+  seeds: [7]
+  max_steps: 3
+  allowed_cases:
+    - baseline_all
+  agent_check_safe: true
+
+smoke:
+  stability_tier: short
+  seeds: [7]
+  max_steps: 3
+  allowed_cases:
+    - baseline_all
+    - baseline_topk
+    - structural_bias_off
+    - budget_aux_off
+  agent_check_safe: false
+
+short:
+  stability_tier: analysis
+  seeds: [7, 13]
+  max_steps: 3
+  allowed_cases:
+    - baseline_all
+    - baseline_topk
+    - structural_bias_off
+    - budget_aux_off
+    - small_realistic_short
+  agent_check_safe: false

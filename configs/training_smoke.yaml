@@ -1,0 +1,67 @@
+# M7 tiny deterministic training smoke config. This drives only the smoke
+# harness, not a full trainer.
+
+seed: 7
+vehicle_count: 100
+training_profile: "toy"
+avalanche_profile: "toy"
+support_mode: "all"
+max_steps: 3
+learning_rate: 0.01
+hidden_dim: 16
+message_layers: 1
+init_mode: "deterministic"
+use_structural_score_bias: true
+train_budget_head: false
+budget_strategy: "fixed"
+budget_target: 2.5
+max_out_degree: null
+reliability_failure_target: 1.0e-2
+delay_target_rounds: 1.0
+energy_target_j: 1.0e-4
+gradient_clip_norm: null
+report_pre_clip_grad_norm: true
+report_post_clip_grad_norm: true
+curriculum_phase_steps: 2
+
+profiles:
+  toy:
+    k: 1
+    alpha: 1
+    beta: 2
+    rounds: 3
+  small_realistic:
+    k: 5
+    alpha: 3
+    beta: 5
+    rounds: 20
+
+phase_0_support_mode: "all"
+phase_0_budget_strategy: "fixed"
+phase_0_train_budget_head: false
+phase_1_support_mode: "topk"
+phase_1_budget_strategy: "auxiliary"
+phase_1_train_budget_head: true
+
+constructor:
+  phase_0_max_out_degree: null
+  phase_1_max_out_degree: 4
+  budget_cap_mode: "round"
+  budget_min_cap: 1
+  budget_max_cap: 4
+
+targets:
+  reliability_failure_target: 1.0e-2
+  delay_target_rounds: 1.0
+  energy_target_j: 1.0e-4
+
+auxiliary_weights:
+  budget_target_weight: 0.05
+  sector_entropy_weight: 0.01
+  role_balance_weight: 0.01
+  bridge_regularizer_weight: 0.01
+
+diagnostics:
+  report_cap_histogram: true
+  report_gradient_coverage: true
+  report_structural_gradient_paths: true

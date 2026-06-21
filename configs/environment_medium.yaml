@@ -1,0 +1,51 @@
+generated_from: configs/physical_search.yaml
+config_hash: f4561d66a44c
+mode: smoke
+seeds:
+- 7
+- 13
+snapshot:
+  grid:
+    block_length_m: 200.0
+    block_width_m: 200.0
+    road_count_x: 5
+    road_count_y: 5
+    lanes_per_direction: 1
+    lane_width_m: 3.5
+  rsu:
+    enabled: true
+    every_n_intersections: 2
+  speed:
+    mean_mps: 13.0
+    std_mps: 2.5
+    min_mps: 2.0
+    max_mps: 22.0
+  vehicle_count: 500
+  seed: null
+channel:
+  carrier_frequency_ghz: 5.9
+  bandwidth_mhz: 20.0
+  tx_power_dbm: 23.0
+  noise_dbm: -95.0
+  interference_proxy_dbm: -78.0
+  nlos_penalty_db: 12.0
+  mcs_threshold_db: 10.0
+candidate_graph:
+  radius_m: 180.0
+  max_candidates_per_node: 12
+  cell_size_m: 180.0
+baselines:
+  low_knn_k:
+  - 1
+  - 2
+  knn_k: 4
+  greedy_max_degree: 8
+  mst_augment_k: 2
+classification:
+  min_candidate_giant_component_ratio: 0.9
+  min_baseline_giant_component_ratio: 0.85
+  min_query_success_proxy: 0.4
+  too_easy_query_success_proxy: 0.985
+  too_easy_low_degree_proxy: 0.96
+  min_avg_candidate_degree: 4.0
+  max_avg_candidate_degree: 24.0

@@ -1,0 +1,37 @@
+baseline_name: pure_edge_score_baseline_v1
+
+training_policy:
+  name: edge_score_all_baseline
+  support_mode: all
+  sector_bias_weight: 0.0
+  role_bias_weight: 0.0
+  bridge_bias_weight: 0.0
+  structural_bias_enabled: false
+  budget_strategy: fixed_or_diagnostic_only
+
+deployment_candidate_policy:
+  name: edge_score_topk_baseline
+  support_mode: topk
+  sector_bias_weight: 0.0
+  role_bias_weight: 0.0
+  bridge_bias_weight: 0.0
+  structural_bias_enabled: false
+  topk_structural_bias_disabled: true
+
+transition_policy:
+  name: edge_score_all_to_topk_curriculum
+  phase_0_support_mode: all
+  phase_1_support_mode: topk
+  structural_bias_enabled: false
+
+structural_head_policy:
+  sector: diagnostic_or_redesign_only
+  role: diagnostic_only
+  bridge: diagnostic_or_redesign_only
+  budget: auxiliary_or_future_surrogate_only
+
+claim_policy:
+  quality_claim_allowed: false
+  health_claim_allowed: true
+  structural_benefit_claim_allowed: false
+  production_training_claim_allowed: false

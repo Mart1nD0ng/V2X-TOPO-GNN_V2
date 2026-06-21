@@ -1,0 +1,75 @@
+training_v0_name: pure_edge_training_v0
+benchmark_source: pure_edge_score_benchmark_v1
+
+readiness:
+  required_artifact: .agent/tmp/pure_edge_benchmark_package.json
+  required_field: ready_for_M32_formal_training_config
+
+model_policy:
+  model_family: pure_edge_score
+  structural_bias_enabled: false
+  sector_bias_weight: 0.0
+  role_bias_weight: 0.0
+  bridge_bias_weight: 0.0
+  budget_head_mode: diagnostic_or_disabled
+  structural_heads_trainable: false
+
+phase_policy:
+  phase_0:
+    name: all_mode_warm_start
+    support_mode: all
+    max_steps: 50
+  phase_1:
+    name: topk_candidate
+    support_mode: topk
+    max_steps: 50
+    topk_structural_bias_disabled: true
+    carry_parameters_from_phase_0: true
+
+scale_policy:
+  node_counts: [100, 500]
+  default_node_count: 100
+  large_node_counts_explicit_only: [2000, 5000, 10000]
+
+seed_policy:
+  seeds: [7, 13, 23]
+  min_successful_seed_count: 3
+
+avalanche_policy:
+  profiles:
+    - toy
+    - small_realistic
+  default_profile: toy
+  realistic_profile_explicit_only: true
+
+loss_policy:
+  reliability_failure_target: 1.0e-2
+  reliability_tail_failure_target: 1.0e-2
+  tail_mode: max
+  direct_link_physics_loss_allowed: false
+
+reporting_policy:
+  required_metrics:
+    - C_avalanche_node_mean
+    - F_avalanche_node_mean
+    - D_avalanche_rounds_mean
+    - E_consensus_node_mean
+    - active_edge_count
+    - gradient_coverage
+    - loss_total
+    - L_R
+    - L_D
+    - L_E
+  required_claim_boundaries:
+    - no_model_quality_claim
+    - no_topk_superiority_claim_from_loss_only
+    - all_to_topk_support_change_confounded
+    - no_production_training_claim
+
+contract:
+  train_eval_deploy_same_graph_rule: true
+  no_structural_bias_in_baseline: true
+  no_dense_NxN: true
+  no_sampling_or_monte_carlo: true
+  no_pbft: true
+  no_direct_link_reliability_loss: true

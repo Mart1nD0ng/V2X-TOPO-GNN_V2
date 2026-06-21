@@ -1,0 +1,62 @@
+operating_point_v1_name: operating_point_recalib_A_cap8
+support_mode: topk
+max_out_degree: 8
+topk_backend: segmented_fast
+gradient_mode: straight_through_full_candidate
+straight_through_temperature: 1.0
+candidate_graph:
+  los_model: axis_visibility
+hidden_dim: 64
+message_layers: 2
+init_mode: deterministic
+use_structural_score_bias: false
+learnable_score_gain: true
+score_output_gain: 10.0
+score_standardization: true
+scale_invariant_backward: true
+scale_reference_node_count: 100.0
+reliability_failure_target: 0.02
+delay_target_rounds: 5.0
+energy_target_j: 0.014
+physical:
+  tx_power_dbm: 23.0
+  mcs_threshold_db: 8.0
+  transition_width_db: 3.0
+  interference_proxy_dbm: -82.0
+  interference_density_coupling_db: 20.0
+  interference_reference_load: 1.0
+  finite_blocklength_reliability: true
+  payload_bits: 100.0
+  resource_block_count: 4.0
+  subcarrier_spacing_hz: 15000.0
+  single_hop_delay_s: 0.001
+energy:
+  retransmission_aware: true
+  retransmission_success_floor: 0.001
+delay:
+  structural_delay: true
+  structural_success_floor: 0.001
+quenched_quadrature: 11
+eval_quenched_quadrature: 21
+optimizer: adam
+learning_rate: 0.005
+max_steps: 50
+seed: 7
+vehicle_count: 2000
+vehicle_profile: density_matched
+node_density_per_km2: 200.0
+avalanche_profile: small_realistic
+training_profile: hard_low_confidence
+spatial_ic:
+  enabled: false
+  anchor_xy_frac:
+  - 0.15
+  - 0.15
+  decay_length_frac: 0.35
+  contrast: 1.0
+  spread: 0.8
+channel:
+  tx_power_dbm: 23.0
+  mcs_threshold_db: 8.0
+  transition_width_db: 3.0
+  interference_proxy_dbm: -82.0

@@ -1,0 +1,90 @@
+# Paper environment v1 — THE standard experimental environment for paper-facing results.
+#
+# Motivation (audit 2026-06-11): the P1-1 realism mechanisms (geometric LOS, TR 37.885 channel,
+# honest quenched currency) were implemented opt-in but NO config enabled them, so every headline
+# was produced on the legacy environment (same-road-segment LOS that mislabels ~28% of collinear
+# edges as NLOS, single-slope channel, mean-field currency). This config turns the realism ON and
+# is the substrate on which paper-facing numbers must be (re)generated.
+#
+# Inherits the production_training_v1 remediations (P0 straight-through, P1 scale-invariant
+# backward, P2 score gain) unchanged. Differences vs production_training_v1.yaml:
+#   * channel.pathloss_model: tr37885 — the 3GPP TR 37.885 V2V models flow into BOTH the candidate
+#     graph (features) and the evaluator (one switch; parity-tested numpy==torch).
+#   * candidate_graph.los_model: axis_visibility — geometric line-of-sight (collinear same-road
+#     LOS, near-intersection cross-road LOS, RSU under the same rule), fixing the ~28% artifact.
+#   * quenched currency (train Q=11 / headline-eval Q=21), as in production_training_v1.
+# NOT included here (frame-stream mechanisms, set per-experiment via harness flags):
+#   * AR(1) hidden shadow (--shadow-std-db), churn (boundary_mode=absorb_inject), carried
+#     reliability emission (temporal_state) — they apply to mobility-stream experiments, not
+#     single-snapshot training.
+paper_environment_v1_name: paper_environment_v1
+
+# --- environment channel + candidate graph (the standard paper physics) ---
+channel:
+  pathloss_model: tr37885
+  scenario: urban
+candidate_graph:
+  los_model: axis_visibility
+
+# --- topology constructor (production P0/P1/P2 remediations) ---
+support_mode: topk
+max_out_degree: 4
+topk_backend: segmented_fast
+gradient_mode: straight_through_full_candidate
+straight_through_temperature: 1.0
+
+# --- scorer / model ---
+hidden_dim: 64
+message_layers: 2
+# xavier, NOT the legacy deterministic ramp: under the tr37885+axis-LOS feature distribution the
+# deterministic init DIVERGES to non-finite edge scores (reproduced at N=2000/seed 7/30 steps;
+# xavier trains fine, F=0.0655 same condition) — the audit's init-pathology finding extended to
+# the new physics. A standard environment config must not crash; xavier is the standardized init.
+init_mode: xavier
+use_structural_score_bias: false
+learnable_score_gain: true
+score_output_gain: 10.0
+score_standardization: true
+
+# --- loss (scale-invariant backward) ---
+scale_invariant_backward: true
+scale_reference_node_count: 100.0
+reliability_failure_target: 0.0001
+delay_target_rounds: 5.0
+energy_target_j: 0.014
+
+# --- evaluator physical layer (pathloss_model/scenario inherited from channel: above) ---
+# COMPOSITION NOTE: with finite_blocklength_reliability=true (the production reliability mapping),
+# the evaluator derives link success from the finite-blocklength Q-function on the tr37885 SINR —
+# i.e. the 37.885 PATH-LOSS upgrade is active while the BLER logistic (and its shadow-variance
+# broadening) is superseded by the FBL mapping, exactly as in production. The candidate-graph
+# FEATURE success uses the 37.885 logistic (no FBL) — the same feature/evaluator mapping split
+# production always had; the no-load/feature-consistency work (P1-1.4) tracks closing it.
+physical:
+  tx_power_dbm: 23.0
+  mcs_threshold_db: 8.0
+  transition_width_db: 3.0
+  interference_proxy_dbm: -82.0
+  interference_density_coupling_db: 10.0
+  interference_reference_load: 1.0
+  finite_blocklength_reliability: true
+  payload_bits: 100.0
+  resource_block_count: 4.0
+  subcarrier_spacing_hz: 15000.0
+  single_hop_delay_s: 0.001
+
+# --- evaluator currency (P0-1): quenched is the single baseline currency ---
+quenched_quadrature: 11
+eval_quenched_quadrature: 21
+
+# --- optimization ---
+optimizer: adam
+learning_rate: 0.005
+max_steps: 50
+seed: 7
+
+# --- environment scale ---
+vehicle_count: 10000
+vehicle_profile: production_like_density_v0
+avalanche_profile: small_realistic
+training_profile: toy

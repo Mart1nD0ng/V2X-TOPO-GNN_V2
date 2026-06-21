@@ -1,0 +1,90 @@
+# Production training v1 — the first configuration that turns the P0/P1/P2
+# remediations ON by default. Every prior config kept them off, which is why
+# 100+ diagnostic milestones never reached production training.
+#
+# The three coupled fixes:
+#   P0 gradient_mode=straight_through_full_candidate
+#       -> excluded candidates receive a non-zero backward gradient
+#          (forward topology is byte-identical hard top-k, deployment faithful).
+#   P1 scale_invariant_backward=true
+#       -> backward loss is rescaled by N / scale_reference_node_count so the
+#          per-edge update magnitude is invariant from N=100 up to N=10000.
+#   P2 learnable_score_gain + score_standardization
+#       -> the scorer's output spread is lifted from ~4e-3 to O(gain), robust to
+#          mean-pool over-smoothing, replacing the external score_scale=30 hack.
+production_training_v1_name: production_training_v1
+
+# --- topology constructor ---
+support_mode: topk
+max_out_degree: 4
+topk_backend: segmented_fast
+gradient_mode: straight_through_full_candidate
+straight_through_temperature: 1.0
+
+# --- scorer / model ---
+hidden_dim: 64
+message_layers: 2
+init_mode: deterministic
+use_structural_score_bias: false
+learnable_score_gain: true
+score_output_gain: 10.0
+score_standardization: true
+
+# --- loss (scale-invariant backward) ---
+scale_invariant_backward: true
+scale_reference_node_count: 100.0
+# Aggressive target keeps reliability pressure ON throughout training (the gate
+# would otherwise weaken L_R once F < target), so loss movement is observable.
+reliability_failure_target: 0.0001
+# Protocol-aware D/E targets. In the small_realistic Snowball profile beta=5, so
+# expected decision delay cannot fall below five rounds even with perfect queries.
+# Energy has the same lower-bound structure:
+# beta * k * single_hop_delay_s * (P_tx + P_rx + P_proc) ~= 1.37e-2 J.
+delay_target_rounds: 5.0
+energy_target_j: 0.014
+
+# --- evaluator physical layer ---
+# Load-aware finite-blocklength evaluator. Link success is computed as
+# 1 - Q((n log(1+SINR) - payload + 0.5 log n) / sqrt(n)), where
+# n = resource_block_count * subcarrier_spacing_hz * single_hop_delay_s.
+# The selected topology's receiver in-load raises interference, so D/E become
+# topology-sensitive through link success -> Avalanche rounds -> query energy.
+physical:
+  tx_power_dbm: 23.0
+  mcs_threshold_db: 8.0
+  transition_width_db: 3.0
+  interference_proxy_dbm: -82.0
+  interference_density_coupling_db: 10.0
+  interference_reference_load: 1.0
+  finite_blocklength_reliability: true
+  payload_bits: 100.0
+  resource_block_count: 4.0
+  subcarrier_spacing_hz: 15000.0
+  single_hop_delay_s: 0.001
+
+# --- evaluator currency (P0-1) ---
+# The corrected SSMC quenched-disorder closed form is the SINGLE baseline currency. The mean-field
+# (Q=1) surrogate is 22-40x optimistic and gradient-blind to the query-spread lever, so it must NOT
+# be used for any reliability conclusion. Train at Q=11 (converged enough, cheaper); report the
+# headline F at eval Q=21. Setting Q=1 here reproduces the legacy mean-field headline (F=0.0043).
+quenched_quadrature: 11
+eval_quenched_quadrature: 21
+
+# --- optimization ---
+# Adam normalizes per-parameter, so it is robust to the large absolute gradient
+# the P2 score gain produces. NOTE: do NOT add gradient_clip_norm here — a fixed
+# clip norm rescales the gradient to a constant size every step and would negate
+# P1's scale-invariant multiplier.
+optimizer: adam
+learning_rate: 0.005
+max_steps: 50
+seed: 7
+
+# --- environment scale ---
+# small_realistic (k=5, rounds=20) is the regime where topology actually drives
+# reliability. The toy profile (k=1, rounds=3) is too weak for F to respond to
+# topology, so it cannot exercise convergence.
+vehicle_count: 10000
+vehicle_profile: production_like_density_v0
+avalanche_profile: small_realistic
+training_profile: toy

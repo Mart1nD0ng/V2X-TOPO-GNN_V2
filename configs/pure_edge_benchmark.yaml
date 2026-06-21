@@ -1,0 +1,36 @@
+benchmark_name: pure_edge_score_benchmark_v1
+
+baseline_policy:
+  training_policy:
+    name: edge_score_all_baseline
+    support_mode: all
+    structural_bias_enabled: false
+    sector_bias_weight: 0.0
+    role_bias_weight: 0.0
+    bridge_bias_weight: 0.0
+  deployment_candidate_policy:
+    name: edge_score_topk_baseline
+    support_mode: topk
+    structural_bias_enabled: false
+    sector_bias_weight: 0.0
+    role_bias_weight: 0.0
+    bridge_bias_weight: 0.0
+    topk_structural_bias_disabled: true
+  transition_policy:
+    name: edge_score_all_to_topk_curriculum
+    phase_0_support_mode: all
+    phase_1_support_mode: topk
+    structural_bias_enabled: false
+
+benchmark_scope:
+  model_family: pure_edge_score
+  structural_heads: diagnostic_or_redesign_only
+  budget_head: auxiliary_or_future_surrogate_only
+  production_training: false
+  large_scale_claims: false
+
+recommended_future_comparisons:
+  - compare_new_model_against_all_mode_health
+  - compare_new_model_against_topk_deployment_candidate
+  - report_support_change_confounding_for_all_to_topk
+  - preserve_no_direct_physics_loss_contract

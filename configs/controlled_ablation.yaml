@@ -1,0 +1,118 @@
+micro:
+  seeds: [7]
+  max_steps: 3
+  node_count: 100
+  avalanche_profile: toy
+  cases:
+    - baseline_all
+    - structural_bias_off
+  agent_check_safe: true
+
+smoke:
+  seeds: [7]
+  max_steps: 3
+  node_count: 100
+  avalanche_profile: toy
+  cases:
+    - baseline_all
+    - baseline_topk
+    - structural_bias_off
+    - sector_bias_off
+    - role_bias_off
+    - bridge_bias_off
+    - budget_aux_off
+  agent_check_safe: false
+
+short:
+  seeds: [7, 13]
+  max_steps: 3
+  node_count: 100
+  avalanche_profile: toy
+  cases:
+    - baseline_all
+    - baseline_topk
+    - structural_bias_off
+    - sector_bias_off
+    - role_bias_off
+    - bridge_bias_off
+    - budget_aux_off
+    - small_realistic_short
+  agent_check_safe: false
+
+interpretation_thresholds:
+  negligible_primary_delta: 1.0e-4
+  small_primary_delta: 1.0e-3
+  moderate_primary_delta: 1.0e-2
+  consistency_fraction_threshold: 0.75
+
+selected_evidence:
+  smoke:
+    seeds: [7]
+    max_steps: 3
+    cases:
+      - baseline_all
+      - structural_bias_off
+    agent_check_safe: true
+  short:
+    seeds: [7, 13]
+    max_steps: 5
+    cases:
+      - baseline_all
+      - structural_bias_off
+      - sector_bias_off
+      - role_bias_off
+      - bridge_bias_off
+      - budget_aux_off
+      - baseline_topk
+    agent_check_safe: false
+
+structural_signal_audit:
+  smoke:
+    seed: 7
+    vehicle_count: 40
+    hidden_dim: 8
+    message_layers: 1
+    max_out_degree: 2
+    topk_k: 2
+    agent_check_safe: false
+
+calibrated_structural_followup:
+  policy:
+    policy_status: "disable_structural_bias_in_topk"
+    tolerance: 1.0e-4
+    all_mode_weights:
+      sector_bias_weight: 0.01
+      role_bias_weight: 0.01
+      bridge_bias_weight: 0.01
+    topk_weights:
+      sector_bias_weight: 0.0
+      role_bias_weight: 0.0
+      bridge_bias_weight: 0.0
+    unsafe_reference_weights:
+      sector_bias_weight: 0.1
+      role_bias_weight: 0.1
+      bridge_bias_weight: 0.1
+  smoke:
+    seeds: [7]
+    max_steps: 2
+    node_count: 100
+    avalanche_profile: toy
+    cases:
+      - all_zero_structural
+      - all_low_structural
+      - topk_zero_structural
+      - topk_high_structural_unsafe_reference
+      - curriculum_calibrated
+    agent_check_safe: true
+  short:
+    seeds: [7, 13]
+    max_steps: 3
+    node_count: 100
+    avalanche_profile: toy
+    cases:
+      - all_zero_structural
+      - all_low_structural
+      - topk_zero_structural
+      - topk_high_structural_unsafe_reference
+      - curriculum_calibrated
+    agent_check_safe: false
