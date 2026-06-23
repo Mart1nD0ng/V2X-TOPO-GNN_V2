@@ -41,6 +41,10 @@ paper/.claudeprism/
 paper/.git.prism-backup
 **/.git
 
+# claudeprism build tree (large build artifacts) + archive bundles
+.prism/
+*.zip
+
 # OS/editor noise
 .DS_Store
 Thumbs.db

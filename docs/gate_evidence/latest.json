@@ -1,0 +1,187 @@
+{
+  "G1": {
+    "title": "shared finite-mixture global evaluator (log-domain product-mixture F)",
+    "passed": true,
+    "evidence": {
+      "F_global_in_[0,1]": true,
+      "bruteforce_joint_vs_closed_form": "0.00e+00",
+      "joint_sums_to_one": true,
+      "logdomain_vs_direct": "3.25e-19",
+      "saturated_regime_F_global": "-0.000e+00 (c_min=1.0000)",
+      "saturated_in_unit_interval": true,
+      "degree_skew_cells_vs_2E": "395 <= 790",
+      "decomposition_identity_error": "0.00e+00",
+      "montecarlo_vs_S_C": "7.16e-06",
+      "F_global_vs_node_mean_gap": "0.226",
+      "legacy_meanfield_imports": "0 hits",
+      "pytest": "passed"
+    },
+    "notes": "F_global = strict global event prob of the shared-mixture joint (H1); not node-mean."
+  },
+  "G2": {
+    "title": "weighted distinct-peer k-subset policy (elementary symmetric polynomial)",
+    "passed": true,
+    "evidence": {
+      "max_normalisation_error (\u03a3p-1)": "4.44e-16",
+      "max_inclusion_vs_bruteforce": "6.66e-16",
+      "max_|\u03a3\u03c0 - k|": "2.22e-15",
+      "max_sampler_vs_distribution": "1.39e-16",
+      "pytest": "passed"
+    },
+    "notes": "exact Eq.16 distribution; shared ancestral sampler; no hard top-k."
+  },
+  "G3": {
+    "title": "exact heterogeneous quorum DP (three-way generating function)",
+    "passed": true,
+    "evidence": {
+      "max_distribution_vs_bruteforce": "2.91e-16",
+      "max_h_plus_vs_bruteforce": "1.11e-16",
+      "edge_scaling_exponent (target ~1.0)": "1.21",
+      "k_scaling_exponent (<= cubic)": "2.81",
+      "dp_table_shape": "[B, 6, 6, 6] (analytic O(k^3))",
+      "beta_tail_residue_in_mainline": "0 hits",
+      "pytest": "passed"
+    },
+    "notes": "O(E k^3) differentiable DP; correct/wrong/no-response; no beta-tail."
+  },
+  "G4": {
+    "title": "physics-constrained adaptive topology (hub overload suppressed by cost, no cap)",
+    "passed": true,
+    "evidence": {
+      "degree_cap_or_topk_in_mainline": "0 hits",
+      "dense_cluster_node0_degree (no cap)": "25 (all 25 neighbours kept)",
+      "avg_degree_across_N (200..1600)": "8.6, 8.0, 8.6, 8.7",
+      "E/N_max/min_ratio (~1 => linear)": "1.09",
+      "receiver_load_vs_bruteforce": "0.00e+00",
+      "hub_load (t=0/1/2)": "1.80 / 2.98 / 3.92",
+      "hub_collision (t=0/1/2)": "0.404 / 0.575 / 0.676",
+      "hub_ell cost (t=0/1/2)": "0.375 / 0.231 / 0.158",
+      "hub_ell ablated (t=0/2)": "1.000 / 1.000",
+      "d(hub_ell)/d(concentration) (t=0)": "-0.1770",
+      "pytest": "passed"
+    },
+    "notes": "spatial-hashing candidate graph; receiver-load -> collision/interference -> ell -> F; no degree cap/top-k."
+  },
+  "G5": {
+    "title": "rigorous finite-blocklength link-delivery (explicit channel dispersion)",
+    "passed": true,
+    "evidence": {
+      "V(gamma)_vs_closed_form_max_err": "4.44e-16",
+      "V(0), V(inf)/(log2e)^2": "0.00e+00, 1.000000",
+      "eps_FBL_vs_scipy_max_err": "1.39e-17",
+      "dispersion_effect_gap (real vs constant V)": "2.595e-03",
+      "blocklength_n (10 RB, comb-2 DMRS)": "840 channel uses (5 data sym + 240 DMRS-survivor RE)",
+      "poll_composition_err": "0.0e+00",
+      "harq_residual (M=1,2,3)": "9.96e-01 -> 1.16e-04 -> 3.44e-15",
+      "headline_grounded_and_rejects_idealized": true,
+      "legacy_logistic_bler_in_mainline": "0 hits",
+      "fbl_dispersion_present": "5 refs",
+      "fading_vs_MC (n=200 / n=25920)": "8.69e-04 / 2.24e-05",
+      "headline_compute_link_reliability (d=20/80/200m)": "0.640/0.640/0.639",
+      "legacy_logistic_in_production (tracked for G10)": "9 site(s) -- NOT yet migrated",
+      "pytest": "passed"
+    },
+    "notes": "PPV normal approximation with explicit V(gamma); 3GPP-grounded headline; no logistic proxy."
+  },
+  "G6": {
+    "title": "independent global delay D and network energy E (+ power/resource heads)",
+    "passed": true,
+    "evidence": {
+      "D_vs_cdf_reference": "8.88e-16",
+      "E_vs_bruteforce": "0.00e+00",
+      "nbar_ell->0_limit_err": "0.00e+00",
+      "power_head_range / blocklength_head_range": "[22,32] dBm / [500,1100] uses",
+      "F U-shape (P=20/24/32)": "0.903 / 0.076 / 0.140",
+      "power: D conflict E (P=26->31)": "D 3.51e-02->2.69e-02, E 1.92e-01->4.39e-01",
+      "blocklength: D,E (n=600->1100)": "D 3.31e-02->3.95e-02, E 2.87e-01->3.23e-01",
+      "cos(gradD, gradE)": "+0.032",
+      "nondominated_points (of 20)": "9",
+      "pytest": "passed"
+    },
+    "notes": "D = order statistic (Eq.44); E = total joules (Eq.53); real F/D/E Pareto, non-collinear gradD/gradE."
+  },
+  "G7": {
+    "title": "preference-conditioned Pareto model (one checkpoint sweeps the F/D/E front)",
+    "passed": true,
+    "evidence": {
+      "non_dominated (of 10)": "10",
+      "relative_spread F/D/E": "0.06 / 0.08 / 0.45",
+      "argmin_at_vertex_steering (of 3)": "3",
+      "F-pref/D-pref/E-pref objective": "F=0.173 D=5.327e-02 E=2.342e-01",
+      "lambda-blind max-spread / steering": "0.007 / 2",
+      "second_checkpoint nd / steering": "10 / 3",
+      "pytest": "passed"
+    },
+    "notes": "FiLM GNN + augmented Chebyshev (Eq.57) with periodic z*/scale refresh; lambda steers F/D/E (3/3 argmin-at-vertex); lambda-blind ablation collapses; geometry-grounded gamma."
+  },
+  "G8": {
+    "title": "global-risk emission + stop-gradient (one-summand-of -log S_C; bounded-scalar claim falsified)",
+    "passed": true,
+    "evidence": {
+      "identity -logS_r = sum_i r_ir (max err)": "0.00e+00",
+      "reconstructs G1 S_C (err)": "1.11e-16",
+      "emission in [0,1] & detached": "True",
+      "stop-grad: grad via emission / control": "0.0e+00 / 1.68e+00",
+      "aggregate emission = -log S_C (helper / candidate)": "0.00e+00 / 2.22e-16",
+      "temporal grad_norm / emission bounded all frames": "1.13e+00 / True",
+      "emission channel effect on op-point": "6.49e-04",
+      "candidate Eq.59 per-node err / std / bound": "0.00e+00 / 0.003 / True",
+      "||H||-growth gru / contractive / expansive (30 frames)": "0.81 / 0.02 / 2017.05",
+      "ablation self-consistent / independent-reconstruction": "True / True",
+      "bounded-scalar claim": "FALSIFIED (state bound is a recurrence property, not the input's)",
+      "pytest": "passed"
+    },
+    "notes": "Eq.58 r_ir=-log c_ir, Eq.59 e=clip(sg[sum_r rho_r r_ir]/r_max,0,1); emission is an exact summand of the G1 loss; stop-gradient cuts the backward risk path; mechanism ablation FALSIFIES the auto-constraint claim (expansive recurrence diverges under the same bounded emission) -- the mainline uses bounded scalar feedback and never asserts it bounds hidden state."
+  },
+  "G9": {
+    "title": "near-linear complexity profiling (H4): end-to-end runtime/memory ~ linear in N, E",
+    "passed": true,
+    "evidence": {
+      "N range / E range": "200-6400 / 7702-307016",
+      "E ~ N exponent": "1.056",
+      "full-range t~E exp (build/gnn/cons/total)": "1.04 / 0.44 / 0.64 / 0.52",
+      "top-of-range t~E exp (build/gnn/cons/total)": "0.99 / 0.02 / 0.41 / 0.33",
+      "per-stage quad-contrib@Emax (build/gnn/cons/total)": "-0.04 / -0.75 / -1.52 / -0.79",
+      "max-tensor numel ~E exp / ratio@Emax (no N\u00d7N)": "1.000 / 65xE",
+      "bucket total_cells <= 2E (max ratio)": "True (1.36)",
+      "no N\u00d7N static grep (mainline hits)": "0",
+      "figure": "docs/gate_evidence/g9_scaling.png (91199 B)",
+      "pytest": "passed"
+    },
+    "notes": "Density fixed (area \u221d N) so E=O(N). Discriminative against quadratics: a deterministic max-tensor-numel scaling guard (no N\u00d7N, any idiom), per-stage quadratic-coefficient fits (overhead-immune), and top-of-range slopes. Honest mainline: largest tensor is the O(E k^3) quorum cube (numel~E exp 1.0), pi head now bucketed (O(E), no [N,max_deg]); all stages <= linear."
+  },
+  "G10": {
+    "title": "single mathematical mainline (H5): one live derivation, legacy quarantined",
+    "passed": true,
+    "evidence": {
+      "forbidden closures in live derivation (recursive, incl tests/)": "0  (beta-tail:0, mean-field:0, logistic-BLER:0, hard:0)",
+      "legacy imports on live path (static / dynamic)": "0 / 0",
+      "src/ live packages": "['mainline']",
+      "legacy/src has 7 expected packages": "True (['consensus', 'evaluation', 'losses', 'models', 'topology', 'training', 'v2x_env'])",
+      "legacy unimportable (src.*) / legacy/ pkg blocked": "True / True",
+      "ARCHIVED.md present": "True",
+      "single FBL ell producer (import+callable)": "True",
+      "behavioural no-degree-cap (dense out-deg == N-1)": "23 == 23 -> True",
+      "pytest": "passed"
+    },
+    "notes": "src/mainline is the sole live derivation; 7 legacy packages + 37 scripts quarantined under legacy/ (import-blocked, scanned recursively incl tests/). Discriminative against paraphrased closures (semantic regexes + behavioural no-cap check), dynamic legacy imports (AST + runtime ImportError guard). Paper-math reconciliation is a tracked post-gate \u00a78 item (paper edits forbidden until all gates green)."
+  },
+  "G11": {
+    "title": "baseline comparison win (ultimate): learned front Pareto-dominates honest strong baselines",
+    "passed": true,
+    "evidence": {
+      "held-out scenarios (dense-deployment, complete candidate graph)": "12 (seeds 200..211)",
+      "Pareto C(model>best-fixed) / C(best-fixed>model) / p": "0.392 / 0.000 / 0.0002",
+      "max C(any baseline strictly-dominates model) [<0.02 at certified budget]": "0.000",
+      "HV model / best-fixed (model-indep. box) -> ratio": "0.606 / 0.509 -> 1.19x",
+      "HV win-rate vs (best-fixed / lambda-blind / untrained)": "100% / 100% / 100%  (p=0.0002)",
+      "model dominates fixed grids (cov, sig)": "True",
+      "preference-conditioning value (vs lambda-blind HV)": "True",
+      "discriminative: untrained dominated C=0.99": "True",
+      "[honest] Chebyshev front-scalar: model / best-fixed / win / p": "0.118 / 0.061 / 0% / 1.000",
+      "[honest] note": "the exhaustive grid achieves better per-preference single-point (Chebyshev) values -- incl. some balanced preferences -- but those points do NOT Pareto-dominate the model; the model's win is on overall front quality (coverage + hypervolume) + generalisation, not extremes",
+      "pytest": "passed"
+    },
+    "notes": "Dense-deployment (complete candidate graph) held-out scenarios, shared physics pipeline. One preference-conditioned checkpoint produces a Pareto front that dominates the strongest non-learned baseline (dense exhaustive constant-policy grid, 392 pts) on the normalisation-FREE set-coverage (C(model>grid)=0.39 vs C(grid>model)=0) AND on hypervolume under a MODEL-INDEPENDENT box (~1.2x, 100% of scenarios, p<0.05); beats a preference-blind ablation and an untrained control. No baseline STRICTLY dominates any model point at the certified training budget (C<0.02). HONEST limitation: the exhaustive grid wins the per-preference Chebyshev metric (better single-point extremes incl. some balanced prefs) but those points are non-dominating. Reproduce: baseline_comparison.py."
+  }
+}
