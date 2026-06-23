@@ -13,7 +13,7 @@ Branch: `effective-sampling-redesign`.
 |------|-------|--------|
 | G0  | canonical execution closure (single `run_consensus_episode`) | ☐ not started |
 | G1  | protocol semantics — true binary Snowball + single-node exact ref | 🟡 core done (per-node chain); joint exact ref pending (Phase 2) |
-| G2  | correlated-evidence environment | ☐ |
+| G2  | correlated-evidence environment | 🟡 evidence model + correlation theory done; urban geometry/graphs pending |
 | G3  | round-coupled full physics | ☐ |
 | G4  | CDQ k-DPP subset exactness | ☐ |
 | G5  | determinantal quorum exactness | ☐ |
@@ -56,7 +56,24 @@ Branch: `effective-sampling-redesign`.
 * **Pending for G1 green:** small-`N` *joint* exact reference (`exact_small_n.py`,
   Phase 2) cross-checked against the dynamic MC under G6.
 
+### D2 — G2 correlated-evidence model (2026-06-24)
+* `src/environment/evidence_model.py`: `O_i = Y* ⊕ B_{g(i)} ⊕ E_i` (spec §6.2).
+  - `sample()` per-instance generator for the dynamic MC (truth fields kept separate
+    from observable region structure);
+  - `analytic_scenarios()` exact shared-latent decomposition `(omega_r, init_cp[i,r])`
+    over `2^G` region-bit configs — this is the analytic evaluator's shared latent `Z`;
+  - `correct_observation_prob()` marginal `q_i`; `pairwise_correlation_theory()` exact.
+* **Exactness boundary:** scenario enumeration is `2^G`; raises above `max_scenarios`
+  (no silent truncation). Large-`N` many-region case uses dynamic MC / reduced scenarios.
+* **Evidence** (`tests/environment/test_evidence_model.py`, 7 passing): empirical
+  pairwise correlation matches theory (<0.01); zero-correlation control recovers
+  independence; scenario decomposition reproduces the exact pairwise correlation (1e-12);
+  weighted scenario marginal == `q_i` (1e-12); refuses too-many-regions; truth/observable
+  separation.
+
 ## Next slice
-G0 skeleton OR Phase 3 correlated-evidence environment (G2) — the environment is a
-prerequisite for the canonical episode and for any joint exact reference, so G2 is the
-natural next slice.
+Phase 3/4 geometry: `urban_scene.py` (Manhattan grid → positions + region assignment)
+and `candidate_graph.py` / `interference_graph.py` (two physical graphs G_comm, G_int,
+spec §7.1). Then the round-coupled canonical episode (G0/G3) ties protocol + evidence +
+physics together. Geometry should reuse `src/mainline/topology.py::build_candidate_graph`
+(no degree cap) as a starting point.
