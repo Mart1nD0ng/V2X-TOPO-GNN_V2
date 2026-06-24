@@ -69,6 +69,23 @@ class DynamicMCResult:
     mean_finalisation_time: float        # mean wall-clock to all-eligible-correct (finished trials)
     finished_fraction: float             # fraction of trials with all eligible decided correct
     num_trials: int
+    mean_energy: float = float("nan")    # mean per-trial total tx energy (all eligible active nodes)
+    latency_cvar: float = float("nan")   # CVaR_0.9 of per-trial elapsed time (worst-10% tail latency)
+    energy_cvar: float = float("nan")    # CVaR_0.9 of per-trial energy (worst-10% tail)
+    cvar_level: float = 0.9
+
+
+def _cvar_upper(x: torch.Tensor, level: float) -> float:
+    """Upper-tail CVaR: mean of the worst ``(1-level)`` fraction (higher values = worse).
+
+    ``CVaR_level = E[x | x >= VaR_level]`` with ``VaR_level`` the ``level``-quantile. Used for
+    tail latency / energy (spec §4.5 CVaR objective). Returns ``nan`` for an empty input.
+    """
+    if x.numel() == 0:
+        return float("nan")
+    var = torch.quantile(x, level)
+    tail = x[x >= var]
+    return float(tail.mean()) if tail.numel() > 0 else float(var)
 
 
 def _wilson_ci(freq: float, n: int, z: float = 1.96) -> tuple[float, float]:
@@ -150,6 +167,7 @@ def run_dynamic_mc(
     decided = torch.zeros((T, N), dtype=torch.int64, device=device)   # 0 / +1 / -1
     rounds_to_decide = torch.full((T, N), r_max + 1, dtype=torch.int64, device=device)
     cumulative_time = torch.zeros(T, dtype=dtype, device=device)
+    cumulative_energy = torch.zeros(T, dtype=dtype, device=device)
 
     from src.protocol.binary_snowball import PLUS, MINUS  # +1, -1
 
@@ -215,6 +233,13 @@ def run_dynamic_mc(
         round_dur = phys.tau.max(dim=0).values               # [Bphys]
         cumulative_time = cumulative_time + running.to(dtype) * round_dur
 
+        # ---- energy: each ELIGIBLE ACTIVE node spends this round's tx energy (decided nodes
+        #      stop polling -> no charge, so accumulating over rounds naturally censors at
+        #      finalisation). energy is [N, Bphys]: Bphys=T (per-trial) or 1 (mean-field). ----
+        elig_active = (active & elig.unsqueeze(0)).to(dtype)          # [T, N]
+        energy_pn = phys.energy.transpose(0, 1) if physics_per_trial else phys.energy[:, 0].unsqueeze(0)
+        cumulative_energy = cumulative_energy + (elig_active * energy_pn).sum(dim=1)   # [T]
+
     # ---- terminal statistics ----
     dec = decided
     elig_b = elig.unsqueeze(0)
@@ -237,6 +262,12 @@ def run_dynamic_mc(
     mean_rounds = float(rounds_to_decide[finalised].to(dtype).mean()) if bool(finalised.any()) else float("nan")
     finished = all_correct
     mean_time = float(cumulative_time[finished].mean()) if bool(finished.any()) else float("nan")
+    # tail metrics over ALL trials (unfinished trials are censored at the horizon's elapsed time,
+    # a lower bound -> the reported tail latency is conservative-optimistic, noted in the manifest)
+    cvar_level = 0.9
+    mean_energy = float(cumulative_energy.mean())
+    latency_cvar = _cvar_upper(cumulative_time, cvar_level)
+    energy_cvar = _cvar_upper(cumulative_energy, cvar_level)
 
     return DynamicMCResult(
         F_disagree=F_disagree, F_wrong=F_wrong, S_allcorrect=S_allcorrect,
@@ -245,7 +276,8 @@ def run_dynamic_mc(
         decided_correct_freq=decided_correct_freq, decided_wrong_freq=decided_wrong_freq,
         undecided_freq=undecided_freq, mean_rounds_to_decide=mean_rounds,
         mean_finalisation_time=mean_time, finished_fraction=float(finished.to(dtype).mean()),
-        num_trials=T,
+        num_trials=T, mean_energy=mean_energy, latency_cvar=latency_cvar,
+        energy_cvar=energy_cvar, cvar_level=cvar_level,
     )
 
 

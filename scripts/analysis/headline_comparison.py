@@ -81,7 +81,7 @@ def run() -> dict:
         from src.optimization import PolicyScores
         members = [scores[n] for n in scores if n.startswith(prefix)]
         agg = PolicyScores(prefix.rstrip("_"))
-        for key in ("F_wrong", "F_disagree", "latency", "finished_fraction"):
+        for key in ("F_wrong", "F_disagree", "latency", "latency_cvar", "energy", "finished_fraction"):
             cols = [m.metric(key) for m in members]
             getattr(agg, key).extend([sum(c[i] for c in cols) / len(cols) for i in range(N_HELDOUT)])
         return agg
@@ -92,7 +92,8 @@ def run() -> dict:
     def _mean(s, k):
         v = s.metric(k); return sum(v) / len(v)
 
-    summary = {n: {k: _mean(s, k) for k in ("F_wrong", "F_disagree", "latency", "finished_fraction")}
+    summary = {n: {k: _mean(s, k) for k in
+                   ("F_wrong", "F_disagree", "latency", "latency_cvar", "energy", "finished_fraction")}
                for n, s in agg.items()}
     vs_uniform = compare_to_reference(agg, "uniform", metric="F_wrong")
     cdq_vs_esp = compare_to_reference({"esd_gnn_esp": agg["esd_gnn_esp"], "esd_gnn_cdq": agg["esd_gnn_cdq"]},
@@ -107,7 +108,8 @@ def run() -> dict:
     print("\n=== mean over held-out scenes ===")
     for n, s in summary.items():
         print(f"  {n:14s} F_wrong={s['F_wrong']:.4f}  F_disagree={s['F_disagree']:.4f}  "
-              f"latency={s['latency']:.3f}  finished={s['finished_fraction']:.3f}")
+              f"lat={s['latency']:.3f}  latCVaR={s['latency_cvar']:.3f}  "
+              f"energy={s['energy']:.4f}  finished={s['finished_fraction']:.3f}")
     print("\n=== ESD-GNN vs uniform (paired, F_wrong; negative = GNN better) ===")
     for c in vs_uniform:
         print(f"  {c.name:14s} mean_diff={c.mean_diff:+.5f}  CI=({c.ci[0]:+.4f},{c.ci[1]:+.4f})  "

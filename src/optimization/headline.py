@@ -35,6 +35,8 @@ class PolicyScores:
     F_wrong: list[float] = field(default_factory=list)
     F_disagree: list[float] = field(default_factory=list)
     latency: list[float] = field(default_factory=list)
+    latency_cvar: list[float] = field(default_factory=list)
+    energy: list[float] = field(default_factory=list)
     finished_fraction: list[float] = field(default_factory=list)
 
     def metric(self, key: str) -> list[float]:
@@ -68,6 +70,8 @@ def evaluate_policies_paired(
             s.F_wrong.append(r.F_wrong)
             s.F_disagree.append(r.F_disagree)
             s.latency.append(r.mean_finalisation_time)
+            s.latency_cvar.append(r.latency_cvar)
+            s.energy.append(r.mean_energy)
             s.finished_fraction.append(r.finished_fraction)
     return scores
 
