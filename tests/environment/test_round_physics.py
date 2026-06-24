@@ -90,17 +90,39 @@ def test_sinr_mechanisms_lower_poll_success_at_moderate_load():
 
 
 def test_queueing_drops_and_delays_under_overload():
-    """Queueing only bites under overload: its DROP lowers ell and its DELAY lengthens tau
-    (both vanish when disabled). Uses high activity so receiver load > service rate."""
+    """Queueing bites when the ADDRESSED request load Lambda_j exceeds the service rate: its
+    DROP lowers ell and its DELAY lengthens tau (both vanish when disabled)."""
     scene, gc, gi = _scene_graphs(gx=4, gy=4, per=8, block=120.0, cr=70.0, ir=110.0)
     k = _k(gc)
     pi = _pi(gc, k)
-    active = torch.ones(scene.num_nodes, 1, dtype=torch.float64)  # overload
-    cfg = RoundPhysicsConfig(subchannels=8, slots_per_window=30, service_rate=12.0)
+    active = torch.ones(scene.num_nodes, 1, dtype=torch.float64)
+    # low service rate so Lambda_j (~k addressed requests) overloads the receiver queue
+    cfg = RoundPhysicsConfig(subchannels=8, slots_per_window=30, service_rate=2.0)
     full = round_physics(gc, gi, pi, active, cfg)
     noq = round_physics(gc, gi, pi, active, cfg, disable_queueing=True)
+    assert float(full.receiver_load.max()) > cfg.service_rate    # genuinely overloaded
     assert float(noq.ell_poll.mean()) > float(full.ell_poll.mean()) + 1e-3   # drop removed
     assert float(noq.tau.mean()) < float(full.tau.mean()) - 1e-6             # delay removed
+
+
+def test_queueing_keyed_on_addressed_load_not_interferer_count():
+    """The M/M/1 queue must be driven by the ADDRESSED load Lambda_j = sum_{i->j} active_i
+    pi_ij (over G_comm), NOT the G_int co-channel contender count. In a dense scene the
+    interferer count (load_request) is far larger than Lambda_j (receiver_load); when
+    Lambda_j << service_rate the queue must be (near-)inactive even though the interferer
+    count is huge. (This fails if the queue is keyed off the G_int contender mass.)"""
+    scene, gc, gi = _scene_graphs(gx=4, gy=4, per=8, block=120.0, cr=70.0, ir=110.0)
+    k = min(2, int(gc.out_degree().min()))
+    pi = _pi(gc, k)
+    active = torch.full((scene.num_nodes, 1), 0.5, dtype=torch.float64)
+    cfg = RoundPhysicsConfig(subchannels=8, slots_per_window=30, service_rate=12.0)
+    res = round_physics(gc, gi, pi, active, cfg)
+    noq = round_physics(gc, gi, pi, active, cfg, disable_queueing=True)
+    # the interferer mass is much larger than the addressed load (the two are distinct)
+    assert float(res.load_request.max()) > 3.0 * float(res.receiver_load.max())
+    # addressed load is below service capacity -> queue is (near) inactive
+    assert float(res.receiver_load.max()) < cfg.service_rate
+    assert abs(float(noq.ell_poll.mean()) - float(res.ell_poll.mean())) < 1e-2
 
 
 def test_cross_destination_interference_uses_int_graph():

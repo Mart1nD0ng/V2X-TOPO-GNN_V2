@@ -126,6 +126,25 @@ Branch: `effective-sampling-redesign`.
 * **Pending:** dynamic_mc (G6), unused-config enforcement (G0 full), CVaR/deadline metric
   (objectives slice), CDQ generalization of the quorum (G4/G5).
 
+### D5b — adversarial verification of G0/G3 (2026-06-24)
+Ran a 6-lens multi-agent adversarial review (`verify-canonical-episode` workflow, 16 agents)
+with per-finding independent verification. 5 confirmed-real findings (3 were the same bug):
+* **[FIXED, high]** M/M/1 queueing was keyed off the `G_int` co-channel **contender count**
+  (`load_req_node`, unweighted, larger radius) instead of the **addressed** receiver load
+  `Λ_j = Σ_{i→j∈G_comm} active_i π_ij` (Eq. 33). Interference/collision correctly use `G_int`,
+  but a service queue only enqueues requests addressed to `j`. Re-keyed `rho` to `recv_load`;
+  kept `G_int` mass for collision/interference. Added a discriminating test
+  (`test_queueing_keyed_on_addressed_load_not_interferer_count`) that fails under the old
+  keying. My original test missed it (used `active=1` so both quantities were large).
+* **[FIXED, med]** `τ` averaged request/response slots (`(Sr+Sp)/2·(ar+ap)`) instead of the
+  per-leg `Sr·ar + Sp·ap`; masked at default equal slots, wrong for asymmetric profiles.
+  Now per-leg (consistent with the energy term).
+* **[deferred, med]** legacy `src/mainline/model.py::evaluate_controls` still uses fixed
+  `tau_proxy`/`Q=1`/scalar initial pref. It is **off the new canonical path** (nothing in
+  `src/environment` or `src/sampling` imports it) and disclaimed as historical, but spec §2.2
+  names it for deletion. Tracked as a legacy-cleanup slice (delete + migrate the figure/
+  baseline scripts) once the new path replaces all consumers.
+
 ## Next slice
 G6 **independent dynamic MC** (`src/validation/dynamic_mc.py`): per-trial sampling of query
 subsets, fading, request/response and Snowball counters — must NOT reuse analytic terminal

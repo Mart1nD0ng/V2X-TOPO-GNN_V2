@@ -253,6 +253,13 @@ def round_physics(
     # ---- §7.3.1-2: active mass -> request transmit activity (each active source polls) ----
     req_tx = active                                        # [N, B]
 
+    # Receiver load Lambda_j = sum_{i->j in G_comm} active_i pi_ij (Eq. 33): the requests
+    # ADDRESSED to j (pi-weighted, over G_comm). This drives the receiver's M/M/1 SERVICE
+    # queue -- distinct from the G_int co-channel contender mass below, which drives
+    # interference/collision (a transmission to some other m still contends on the channel
+    # near j but never enters j's service queue).
+    recv_load = _scatter_dst(graph_comm, req_tx[src_c] * pi, N)                    # [N, B] Lambda
+
     # ---- §7.3.4-5: request-phase interference + collision load over G_int ----
     req_tx_src_i = req_tx[src_i]                           # [E_int, B]
     if disable_interference:
@@ -285,24 +292,23 @@ def round_physics(
         # (duty cycle = own transmissions spread over the W-slot window)
         p_hd_req = (req_tx[dst_c] / W).clamp(0.0, 1.0)
 
-    # ---- §7.3.8: queueing at the receiver (M/M/1) -> drop + delay ----
-    rho_j = load_req_at_j / cfg.service_rate              # [E_comm, B]
+    # ---- §7.3.8: queueing at the receiver (M/M/1), driven by the ADDRESSED load Lambda_j ----
+    rho_node = recv_load / cfg.service_rate               # [N, B] = Lambda_j / mu
+    rho_j = rho_node[dst_c]                               # [E_comm, B] at the receiver j
     if disable_queueing:
         p_queue_drop = torch.zeros_like(gamma_req)
         queue_delay_node = torch.zeros_like(active)
     else:
         p_queue_drop = (1.0 - 1.0 / rho_j.clamp_min(1e-12)).clamp(0.0, 1.0)  # frac dropped if rho>1
-        rho_node = load_req_node / cfg.service_rate
         queue_delay_node = cfg.slot_time_s * (rho_node / (1.0 - rho_node).clamp_min(1e-3)).clamp(0.0, 50.0)
 
     # ---- §7.4: request-leg delivery (FBL AND collision AND half-duplex AND not dropped) ----
     ell_request_leg = (succ_req * (1.0 - p_col_req) * (1.0 - p_hd_req) * (1.0 - p_queue_drop))
 
     # ---- §7.3 response activity: nodes answer only requests they actually RECEIVED ----
-    # Lambda_j = sum_{i->j} active_i pi_ij (receiver load, Eq. 33); responders weight by the
-    # full request-leg delivery (better request delivery -> more responders -> more response
-    # -phase congestion: the real hub-overload feedback, spec §9.1).
-    recv_load = _scatter_dst(graph_comm, req_tx[src_c] * pi, N)                   # [N, B] Lambda
+    # responders weight Lambda by the full request-leg delivery (better request delivery ->
+    # more responders -> more response-phase congestion: the real hub-overload feedback,
+    # spec §9.1).
     response_tx = _scatter_dst(graph_comm, req_tx[src_c] * pi * ell_request_leg, N)  # [N, B]
 
     # ---- response-phase interference + collision over G_int (different tx/rx set) ----
@@ -338,8 +344,10 @@ def round_physics(
     ell_poll = (ell_request_leg * ell_response_leg).clamp(0.0, 1.0)
 
     # ---- §5.4 / §7.3.12: round duration tau (load- and quality-dependent; NO tau_proxy) ----
-    base_slots = cfg.request_slots + cfg.response_slots
-    per_edge_time = pi * (cfg.slot_time_s * base_slots * 0.5 * (attempts_req + attempts_resp))  # [E_comm,B]
+    # per-leg service time: request leg occupies request_slots per attempt, response leg
+    # response_slots per attempt (the two legs are physically distinct, spec §7.4).
+    per_edge_time = pi * cfg.slot_time_s * (cfg.request_slots * attempts_req
+                                            + cfg.response_slots * attempts_resp)  # [E_comm, B]
     sum_pi = _scatter_dst(graph_comm, pi.expand(-1, Bn), N).clamp_min(1e-9)       # [N,B] ~ k
     tau = _scatter_dst(graph_comm, per_edge_time, N) / sum_pi + queue_delay_node  # [N, B]
 
