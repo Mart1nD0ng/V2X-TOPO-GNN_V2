@@ -418,14 +418,32 @@ at scale.** So the CDQ contribution question is OPEN (not reframed); G10/G11 run
   the only large-N headline evaluator** (§8.3). **Stop-condition #4 (near-linear cost) does NOT
   trigger.** 122 tests passing.
 
-## Next slices (planned order)  — direction **C**; G10 ✅.
+### D20 — G11 headline verdict: ESD-GNN ≫ heuristics; **CDQ does NOT beat ESP at scale** (2026-06-24)
+Ran the paired-CRN headline (`scripts/analysis/headline_comparison.py` → `result/headline/
+headline.json`): 3 model seeds × {CDQ, ESP}, trained on N=48 scenes, evaluated on **16 disjoint
+held-out N=336 scenes**, 350 MC trials, paired CRN, ideal link (topology isolation). Mean F_wrong:
+uniform 0.106, distance 0.232, **esd_gnn_cdq 0.054, esd_gnn_esp 0.017**.
+* **ESD-GNN ≫ baselines (PASS):** paired vs uniform — esd_gnn_esp **−0.088 [−0.102,−0.074]**,
+  esd_gnn_cdq −0.052 [−0.078,−0.020], both significant & better; distance +0.127 (significantly
+  *worse* — §9.1 tension). Trained N=48 → deployed N=336 ⇒ **scale transfer works** (#3/#5).
+* **CDQ vs ESP (the deferred D18 question, decided):** paired diff CDQ−ESP **+0.036
+  [+0.021,+0.056], significant ⇒ ESP is significantly BETTER than CDQ.** The user deferred to
+  scale specifically to test whether multi-round diverse-coverage would help CDQ; **it does not.**
+  Confirms the D18 structural analysis empirically and rigorously.
+* **Verdict:** the deployable headline policy is the **region-aware ESD-GNN in ESP mode**; the
+  determinantal-diversity CDQ provides no reliability advantage in the region-block V2X regime.
+  The exact CDQ math (G4/G5) stands as a valid generalization (ESP = its diagonal special case).
+  → Framing decision now due (the one the user deferred): **B reframe** (honest: exact CDQ math +
+  region-aware ESD-GNN + the negative diversity finding) vs **A pursue** (finer-than-region
+  correlation §6.3 to give CDQ a lever). Asking the user.
+
+## Next slices (planned order)  — direction **C**; G10 ✅; G11 superiority-over-baselines ✅ (verdict above).
 Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9a+G9b ✅; CDQ-MC ✅; G9c infra ✅; G10 ✅.
-1. **G11 reliability-constrained superiority headline** (dynamic-MC, the open CDQ-vs-ESP test):
-   train ESD-GNN (both `use_cdq` True/False) ≥5 model seeds; evaluate vs capability-matched
-   baselines (uniform / distance / ESP-oracle) on ≥30 scene seeds at scale (N~10^3) with paired
-   CRN + multiple-comparison correction; dynamic-MC headline metrics (F_wrong/F_disagree under the
-   reliability constraint, CVaR tail latency, energy). **This is where CDQ vs ESP gets decided.**
-2. **G12** temporal robustness. Legacy cleanup: delete `src/mainline/model.py::evaluate_controls`.
+* **G11 full rigor** (after framing decision): ≥5 model seeds, ≥30 scene seeds, FULL physics
+  (link_override=None), CVaR tail-latency + energy headline metrics, multiple-comparison.
+1. **Framing decision (A/B)** then **G11 full rigor** (≥5 seeds, ≥30 scenes, full physics, CVaR
+   latency + energy). 2. **G12** temporal robustness. Legacy cleanup: delete
+   `src/mainline/model.py::evaluate_controls`.
 * **(A) Pursue CDQ fairly** — differentiable k_eff rewrite (§5.8 aux loss) + enrich the env with
   finer-than-region correlation (§6.3 common-cause sensor-source groups making same-region peers
   non-exchangeable) + retrain + MC-eval. Multi-iteration, uncertain payoff, changes the headline env.
