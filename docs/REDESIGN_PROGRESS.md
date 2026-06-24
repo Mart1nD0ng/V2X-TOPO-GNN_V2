@@ -384,15 +384,37 @@ grad); 14 G4 tests passing.
   (`k_eff`) auxiliary loss (built in G7, encodes the correlation `R_i`) as the diversity
   training signal, with the MC as evaluator (§8.3). NOT a stop — the path is in-spec.
 
-## Next slices (planned order)
+### D18 — CDQ fair-test investigation ⇒ STOP+report (central-claim direction decision)
+Investigated whether CDQ's determinantal diversity can beat region-aware ESP. **Three
+independent obstacles found, all evidence-backed:**
+1. **Analytic blindness** (D17): the mean-field episode's quorum uses each peer's marginal
+   `u_j` and treats selections as independent ⇒ diverse vs redundant peers give identical
+   analytic `h`. No analytic gradient for diversity.
+2. **The k_eff signal is non-differentiable.** `effective_sample_size` (the §5.6/§5.8 ESS,
+   the *only* correlation-aware quantity) detaches the gradient (`float(w@R@w)`, line 95) —
+   a diagnostic, not a usable training loss. The §5.8 aux loss needs a differentiable rewrite.
+3. **The environment correlation is region-block / near-exchangeable.**
+   `pairwise_correlation_theory`: cross-region corr = exactly 0; same-region corr depends only
+   on the peers' marginal error rates. So the only correlation structure is region-level — which
+   region-aware ESP already exploits (D17: no_region 26× worse). CDQ's extra lever (within-group
+   heterogeneous-correlation diversity) is near-absent. Plus ESP with free weights can select any
+   single best subset deterministically; CDQ's edge is only multi-round diverse *coverage*.
+**Conclusion:** the CDQ-superiority claim is **unestablished and structurally obstructed in the
+current §6.2 region-block design.** Not a defect to silently fix — it reshapes the headline, so
+per spec §12 (no overclaiming) + stop-condition #6 it is a user direction decision. The exact CDQ
+math (G4/G5) + region-aware ESD-GNN (G9a/b) remain valid and verified regardless.
+
+## Next slices (planned order)  — **PAUSED pending user direction (D18); options A/B/C below.**
 Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9a+G9b ✅; CDQ-MC ✅; G9c infra ✅.
-1. **CDQ fair test** (the central-claim resolution): add the §5.8 ESS/k_eff auxiliary loss to
-   `train_esd_gnn` (using G7's `effective_sample_size` with the evidence correlation `R_i`);
-   re-train full-CDQ vs ESP; evaluate with the **dynamic MC** (correlation-aware judge), not the
-   analytic. Expectation: CDQ raises k_eff and lowers MC F_wrong vs ESP where correlation is
-   redundant. If CDQ still shows no MC advantage → STOP+report (central claim unsupported).
-2. **G9c full ablations** (with the aux loss, MC-evaluated, multi-seed) + capability-matched
-   baselines; gain decomposition.
-3. **G10/G11** large-scale (N=100–10000) complexity + reliability-constrained superiority
-   (dynamic-MC headline; ≥5 model seeds, ≥30 scene seeds, paired CRN, multiple-comparison).
-   **G12** temporal. Deferred legacy cleanup: delete `src/mainline/model.py::evaluate_controls`.
+* **(A) Pursue CDQ fairly** — differentiable k_eff rewrite (§5.8 aux loss) + enrich the env with
+  finer-than-region correlation (§6.3 common-cause sensor-source groups making same-region peers
+  non-exchangeable) + retrain + MC-eval. Multi-iteration, uncertain payoff, changes the headline env.
+* **(B) Reframe honestly** — contribution = exact determinantal CDQ math (generalizes ESP) +
+  region-aware ESD-GNN (beats heuristics, approaches oracle) + the honest finding that
+  determinantal diversity ≈ region-aware ESP in region-block V2X. Then finish G10/G11 (scale +
+  reliability headline) on this honest framing.
+* **(C) Defer** the CDQ question to G10/G11 large-scale first (multi-round coverage may differ),
+  decide after seeing scale results.
+* Independent of A/B/C: **G10/G11** large-scale (N=100–10000) complexity + reliability-constrained
+  superiority (dynamic-MC headline; ≥5 model seeds, ≥30 scene seeds, paired CRN, multiple-
+  comparison); **G12** temporal; legacy cleanup (`src/mainline/model.py::evaluate_controls`).
