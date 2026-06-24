@@ -172,6 +172,19 @@ with per-finding independent verification. 5 confirmed-real findings (3 were the
 * **Pending:** small-`N` exact joint chain (finishes G1+G6 three-way), common-random-numbers
   paired comparison, rare-event estimators (spec §8.1 lvl 4).
 
+### D6b — adversarial verification of G6 (2026-06-24)
+`verify-dynamic-mc` workflow (4 lenses + per-finding verification). The highest-risk surface
+— the vectorised true-Snowball `_step` equivalence — and the independence lens both passed
+**clean** (no findings). Two confirmed bugs, **both in latency accounting only** (the hard
+`F_disagree/F_wrong/S_allcorrect` stats were verified correct):
+* **[FIXED, med]** off-by-one: the decisive round's duration was not accrued (one-round
+  finishes reported `T_all=0`; desynced from the analytic clock). Now `running` is snapshotted
+  at the START of the round (before the decision commit). Regression test
+  `test_latency_charges_the_decisive_round` added.
+* **[FIXED, low]** `physics_per_trial=True` collapsed round duration to a global scalar
+  (`tau.max()` over N and T); now `tau.max(dim=0).values` → per-trial `[T]` (broadcasts in the
+  mean-field mode).
+
 ## Next slice
 Small-`N` exact joint chain (`src/protocol/exact_small_n.py`): enumerate the joint protocol
 state for tiny `N` (k=1, alpha=1) as an exact ground truth; three-way agreement

@@ -116,6 +116,19 @@ def test_mc_does_not_use_analytic_marginals():
     assert "evaluate_global_consensus" not in src
 
 
+def test_latency_charges_the_decisive_round():
+    """A trial that finalises in round 1 (beta=1) must accrue exactly one round's duration,
+    not 0 (regression for the off-by-one the adversarial review found)."""
+    scene = _scene()
+    ev = build_scenario("all_correct", scene)
+    proto1 = ProtocolConfig(k=3, alpha=2, beta=1, r_max=8)
+    mc = run_dynamic_mc(scene, ev, UniformQueryPolicy(), proto1, PHY, num_trials=500,
+                        generator=torch.Generator().manual_seed(4))
+    assert mc.finished_fraction > 0.99
+    assert mc.mean_finalisation_time > 0.0       # 0.0 under the off-by-one bug
+    assert mc.mean_rounds_to_decide <= 2.0       # finalises within ~1 round
+
+
 def test_physics_per_trial_path_runs():
     scene = _scene()
     ev = build_scenario("iid", scene, base_node_err=0.1)

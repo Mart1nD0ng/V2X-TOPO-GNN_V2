@@ -172,6 +172,10 @@ def run_dynamic_mc(
         o = torch.where(votes_plus >= alpha, torch.ones_like(o), o)
         o = torch.where(votes_minus >= alpha, -torch.ones_like(o), o)
 
+        # trials still running at the START of this round (before this round's decisions);
+        # a trial that finalises IN this round must still be charged this round's duration.
+        running = ~((decided == 1) | ~elig.unsqueeze(0)).all(dim=1)   # [T]
+
         # ---- advance TRUE binary-Snowball counters (vectorised _step) ----
         o0 = active & (o == 0)
         onz = active & (o != 0)
@@ -191,12 +195,10 @@ def run_dynamic_mc(
         decided = torch.where(newly, pref, decided)
         rounds_to_decide = torch.where(newly, torch.full_like(rounds_to_decide, t_round), rounds_to_decide)
 
-        # ---- wall-clock: trials not yet all-eligible-correct accrue this round's duration ----
-        all_correct_now = ((decided == 1) | ~elig.unsqueeze(0)).all(dim=1)   # [T]
-        running = ~all_correct_now
-        # network round duration = slowest active node's tau (shared physics -> scalar/round)
-        tau = phys.tau                                       # [N, Bphys]
-        round_dur = tau.max()                                # conservative scalar duration
+        # ---- wall-clock: charge each still-running trial this round's duration ----
+        # network round duration = slowest node's tau; per-trial in physics_per_trial mode
+        # ([Bphys]=[T]), a single value in the mean-field mode ([Bphys]=[1], broadcasts).
+        round_dur = phys.tau.max(dim=0).values               # [Bphys]
         cumulative_time = cumulative_time + running.to(dtype) * round_dur
 
     # ---- terminal statistics ----
