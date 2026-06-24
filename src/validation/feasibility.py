@@ -72,6 +72,10 @@ def wellmixed_terminal(init_correct: float, k: int, alpha: int, beta: int, r_max
     """Per-node terminal ``(c, w, undecided)`` under the well-mixed perfect-link recursion."""
     if not (0.0 <= init_correct <= 1.0):
         raise ValueError("init_correct must be in [0, 1]")
+    if not (1 <= alpha <= k) or 2 * alpha <= k:
+        # strict majority required so {>=alpha correct} and {>=alpha wrong} are exclusive
+        # (h^0 = 1 - h^+ - h^- only valid then); otherwise the update is non-stochastic.
+        raise ValueError("alpha must be a strict majority of k (1 <= alpha <= k and 2*alpha > k)")
     layout = snowball_layout(beta, r_max)
     p = initial_distribution(torch.tensor([init_correct], dtype=dtype), layout, 1, dtype=dtype)
     for _ in range(r_max):
@@ -106,11 +110,12 @@ def _one_minus_pow(x: float, N: int) -> float:
 def network_floors(c: float, w: float, undec: float, N: int) -> FeasibilityFloors:
     """Network reliability floors over ``N`` exchangeable honest nodes (mean-field independent)."""
     F_wrong = _one_minus_pow(w, N)
-    # P(no disagreement) = P(no wrong) + P(no correct decided) - P(none decided)
-    no_wrong = math.exp(N * math.log1p(-w)) if w < 1 else 0.0
+    # F_disagree = 1 - [P(no wrong) + P(no correct decided) - P(none decided)]
+    #            = [1 - (1-w)^N] - (1-c)^N + undec^N   (log-domain on the dominant 1-(1-w)^N
+    #              term to avoid catastrophic cancellation of two near-1 quantities).
     no_correct = math.exp(N * math.log1p(-c)) if c < 1 else 0.0
     none_decided = math.exp(N * math.log(undec)) if undec > 0 else 0.0
-    F_disagree = min(1.0, max(0.0, 1.0 - (no_wrong + no_correct - none_decided)))
+    F_disagree = min(1.0, max(0.0, _one_minus_pow(w, N) - no_correct + none_decided))
     F_deadline = _one_minus_pow(1.0 - c, N)   # 1 - c^N  (P(not all decided correct by R_max))
     return FeasibilityFloors(F_disagree=F_disagree, F_wrong=F_wrong, F_deadline=F_deadline,
                              c=c, w=w, undecided=undec)

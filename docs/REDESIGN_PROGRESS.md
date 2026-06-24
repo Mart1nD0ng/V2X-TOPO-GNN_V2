@@ -271,8 +271,14 @@ grad); 14 G4 tests passing.
   case, NOT the local-topology headline evaluator); the deep ~1e-7 tail rests on the
   MC-validated recursion + classic exp(-β) Snowball safety — direct MC of 1e-7 needs rare-event
   methods (spec §8.1 lvl 4).
-* **Evidence** (`tests/validation/test_feasibility.py`, 5 passing): monotone in β/init; floor
-  formulas; scan feasible at target N; 50/50 infeasible; recursion matches dynamic MC.
+* **Evidence** (`tests/validation/test_feasibility.py`, 7 passing): monotone in β/init; floor
+  formulas; scan feasible at target N; 50/50 infeasible; recursion matches dynamic MC; +2
+  regression tests from the `verify-feasibility` workflow.
+* **D10b adversarial verification** (`verify-feasibility`, 8 agents): floor model sound; 2 LOW
+  defects fixed — (1) `wellmixed_terminal` now guards the strict-majority precondition
+  (`2α>k`; non-strict α silently inflated mass via the `h_zero` clamp); (2) `F_disagree` now
+  uses the log-domain `1-(1-w)^N` form (was naive subtraction with ~1e-7 cancellation, below
+  the gate but a docstring/code mismatch). No verdict impact; viability conclusion unchanged.
 
 ## Next slice
 G9 **ESD-GNN** (spec §9, plan Phase 9) — the model that WIRES CDQ into the canonical path:

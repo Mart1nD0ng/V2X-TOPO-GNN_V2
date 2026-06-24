@@ -57,6 +57,25 @@ def test_scan_infeasible_for_tie_has_teeth():
     assert not r["feasible"]
 
 
+def test_wellmixed_requires_strict_majority():
+    """Non-strict alpha (2*alpha<=k) makes the ternary quorum non-exclusive -> must raise,
+    not silently inflate probability mass via the h_zero clamp."""
+    import pytest
+    with pytest.raises(ValueError):
+        wellmixed_terminal(0.8, 5, 2, 3, 12)      # 2*2 = 4 <= 5, not a strict majority
+
+
+def test_f_disagree_log_domain_matches_reference():
+    """F_disagree's dominant 1-(1-w)^N term is log-domain (no catastrophic cancellation):
+    match a high-precision reference for a tiny floor."""
+    c, w, undec = 1.0 - 1e-7, 1e-9, 0.0
+    f = network_floors(c, w, undec, 1000)
+    # reference: 1 - [(1-w)^N + (1-c)^N - undec^N]  via expm1 (stable)
+    import math
+    ref = -math.expm1(1000 * math.log1p(-w)) - math.exp(1000 * math.log1p(-c))
+    assert abs(f.F_disagree - max(0.0, ref)) < 1e-15
+
+
 def _complete_scene(N, seed, box=30.0):
     g = torch.Generator().manual_seed(seed)
     pos = torch.rand(N, 2, generator=g, dtype=torch.float64) * box
