@@ -353,12 +353,21 @@ grad); 14 G4 tests passing.
   differentiable; dual ascent direction correct (μ↑ when F>ε, ≥0 floor); training reduces
   failure <0.5× and ≤ oracle+0.02; generalises to a held-out scene; reproducible. 112 tests.
 
+### D16 — CDQ dynamic MC (2026-06-24)
+* `src/validation/dynamic_mc.py`: `run_dynamic_mc` now branches on `query_law` — for `"cdq"` it
+  computes inclusion via `cdq_edge_inclusion` and samples subsets with `_CDQSubsetSampler`
+  (per node: enumerate the exact k-DPP subset distribution once, draw fresh subsets each round
+  by multinomial — exact, fast for dev-scale; raises above `max_subsets`). The trained CDQ
+  ESD-GNN can now be externally MC-confirmed (constraint #14, spec §8.3). ESP path unchanged.
+* **Evidence** (`tests/validation/test_cdq_mc.py`, 4 passing): CDQ sampler draws exactly-k
+  distinct peers; **diagonal-CDQ MC reproduces the validated ESP MC** (CIs overlap, S_all
+  within 0.03) — the consistency anchor against the adversarially-verified ESP sampler; CDQ MC
+  agrees with the analytic CDQ episode on all-correct; runs for a real ESD-GNN + reproducible.
+  116 tests passing.
+
 ## Next slices (planned order)
-Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9a+G9b ✅.
-1. **CDQ dynamic MC** (extend `run_dynamic_mc` to sample k-DPP subsets via `kdpp_sample` per
-   source) — REQUIRED to MC-confirm the trained CDQ model (constraint #14, spec §8.3); without
-   it the trained ESD-GNN's reliability is externally unvalidated.
-2. **G9c ablations**: no-CDQ (diagonal=ESP) / no-region-pool / no-interference / no-refinement
+Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9a+G9b ✅; CDQ-MC ✅.
+1. **G9c ablations**: no-CDQ (diagonal=ESP) / no-region-pool / no-interference / no-refinement
    / no-aux — decompose the gain; capability-matched baselines (uniform/distance/ESP-oracle/
    GNN-without-CDQ); multi model-seed; MC-confirmed.
 3. **G10/G11** large-scale (N=100–10000) complexity + reliability-constrained superiority

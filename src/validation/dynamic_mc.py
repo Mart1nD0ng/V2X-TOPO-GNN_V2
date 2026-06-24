@@ -111,10 +111,6 @@ def run_dynamic_mc(
     geom_c = edge_geometry(gc, phy_cfg)
     geom_i = edge_geometry(gi, phy_cfg)
 
-    # query policy -> log-weights -> inclusion pi (same policy as deployment/analytic, #3)
-    log_weights = query_policy.log_weights(gc).to(device=device, dtype=dtype)
-    pi = edge_inclusion_probabilities(gc.src_index, gc.dst_index, N, log_weights, k)
-
     # source padding for per-(trial,node) subset sampling
     pad = build_source_padding(gc.src_index, gc.dst_index, N)
     nmax = pad.max_deg
@@ -123,8 +119,23 @@ def run_dynamic_mc(
     slot_edge = pad.slot_edge                              # [N, nmax] edge id (0 where invalid)
     slot_mask = pad.slot_mask                              # [N, nmax] bool
     slot_dst = gc.dst_index[slot_edge]                    # [N, nmax] peer node id
-    neg = torch.full((), float("-inf"), dtype=dtype, device=device)
-    slot_logw = torch.where(slot_mask, log_weights[slot_edge], neg)  # [N, nmax]
+
+    # query law -> inclusion pi (for load) + the round subset sampler (same policy, #3).
+    query_law = getattr(query_policy, "query_law", "esp")
+    if query_law == "cdq":
+        from src.sampling.cdq_query import cdq_edge_inclusion
+        quality, diversity = query_policy.kernel(gc)
+        quality = quality.to(device=device, dtype=dtype)
+        diversity = diversity.to(device=device, dtype=dtype)
+        pi = cdq_edge_inclusion(gc.src_index, gc.dst_index, N, quality, diversity, k)
+        cdq_sampler = _CDQSubsetSampler(quality, diversity, slot_edge, slot_mask, k)
+        slot_logw = None
+    else:
+        log_weights = query_policy.log_weights(gc).to(device=device, dtype=dtype)
+        pi = edge_inclusion_probabilities(gc.src_index, gc.dst_index, N, log_weights, k)
+        neg = torch.full((), float("-inf"), dtype=dtype, device=device)
+        slot_logw = torch.where(slot_mask, log_weights[slot_edge], neg)  # [N, nmax]
+        cdq_sampler = None
 
     if eligible_mask is None:
         eligible_mask = torch.ones(N, dtype=torch.bool, device=device)
@@ -159,8 +170,9 @@ def run_dynamic_mc(
         else:
             ell_slot = ell_slot.squeeze(-1).unsqueeze(0)   # [1, N, nmax] -> broadcast
 
-        # ---- sample k-subsets for every (trial, node) from the SAME ESP sampler ----
-        chosen = _sample_subsets(slot_logw, slot_mask, k, T, generator)   # [T, N, nmax] bool
+        # ---- sample k-subsets for every (trial, node) from the SAME query law ----
+        chosen = (cdq_sampler.sample(T, generator) if query_law == "cdq"
+                  else _sample_subsets(slot_logw, slot_mask, k, T, generator))   # [T, N, nmax] bool
 
         # ---- poll outcomes: success ~ Bern(ell), read peer's ACTUAL colour ----
         peer_colour = pref[:, slot_dst]                    # [T, N, nmax] in {+1,-1}
@@ -235,6 +247,50 @@ def run_dynamic_mc(
         mean_finalisation_time=mean_time, finished_fraction=float(finished.to(dtype).mean()),
         num_trials=T,
     )
+
+
+class _CDQSubsetSampler:
+    """Exact per-(trial,node) k-DPP subset sampler for the CDQ query law (G6 + CDQ).
+
+    The kernel is fixed (the policy is scenario/trial-independent), so per node we enumerate the
+    exact k-DPP subset distribution ONCE and draw fresh subsets each round by multinomial. Exact
+    (``enumerate_kdpp_distribution`` is the true law) and fast for the dev-scale validation MC;
+    raises if any source's ``C(deg, k)`` exceeds ``max_subsets`` (the CDQ MC is dev-scale -- the
+    eigendecomposition sampler ``kdpp_sample`` covers large degree but is not needed here).
+    """
+
+    def __init__(self, quality, diversity, slot_edge, slot_mask, k, *, max_subsets: int = 50000):
+        from math import comb
+
+        from src.sampling.dpp_query import enumerate_kdpp_distribution, low_rank_kernel
+        N, nmax = slot_mask.shape
+        self.N, self.nmax = N, nmax
+        self.device, self.dtype = quality.device, quality.dtype
+        self.node_masks: list[torch.Tensor] = []
+        self.node_probs: list[torch.Tensor] = []
+        for i in range(N):
+            valid = slot_mask[i].nonzero().reshape(-1)              # slot positions of real candidates
+            d = int(valid.numel())
+            if comb(d, k) > max_subsets:
+                raise ValueError(f"node {i}: C({d},{k}) > max_subsets={max_subsets} (CDQ MC is dev-scale)")
+            edges = slot_edge[i][valid]
+            B = low_rank_kernel(quality[edges], diversity[edges])  # [d, r]
+            dist, _ = enumerate_kdpp_distribution(B.detach(), k)   # {local-subset: prob}
+            subs = list(dist.keys())
+            probs = torch.tensor([dist[s] for s in subs], dtype=self.dtype, device=self.device)
+            masks = torch.zeros((len(subs), nmax), dtype=torch.bool, device=self.device)
+            for si, s in enumerate(subs):
+                for j in s:
+                    masks[si, int(valid[j])] = True
+            self.node_masks.append(masks)
+            self.node_probs.append(probs.clamp_min(0.0))
+
+    def sample(self, T: int, generator: torch.Generator) -> torch.Tensor:
+        chosen = torch.zeros((T, self.N, self.nmax), dtype=torch.bool, device=self.device)
+        for i in range(self.N):
+            idx = torch.multinomial(self.node_probs[i], T, replacement=True, generator=generator)  # [T]
+            chosen[:, i, :] = self.node_masks[i][idx]
+        return chosen
 
 
 def _sample_subsets(slot_logw: torch.Tensor, slot_mask: torch.Tensor, k: int, T: int,
