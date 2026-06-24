@@ -20,7 +20,7 @@ Branch: `effective-sampling-redesign`.
 | G6  | independent dynamic MC | 🟢 forward MC + ranking agreement + exact-joint-chain agreement (MC unbiased, within CI); CRN/rare-event optional refinements |
 | G7  | effective-sampling diagnostics | 🟢 response-conditioned π̃, progress/drift, ESS, region mixing+spectral gap, load; all hand-scenario directions pass |
 | G8  | protocol feasibility (perfect-link floors) | 🟢 well-mixed perfect-link floor (MC-validated); FEASIBLE at N≤10000 for correct-majority≥0.6; 50/50 correctly infeasible → greenlights G9 |
-| G9  | model mechanism & ablations | 🟡 G9a ESD-GNN architecture done (multi-graph encoder→CDQ heads, observable-only, transferable, no-truth-leak verified); training + ablations pending |
+| G9  | model mechanism & ablations | 🟡 G9a architecture + G9b primal-dual training done (trains toward oracle, generalizes); CDQ-MC confirmation + ablations + multi-seed headline pending |
 | G10 | large-N complexity/performance | ☐ |
 | G11 | reliability-constrained superiority | ☐ |
 | G12 | temporal robustness | ☐ |
@@ -341,18 +341,26 @@ grad); 14 G4 tests passing.
   scales; kernel depends on observable structure; refinement load-feedback non-trivial.
   Architecture only (untrained); training quality is G9b. 107 tests passing.
 
+### D15 — G9b primal-dual reliability-constrained training (2026-06-24)
+* `src/optimization/primal_dual.py`: augmented-Lagrangian `L=ET+λE+Σμ_r(F_r−ε_r)` with dual
+  ascent `μ_r←[μ_r+η(F_r−ε_r)]_+` (spec §4.5). `episode_metrics` (differentiable ET=Σ_t
+  round_duration·P(not-all-correct), F_deadline=1−P(all-correct by deadline round) from the
+  episode trajectory), `lagrangian`, `train_esd_gnn`. ET is the trainable analytic surrogate
+  for `CVaR_q(T_all)`; the headline CVaR is the MC's job (G11).
+* **Demonstration:** training the G9a ESD-GNN reduces `F_wrong` 0.015→0.0012 toward the D12
+  oracle (0.0), `μ_v` actively enforcing the constraint — from OBSERVABLE features only.
+* **Evidence** (`tests/optimization/test_primal_dual.py`, 5 passing): metrics+lagrangian
+  differentiable; dual ascent direction correct (μ↑ when F>ε, ≥0 floor); training reduces
+  failure <0.5× and ≤ oracle+0.02; generalises to a held-out scene; reproducible. 112 tests.
+
 ## Next slices (planned order)
-Viability gates passed: #1 (G8 feasibility) ✅, #2 (topology oracle, D12) ✅. G7 ✅. G9a ✅.
-1. **G9b primal-dual training** (`src/optimization/primal_dual.py`, spec §4.5): minimize
-   `CVaR_q(T_all) + λ_E E` s.t. `F_disagree/F_wrong/F_deadline ≤ ε` via dual ascent on `μ`;
-   + §5.8 aux losses (progress/drift/ESS/mixing); curriculum iid→region→weak-cut; multi
-   model-seed; train the G9a ESD-GNN; the trained model must approach the D12 oracle ceiling
-   from observable features. Then **G9c ablations** (no-CDQ=diagonal / no-region / no-int /
-   no-refinement / no-aux) + gain decomposition + capability-matched baselines.
-2. **G9 ESD-GNN** (full): multi-graph encoder (G_comm/G_int/G_corr/G_region) → quality `q` + diversity
-   `b` heads → CDQ k-DPP query (G4) + determinantal quorum (G5) on the canonical path;
-   topology-only headline (fixed PHY); primal-dual reliability-constrained training; multi-seed;
-   the GNN must approach the D12 oracle ceiling from OBSERVABLE features (constraint #10).
-3. **G10/G11** large-scale (N=100–10000) complexity + reliability-constrained superiority vs
-   capability-matched baselines (dynamic-MC headline). **G12** temporal extension.
-Deferred legacy cleanup: delete `src/mainline/model.py::evaluate_controls` (tau_proxy/Q=1).
+Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9a+G9b ✅.
+1. **CDQ dynamic MC** (extend `run_dynamic_mc` to sample k-DPP subsets via `kdpp_sample` per
+   source) — REQUIRED to MC-confirm the trained CDQ model (constraint #14, spec §8.3); without
+   it the trained ESD-GNN's reliability is externally unvalidated.
+2. **G9c ablations**: no-CDQ (diagonal=ESP) / no-region-pool / no-interference / no-refinement
+   / no-aux — decompose the gain; capability-matched baselines (uniform/distance/ESP-oracle/
+   GNN-without-CDQ); multi model-seed; MC-confirmed.
+3. **G10/G11** large-scale (N=100–10000) complexity + reliability-constrained superiority
+   (dynamic-MC headline; ≥5 model seeds, ≥30 scene seeds, paired CRN, multiple-comparison).
+   **G12** temporal. Deferred legacy cleanup: delete `src/mainline/model.py::evaluate_controls`.

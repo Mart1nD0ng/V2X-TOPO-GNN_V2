@@ -10,6 +10,13 @@
 Primal-dual reliability-constrained training of the ESD-GNN is added at G9.
 """
 
+from .primal_dual import (
+    DualState,
+    ReliabilityThresholds,
+    episode_metrics,
+    lagrangian,
+    train_esd_gnn,
+)
 from .topology_oracle import (
     LearnedLogWeightPolicy,
     optimize_logweight_topology,
@@ -20,4 +27,9 @@ __all__ = [
     "LearnedLogWeightPolicy",
     "optimize_logweight_topology",
     "oracle_vs_heuristics",
+    "ReliabilityThresholds",
+    "DualState",
+    "episode_metrics",
+    "lagrangian",
+    "train_esd_gnn",
 ]
