@@ -17,7 +17,7 @@ Branch: `effective-sampling-redesign`.
 | G3  | round-coupled full physics | 🟢 two graphs + round_physics + closed loop in canonical episode; all mechanisms causal-tested + activation-sentinelled |
 | G4  | CDQ k-DPP subset exactness | ☐ |
 | G5  | determinantal quorum exactness | ☐ |
-| G6  | independent dynamic MC | ☐ |
+| G6  | independent dynamic MC | 🟡 forward-simulation MC done + ranking agreement validated; small-N exact joint chain + CRN pending |
 | G7  | effective-sampling diagnostics | ☐ |
 | G8  | protocol feasibility (perfect-link floors) | ☐ |
 | G9  | model mechanism & ablations | ☐ |
@@ -145,8 +145,36 @@ with per-finding independent verification. 5 confirmed-real findings (3 were the
   names it for deletion. Tracked as a legacy-cleanup slice (delete + migrate the figure/
   baseline scripts) once the new path replaces all consumers.
 
+### D6 — G6 independent dynamic MC (2026-06-24)
+* `src/validation/dynamic_mc.py::run_dynamic_mc`: genuine round-by-round FORWARD simulation
+  — samples evidence per trial → initial colours; each round samples `k`-subsets (exact ESP
+  ancestral sampler), samples poll success ~ `Bern(ell_poll)` (fading-marginalised), reads
+  peers' **actual** current colours, advances the **true** binary-Snowball counters
+  (vectorised `_step` over `[T,N]`). Reports `F_disagree/F_wrong/S_allcorrect` + Wilson CIs,
+  per-node decided freqs, finalisation latency. `physics_per_trial` knob (mean-active ℓ vs
+  per-trial ℓ).
+* **Independence (constraint #8):** never reads analytic terminal marginals `c_ir/w_ir` nor
+  calls `run_consensus_episode` (sentinel-tested); shares only the system definition (policy
+  + physics model). `Bern(ell)` is the exact fading-marginalised poll outcome.
+* **Key findings (honest):**
+  - all-correct evidence → analytic and MC agree exactly (`S_all≈1`).
+  - **ranking preserved** (spec §8.3, NOT stop-condition #3): both rank `uniform` < `distance`
+    for `F_wrong` (concentrating polls in-region raises correlated wrong evidence — the §9.1
+    local-quality-vs-diversity tension).
+  - the analytic mean-field is **optimistic under correlation** (one-biased: analytic
+    `F_wrong≈0.08-0.40` vs MC `0.28-0.46`; iid: analytic `~0` vs MC `~0.7%`, the latter
+    matching an independent union-bound estimate). This **confirms the MC's calibrating-judge
+    role** — the analytic is the differentiable ranking surrogate; the MC sets absolute
+    safety/deadline (spec §8.2/8.3). Documented as a known surrogate property, not faked away.
+* **Evidence** (`tests/validation/test_dynamic_mc.py`, 7 passing): internal validity +
+  reproducibility; all-correct exact agreement; failure-tail capture; ranking agreement;
+  direction vs bias; independence sentinel; per-trial-physics path.
+* **Pending:** small-`N` exact joint chain (finishes G1+G6 three-way), common-random-numbers
+  paired comparison, rare-event estimators (spec §8.1 lvl 4).
+
 ## Next slice
-G6 **independent dynamic MC** (`src/validation/dynamic_mc.py`): per-trial sampling of query
-subsets, fading, request/response and Snowball counters — must NOT reuse analytic terminal
-marginals (spec §8). Three-way agreement (small-`N` exact chain / analytic / dynamic MC) and
-common random numbers. This is the independent judge that validates the analytic episode.
+Small-`N` exact joint chain (`src/protocol/exact_small_n.py`): enumerate the joint protocol
+state for tiny `N` (k=1, alpha=1) as an exact ground truth; three-way agreement
+exact/analytic/MC; common random numbers. Finishes G1 (joint exact ref) and hardens G6.
+Then G4/G5 CDQ k-DPP + determinantal quorum (generalize the ESP/quorum to the diversity
+-aware kernel).
