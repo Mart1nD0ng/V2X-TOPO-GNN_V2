@@ -44,6 +44,10 @@ class ESDGNNConfig:
     n_refine: int = 2          # dynamics-in-the-loop refinements (load feedback, spec §9.6)
     quality_floor: float = 0.05
     k: int = 3                 # query subset size (for the refinement inclusion feedback)
+    # --- mechanism ablation switches (G9c); all True = full ESD-GNN ---
+    use_cdq: bool = True        # False -> diagonal ESP query law (no diversity, the §9.4 special case)
+    use_region: bool = True     # False -> drop the vehicle<->region pooling channel
+    use_interference: bool = True  # False -> drop the G_int aggregation channel
 
 
 @dataclass(frozen=True)
@@ -91,11 +95,13 @@ def build_scene_features(scene, cfg: ESDGNNConfig, *, comm_radius_norm: float | 
 class _MultiGraphLayer(nn.Module):
     """One spec §9.3 layer: comm source/dest + interference + region pooling, residual + norm."""
 
-    def __init__(self, h: int, edge_dim: int):
+    def __init__(self, h: int, edge_dim: int, *, use_region: bool = True, use_interference: bool = True):
         super().__init__()
+        self.use_region = use_region
+        self.use_interference = use_interference
         self.msg_src = nn.Linear(h + edge_dim, h)      # candidate -> source (competition)
         self.msg_dst = nn.Linear(h + edge_dim, h)      # poller -> destination (incoming load)
-        self.update = nn.Linear(4 * h, h)              # [self, src-agg, dst-agg, region] (+int folded)
+        self.update = nn.Linear(4 * h, h)              # [self, src-agg(+int), dst-agg, region]
         self.msg_int = nn.Linear(h, h)                 # interference neighbour -> node
         self.norm = nn.LayerNorm(h)
 
@@ -103,9 +109,10 @@ class _MultiGraphLayer(nn.Module):
         s, d = gc.src_index, gc.dst_index
         m_src = _scatter_mean(F.relu(self.msg_src(torch.cat([h[d], ef], dim=-1))), s, h.shape[0])
         m_dst = _scatter_mean(F.relu(self.msg_dst(torch.cat([h[s], ef], dim=-1))), d, h.shape[0])
-        m_int = _scatter_mean(F.relu(self.msg_int(h[gi.src_index])), gi.dst_index, h.shape[0]) \
-            if gi.num_edges > 0 else torch.zeros_like(h)
-        reg = _scatter_mean(h, region_of, num_regions)[region_of]            # region pool + broadcast
+        m_int = (_scatter_mean(F.relu(self.msg_int(h[gi.src_index])), gi.dst_index, h.shape[0])
+                 if (self.use_interference and gi.num_edges > 0) else torch.zeros_like(h))
+        reg = (_scatter_mean(h, region_of, num_regions)[region_of] if self.use_region
+               else torch.zeros_like(h))            # region pool + broadcast (ablatable)
         upd = self.update(torch.cat([h, m_src + m_int, m_dst, reg], dim=-1))
         return self.norm(h + F.relu(upd))
 
@@ -118,9 +125,10 @@ class ESDGNN(nn.Module):
         self.cfg = cfg
         h = cfg.hidden_dim
         self.embed = nn.Linear(node_dim, h)
-        self.enc = nn.ModuleList([_MultiGraphLayer(h, edge_dim) for _ in range(cfg.n_enc)])
+        lk = dict(use_region=cfg.use_region, use_interference=cfg.use_interference)
+        self.enc = nn.ModuleList([_MultiGraphLayer(h, edge_dim, **lk) for _ in range(cfg.n_enc)])
         # refinement layers consume an extra scalar node feature (inclusion-derived load Lambda)
-        self.refine = nn.ModuleList([_MultiGraphLayer(h, edge_dim) for _ in range(cfg.n_refine)])
+        self.refine = nn.ModuleList([_MultiGraphLayer(h, edge_dim, **lk) for _ in range(cfg.n_refine)])
         self.load_proj = nn.Linear(1, h)
         self.q_head = nn.Linear(2 * h + edge_dim, 1)
         self.b_head = nn.Linear(2 * h + edge_dim, cfg.r)
@@ -147,25 +155,43 @@ class ESDGNN(nn.Module):
         return quality, diversity
 
     def _receiver_load(self, feats: SceneFeatures, quality, diversity) -> torch.Tensor:
-        """Inclusion-derived receiver load Lambda_j = sum_{i->j} pi_ij (analytic feedback, §9.6)."""
-        from src.sampling.cdq_query import cdq_edge_inclusion
+        """Inclusion-derived receiver load Lambda_j = sum_{i->j} pi_ij (analytic feedback, §9.6).
+
+        Uses the CDQ inclusion for the full model and the ESP inclusion in the no-CDQ ablation
+        (so diversity plays NO role at all when use_cdq=False -- a clean ablation)."""
         gc = feats.gc
         N = feats.node_feat.shape[0]
-        pi = cdq_edge_inclusion(gc.src_index, gc.dst_index, N, quality, diversity, self.cfg.k)
+        if self.cfg.use_cdq:
+            from src.sampling.cdq_query import cdq_edge_inclusion
+            pi = cdq_edge_inclusion(gc.src_index, gc.dst_index, N, quality, diversity, self.cfg.k)
+        else:
+            from src.sampling.esp_query import edge_inclusion_probabilities
+            pi = edge_inclusion_probabilities(gc.src_index, gc.dst_index, N,
+                                              torch.log(quality), self.cfg.k)
         return pi.new_zeros(N).index_add(0, gc.dst_index, pi)            # [N]
 
 
 class ESDGNNQueryPolicy:
-    """Wrap an :class:`ESDGNN` + a scene as a CDQ query policy for the canonical episode."""
+    """Wrap an :class:`ESDGNN` + a scene as a query policy for the canonical episode.
 
-    query_law = "cdq"
+    ``query_law`` follows ``cfg.use_cdq``: the full model is a CDQ policy (``kernel`` -> quality
+    + diversity); the no-CDQ ablation is an ESP policy (``log_weights`` = ``log(quality)``,
+    diagonal kernel, no diversity). Same model, same observable features either way.
+    """
+
     name = "esd_gnn"
 
     def __init__(self, model: ESDGNN, scene, *, features: SceneFeatures | None = None):
         self.model = model
         self.scene = scene
+        self.query_law = "cdq" if model.cfg.use_cdq else "esp"
         self.features = features if features is not None else build_scene_features(scene, model.cfg)
 
     def kernel(self, graph) -> tuple[torch.Tensor, torch.Tensor]:
         # the episode passes its own G_comm; it matches the cached features' gc (same positions)
         return self.model(self.features)
+
+    def log_weights(self, graph) -> torch.Tensor:
+        """ESP log-weights for the no-CDQ ablation: ``s_ij = log(quality_ij)`` (diagonal kernel)."""
+        quality, _ = self.model(self.features)
+        return torch.log(quality)

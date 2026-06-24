@@ -365,11 +365,34 @@ grad); 14 G4 tests passing.
   agrees with the analytic CDQ episode on all-correct; runs for a real ESD-GNN + reproducible.
   116 tests passing.
 
+### D17 — G9c ablation flags + the CDQ-vs-ESP finding (2026-06-24)
+* `src/models/esd_gnn.py`: ablation switches `use_cdq` / `use_region` / `use_interference`
+  (+ `n_refine`); `use_cdq=False` makes the policy ESP (`log_weights=log(quality)`, diagonal
+  kernel, diversity unused — clean). `ESDGNNQueryPolicy.query_law` follows `use_cdq`.
+* **Evidence** (`tests/models/test_esd_gnn_ablations.py`, 3 passing): each flag is RUNTIME
+  -ACTIVE (changes the model output); no-CDQ switches query law to ESP; all variants valid+diff.
+* **Ablation result (analytic, dev scale, one-biased-region):** `no_region` is **26× worse**
+  (CR=88: 0.091 vs full 0.0035) — the region/correlation channel is the dominant mechanism.
+  `no_refine` modestly worse. **BUT `no_cdq` (ESP) ≈/slightly-better than full CDQ** (0.0009 vs
+  0.0035) — the central CDQ diversity shows NO analytic advantage.
+* **Why (key methodological insight, recorded honestly per spec §12 / no-overclaim):** the
+  **mean-field analytic episode is correlation-blind** — the quorum uses each selected peer's
+  marginal `u_j` and treats selections as independent, so diverse vs redundant peers with the
+  same `u_j` give identical analytic `h`. CDQ's diversity benefit (independent evidence ⇒ lower
+  joint-error correlation) only manifests in the JOINT/MC dynamics. G9b trained on the analytic
+  objective ⇒ CDQ had no gradient signal for diversity. The fix is the spec's own §5.8 ESS
+  (`k_eff`) auxiliary loss (built in G7, encodes the correlation `R_i`) as the diversity
+  training signal, with the MC as evaluator (§8.3). NOT a stop — the path is in-spec.
+
 ## Next slices (planned order)
-Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9a+G9b ✅; CDQ-MC ✅.
-1. **G9c ablations**: no-CDQ (diagonal=ESP) / no-region-pool / no-interference / no-refinement
-   / no-aux — decompose the gain; capability-matched baselines (uniform/distance/ESP-oracle/
-   GNN-without-CDQ); multi model-seed; MC-confirmed.
+Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9a+G9b ✅; CDQ-MC ✅; G9c infra ✅.
+1. **CDQ fair test** (the central-claim resolution): add the §5.8 ESS/k_eff auxiliary loss to
+   `train_esd_gnn` (using G7's `effective_sample_size` with the evidence correlation `R_i`);
+   re-train full-CDQ vs ESP; evaluate with the **dynamic MC** (correlation-aware judge), not the
+   analytic. Expectation: CDQ raises k_eff and lowers MC F_wrong vs ESP where correlation is
+   redundant. If CDQ still shows no MC advantage → STOP+report (central claim unsupported).
+2. **G9c full ablations** (with the aux loss, MC-evaluated, multi-seed) + capability-matched
+   baselines; gain decomposition.
 3. **G10/G11** large-scale (N=100–10000) complexity + reliability-constrained superiority
    (dynamic-MC headline; ≥5 model seeds, ≥30 scene seeds, paired CRN, multiple-comparison).
    **G12** temporal. Deferred legacy cleanup: delete `src/mainline/model.py::evaluate_controls`.
