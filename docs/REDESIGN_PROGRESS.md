@@ -20,7 +20,7 @@ Branch: `effective-sampling-redesign`.
 | G6  | independent dynamic MC | 🟢 forward MC + ranking agreement + exact-joint-chain agreement (MC unbiased, within CI); CRN/rare-event optional refinements |
 | G7  | effective-sampling diagnostics | 🟢 response-conditioned π̃, progress/drift, ESS, region mixing+spectral gap, load; all hand-scenario directions pass |
 | G8  | protocol feasibility (perfect-link floors) | 🟢 well-mixed perfect-link floor (MC-validated); FEASIBLE at N≤10000 for correct-majority≥0.6; 50/50 correctly infeasible → greenlights G9 |
-| G9  | model mechanism & ablations | ☐ |
+| G9  | model mechanism & ablations | 🟡 G9a ESD-GNN architecture done (multi-graph encoder→CDQ heads, observable-only, transferable, no-truth-leak verified); training + ablations pending |
 | G10 | large-N complexity/performance | ☐ |
 | G11 | reliability-constrained superiority | ☐ |
 | G12 | temporal robustness | ☐ |
@@ -325,9 +325,31 @@ grad); 14 G4 tests passing.
   -tested, no separate workflow. 31 sampling tests passing.
 * These feed the G9 primal-dual auxiliary losses (spec §5.8).
 
+### D14 — G9a ESD-GNN architecture (2026-06-24)
+* `src/models/esd_gnn.py`: scene/scale-agnostic multi-graph encoder (spec §9.3) — per layer:
+  source-side candidate competition + dest-side incoming load (G_comm), interference
+  aggregation (G_int), vehicle↔region mean-pool/broadcast (region supergraph / correlation
+  channel), residual+LayerNorm; `n_enc=3` layers + `n_refine=2` dynamics-in-the-loop
+  refinements that feed the current kernel's inclusion-derived receiver load `Λ` back (spec
+  §9.6) → CDQ heads (`quality=softplus+floor>0`, `diversity∈Rʳ`). `ESDGNNQueryPolicy`
+  (`query_law="cdq"`). **Features are STRUCTURAL/observable only** (log-degrees, region size,
+  distance, LOS, same-region — no `Y*`/vote/scene-ids), so one model transfers across N and
+  scales; O(E) scatter, no N×N.
+* **Evidence** (`tests/models/test_esd_gnn.py`, 6 passing): valid differentiable kernel;
+  **no-truth-leak sentinel** (kernel identical across evidence biases — constraint #10); runs
+  in the canonical CDQ episode with end-to-end gradient to model params; transfers across
+  scales; kernel depends on observable structure; refinement load-feedback non-trivial.
+  Architecture only (untrained); training quality is G9b. 107 tests passing.
+
 ## Next slices (planned order)
-Viability gates passed: #1 (G8 feasibility) ✅, #2 (topology oracle, D12) ✅. G7 ✅.
-1. **G9 ESD-GNN**: multi-graph encoder (G_comm/G_int/G_corr/G_region) → quality `q` + diversity
+Viability gates passed: #1 (G8 feasibility) ✅, #2 (topology oracle, D12) ✅. G7 ✅. G9a ✅.
+1. **G9b primal-dual training** (`src/optimization/primal_dual.py`, spec §4.5): minimize
+   `CVaR_q(T_all) + λ_E E` s.t. `F_disagree/F_wrong/F_deadline ≤ ε` via dual ascent on `μ`;
+   + §5.8 aux losses (progress/drift/ESS/mixing); curriculum iid→region→weak-cut; multi
+   model-seed; train the G9a ESD-GNN; the trained model must approach the D12 oracle ceiling
+   from observable features. Then **G9c ablations** (no-CDQ=diagonal / no-region / no-int /
+   no-refinement / no-aux) + gain decomposition + capability-matched baselines.
+2. **G9 ESD-GNN** (full): multi-graph encoder (G_comm/G_int/G_corr/G_region) → quality `q` + diversity
    `b` heads → CDQ k-DPP query (G4) + determinantal quorum (G5) on the canonical path;
    topology-only headline (fixed PHY); primal-dual reliability-constrained training; multi-seed;
    the GNN must approach the D12 oracle ceiling from OBSERVABLE features (constraint #10).
