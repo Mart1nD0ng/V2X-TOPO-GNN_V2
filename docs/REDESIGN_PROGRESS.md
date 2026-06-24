@@ -404,8 +404,28 @@ current §6.2 region-block design.** Not a defect to silently fix — it reshape
 per spec §12 (no overclaiming) + stop-condition #6 it is a user direction decision. The exact CDQ
 math (G4/G5) + region-aware ESD-GNN (G9a/b) remain valid and verified regardless.
 
-## Next slices (planned order)  — **PAUSED pending user direction (D18); options A/B/C below.**
-Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9a+G9b ✅; CDQ-MC ✅; G9c infra ✅.
+### D19 — user chose **C (defer CDQ to scale)** + G10 large-scale complexity ✅ (2026-06-24)
+User direction on D18: **C — proceed to G10/G11 first, keep both CDQ and ESP variants alive,
+decide the CDQ-vs-ESP framing after seeing whether multi-round diverse-coverage effects emerge
+at scale.** So the CDQ contribution question is OPEN (not reframed); G10/G11 run on both variants.
+* **G10 large-scale complexity** (`scripts/analysis/scaling_benchmark.py` →
+  `result/scaling/scaling.json`; `tests/validation/test_scaling.py`, 3 passing): the FULL
+  canonical pipeline (radius graphs + ESD-GNN forward + dynamic MC) scales **near-linearly** N=96
+  →9520: avg degree stays **bounded** (11.0→13.7 as N grows ~100×) ⇒ E=O(N) from the local radius
+  (no degree cap needed, constraint #4); build/GNN/MC all ~linear; **per-trial-per-edge MC cost is
+  ~constant (9.7→13.0 µs)**; N=9520 (E=130k) runs in seconds — **no N×N tensor** (#11). The
+  analytic's 2^G scenario enumeration is intractable at scale (G~thousands) ⇒ confirms the **MC is
+  the only large-N headline evaluator** (§8.3). **Stop-condition #4 (near-linear cost) does NOT
+  trigger.** 122 tests passing.
+
+## Next slices (planned order)  — direction **C**; G10 ✅.
+Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9a+G9b ✅; CDQ-MC ✅; G9c infra ✅; G10 ✅.
+1. **G11 reliability-constrained superiority headline** (dynamic-MC, the open CDQ-vs-ESP test):
+   train ESD-GNN (both `use_cdq` True/False) ≥5 model seeds; evaluate vs capability-matched
+   baselines (uniform / distance / ESP-oracle) on ≥30 scene seeds at scale (N~10^3) with paired
+   CRN + multiple-comparison correction; dynamic-MC headline metrics (F_wrong/F_disagree under the
+   reliability constraint, CVaR tail latency, energy). **This is where CDQ vs ESP gets decided.**
+2. **G12** temporal robustness. Legacy cleanup: delete `src/mainline/model.py::evaluate_controls`.
 * **(A) Pursue CDQ fairly** — differentiable k_eff rewrite (§5.8 aux loss) + enrich the env with
   finer-than-region correlation (§6.3 common-cause sensor-source groups making same-region peers
   non-exchangeable) + retrain + MC-eval. Multi-iteration, uncertain payoff, changes the headline env.
