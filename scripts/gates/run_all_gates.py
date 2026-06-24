@@ -35,7 +35,10 @@ GATE_CATALOGUE: list[tuple[str, str, str | None]] = [
     ("G7", "preference-conditioned Pareto model (3.7)", "gate_g7"),
     ("G8", "global-risk emission + stop-gradient (3.8)", "gate_g8"),
     ("G9", "near-linear complexity profiling (H4)", "gate_g9"),
-    ("G10", "single mathematical mainline (H5)", "gate_g10"),
+    # G10 (single-mainline architecture gate) RETIRED on the effective-sampling-redesign branch:
+    # the ESD redesign uses the spec module layout (src/{environment,sampling,models,...}), so the
+    # legacy "src/ has only mainline" invariant no longer applies. Its canonical-path hygiene role
+    # is taken by tests/test_g0_canonical_hygiene.py. Frozen at tag legacy-global-fde-v1.
     ("G11", "baseline comparison win (ultimate)", "gate_g11"),
 ]
 
