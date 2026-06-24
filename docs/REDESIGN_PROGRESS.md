@@ -13,8 +13,8 @@ Branch: `effective-sampling-redesign`.
 |------|-------|--------|
 | G0  | canonical execution closure (single `run_consensus_episode`) | ☐ not started |
 | G1  | protocol semantics — true binary Snowball + single-node exact ref | 🟡 core done (per-node chain); joint exact ref pending (Phase 2) |
-| G2  | correlated-evidence environment | 🟡 evidence model + correlation theory done; urban geometry/graphs pending |
-| G3  | round-coupled full physics | ☐ |
+| G2  | correlated-evidence environment | 🟡 evidence model + correlation theory + geometry/graphs done; scenario-set wiring pending (with canonical episode) |
+| G3  | round-coupled full physics | 🟡 two physical graphs G_comm/G_int done (spec §7.1); round closed-loop pending |
 | G4  | CDQ k-DPP subset exactness | ☐ |
 | G5  | determinantal quorum exactness | ☐ |
 | G6  | independent dynamic MC | ☐ |
@@ -71,9 +71,30 @@ Branch: `effective-sampling-redesign`.
   weighted scenario marginal == `q_i` (1e-12); refuses too-many-regions; truth/observable
   separation.
 
+### D3 — G2/G3 geometry + two physical graphs (2026-06-24)
+* `src/environment/urban_scene.py`: Manhattan grid → vehicle positions clustered on road
+  segments; region `g(i)` = segment id (spatial clustering ⇒ correlated evidence). Scene
+  carries `comm_radius`/`int_radius`. Deterministic given a generator.
+* `src/environment/candidate_graph.py`: `RadiusGraph` + cell-list `build_radius_graph`
+  (`O(N+E)`, no `N×N`, **no degree cap**); `build_candidate_graph` = `G_comm`;
+  generic `aggregate_over_graph` scatter.
+* `src/environment/interference_graph.py`: `build_interference_graph` = `G_int` (larger
+  radius); `non_intended_interferers` = `G_int \ G_comm`; `received_interference_mw`
+  aggregates over **all** transmitters near a receiver (spec §7.1 cross-destination fix —
+  the legacy destination-keyed aggregation drops these).
+* **Complexity:** degree bounded & constant across scale (comm ~48, int ~200 for
+  N=600→6300), so `E=O(N)` at fixed density (constraint #11). Builds 4000+ nodes fast.
+* **Evidence** (`tests/environment/test_physical_graphs.py`, 7 passing): radius graph ==
+  brute force, no self-loops, symmetric; no degree cap (dense cluster deg 29/29);
+  `G_comm ⊆ G_int`; non-intended interferer sentinel `(t,j)∈G_int\G_comm`; interference
+  over `G_int` strictly exceeds comm-only aggregation (external transmitter raises floor);
+  Manhattan region containment; near-linear `E/N`; multi-thousand-node build.
+
 ## Next slice
-Phase 3/4 geometry: `urban_scene.py` (Manhattan grid → positions + region assignment)
-and `candidate_graph.py` / `interference_graph.py` (two physical graphs G_comm, G_int,
-spec §7.1). Then the round-coupled canonical episode (G0/G3) ties protocol + evidence +
-physics together. Geometry should reuse `src/mainline/topology.py::build_candidate_graph`
-(no degree cap) as a starting point.
+Round-coupled **canonical episode** (G0/G3): tie protocol + evidence + two graphs +
+round physics into a single `run_consensus_episode(..., mode="analytic")` with a mechanism
+trace and per-round closed loop `X_t → τ_t → Π → Λ_t → γ_t,ℓ_t → (h⁺,h⁻,h⁰) → X_{t+1}`
+(spec §7.2), no fixed `tau_proxy`. Reuse `src/mainline/finite_blocklength.py` (FBL/HARQ/
+path-loss) for `ℓ`, and `src/mainline/quorum_dp.py` for `(h⁺,h⁻,h⁰)` until CDQ (G4/G5)
+generalizes it. Also wire the scenario set (one biased region / two opposing / weak cut /
+hub) via the evidence model to finish G2.
