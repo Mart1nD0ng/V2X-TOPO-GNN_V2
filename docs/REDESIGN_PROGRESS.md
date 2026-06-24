@@ -13,7 +13,7 @@ Branch: `effective-sampling-redesign`.
 |------|-------|--------|
 | G0  | canonical execution closure (single `run_consensus_episode`) | ☐ not started |
 | G1  | protocol semantics — true binary Snowball + single-node exact ref | 🟡 core done (per-node chain); joint exact ref pending (Phase 2) |
-| G2  | correlated-evidence environment | 🟡 evidence model + correlation theory + geometry/graphs done; scenario-set wiring pending (with canonical episode) |
+| G2  | correlated-evidence environment | 🟢 evidence model + correlation theory + geometry/graphs + evidence scenarios done (geometric weak-cut/hub deferred to G7) |
 | G3  | round-coupled full physics | 🟡 two physical graphs G_comm/G_int done (spec §7.1); round closed-loop pending |
 | G4  | CDQ k-DPP subset exactness | ☐ |
 | G5  | determinantal quorum exactness | ☐ |
@@ -89,6 +89,18 @@ Branch: `effective-sampling-redesign`.
   `G_comm ⊆ G_int`; non-intended interferer sentinel `(t,j)∈G_int\G_comm`; interference
   over `G_int` strictly exceeds comm-only aggregation (external transmitter raises floor);
   Manhattan region containment; near-linear `E/N`; multi-thousand-node build.
+
+### D4 — G2 evidence scenarios (2026-06-24)
+* `src/environment/scenarios.py`: `build_scenario(name, scene)` →
+  `EvidenceModel` for `all_correct` (perfect-evidence control), `iid` (independent),
+  `one_biased_region` (shared region error), `two_opposing_regions` (median-x split into
+  opposite opinion clusters). Geometric scenarios (`weak_cut`, `hub_congestion`) listed in
+  `GEOMETRIC_SCENARIOS` and deferred to G7 (built by geometry edits) — catalogue explicit,
+  not silently missing. G2 now 🟢.
+* **Evidence** (`tests/environment/test_scenarios.py`, 5 passing): all-correct `q_i=1`;
+  iid zero correlation, `q_i=1-p_node`; one-biased region mostly-wrong + positively
+  correlated within region, zero cross-region; two-opposing has both opinion clusters;
+  unknown/geometric name raises.
 
 ## Next slice
 Round-coupled **canonical episode** (G0/G3): tie protocol + evidence + two graphs +
