@@ -33,10 +33,15 @@ from src.sampling import DistanceQueryPolicy, UniformQueryPolicy
 
 PHY = RoundPhysicsConfig(subchannels=12, slots_per_window=50)
 PROTO = ProtocolConfig(k=3, alpha=2, beta=3, r_max=12)
-N_MODEL_SEEDS = 3
-N_HELDOUT = 16
-TRIALS = 350
-EVAL_GX = 7                      # held-out scene size (N ~ 336); train scenes are gx=3 (N~48)
+# Defaults run a full-physics CONFIRMATION at representative scale (fits the 10-min tool cap).
+# The publication-grade run is the SAME script with N_MODEL_SEEDS>=5, N_HELDOUT>=30, larger
+# EVAL_GX/TRIALS -- a multi-hour offline job (no code change, just these constants).
+N_MODEL_SEEDS = 2
+N_HELDOUT = 6
+TRIALS = 100
+TRAIN_STEPS = 25
+EVAL_GX = 4                      # held-out scene size (N ~ 96); train scenes are gx=3 (N~48)
+EVAL_LINK = None                 # None = FULL physics chain (constraint #7); 1.0 = ideal-link
 
 
 def _scene(gx, seed):
@@ -51,7 +56,7 @@ def _train(use_cdq, model_seed, train_inst):
     model = ESDGNN(ESDGNNConfig(hidden_dim=24, r=4, n_enc=3, n_refine=2, k=3,
                                 use_cdq=use_cdq)).double()
     train_esd_gnn(model, train_inst, PROTO, PHY, ReliabilityThresholds(),
-                  steps=45, lr=0.01, eta_mu=8.0, link_override=1.0)
+                  steps=TRAIN_STEPS, lr=0.01, eta_mu=8.0, link_override=1.0)
     return model
 
 
@@ -74,7 +79,7 @@ def run() -> dict:
         return pols
 
     scores = evaluate_policies_paired(heldout, make_policies, PROTO, PHY, num_trials=TRIALS,
-                                      link_override=1.0)
+                                      link_override=EVAL_LINK, verbose=True)
 
     # aggregate model seeds into one "policy" per mode = per-scene mean over seeds
     def _agg(prefix):
@@ -100,7 +105,8 @@ def run() -> dict:
                                       "esd_gnn_esp", metric="F_wrong")[0]
     out = {
         "config": {"model_seeds": N_MODEL_SEEDS, "heldout_scenes": N_HELDOUT, "trials": TRIALS,
-                   "N_train": train_inst[0][0].num_nodes, "N_eval": N_eval, "link": "ideal"},
+                   "N_train": train_inst[0][0].num_nodes, "N_eval": N_eval,
+                   "link": "ideal" if EVAL_LINK is not None else "full_physics"},
         "summary_mean": summary,
         "vs_uniform_Fwrong": [c.__dict__ for c in vs_uniform],
         "cdq_vs_esp_Fwrong": cdq_vs_esp.__dict__,

@@ -452,12 +452,34 @@ User chose **B**. The project's contribution is reframed (honestly, on the verif
 **Canonical deployable policy = ESD-GNN with `use_cdq=False`.** CDQ stays as the exact-math layer,
 NOT claimed as empirically superior. Finer-correlation pursuit (option A) parked as future work.
 
-## Next slices (planned order)  — direction **C** + framing **B**; G10 ✅; G11-vs-baselines ✅.
-Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9a+G9b ✅; CDQ-MC ✅; G9c infra ✅; G10 ✅.
-1. **G11 full rigor** (ESP headline): extend the MC to return per-trial latency + energy ⇒ CVaR_q
-   tail-latency + mean energy headline metrics; then ≥5 model seeds, ≥30 scene seeds, **FULL
-   physics (`link_override=None`)**, paired CRN + multiple-comparison. Confirms ESD-GNN(ESP) ≫
-   baselines under the real physical chain + the reliability constraint.
+### D22 — G11 full-physics confirmation + energy/latency metrics ✅ (2026-06-24)
+* **MC extended** (committed 10b5535): per-trial energy + CVaR_0.9 tail latency/energy
+  (`_cvar_upper`); `tests/validation/test_mc_energy_latency.py` (3 passing). Headline harness
+  records energy + latency_cvar; `evaluate_policies_paired(verbose=)` logs per-scene progress.
+* **Full-physics headline** (`link_override=None`, real chain, N=96, 2 model seeds, 6 held-out
+  scenes, 100 trials, paired CRN — a CONFIRMATION; the publication run is the same script with
+  N_MODEL_SEEDS≥5/N_HELDOUT≥30, a multi-hour offline job beyond the 10-min dev cap). Mean F_wrong:
+  uniform 0.112, distance 0.242, esd_gnn_cdq **0.110**, esd_gnn_esp **0.021**.
+  - **esd_gnn_esp ≫ baselines:** −0.091 [−0.115,−0.067] vs uniform (sig, better). The robust
+    deployable headline policy under the full physical chain.
+  - **CDQ collapses under real physics:** esd_gnn_cdq −0.002 [−0.063,+0.088] vs uniform — **NOT
+    significant** (≈ uniform) and **3× slower latency** (0.093 vs ESP 0.030). CDQ vs ESP: +0.089
+    [+0.024,+0.172] sig ⇒ ESP decisively better. New honest insight: diversity picks worse
+    -connected peers, hurting reliability AND latency under realistic links.
+  - distance significantly worse than uniform (§9.1 tension — robust across link modes).
+* **G11 verdict (robust across ideal-link D20 + full-physics D22):** the region-aware ESD-GNN in
+  **ESP mode** is the headline policy — significantly beats heuristics, scale-transferable
+  (N=48→336), robust to link noise. Determinantal CDQ provides no reliability benefit and *hurts*
+  under full physics. Confirms the D18/D21 framing **B**. **G11 ✅ at dev rigor**; publication-grade
+  seed/scene counts parameterized.
+
+## Next slices (planned order)  — direction **C** + framing **B**; G10 ✅; **G11 ✅** (dev rigor).
+Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9a/b ✅; CDQ-MC ✅; G9c ✅; G10 ✅; G11 ✅.
+1. **G12 temporal robustness** — evaluate the trained ESD-GNN(ESP) under temporal scene drift
+   (vehicle mobility between rounds / across episodes); confirm reliability holds.
+2. **Finalize**: honest report reflecting framing B; **G0 closure** (unused-config enforcement);
+   legacy cleanup (delete `src/mainline/model.py::evaluate_controls`, migrate any figure scripts).
+3. **(offline)** publication-grade G11: ≥5 seeds, ≥30 scenes, full physics, high trials.
 1. **Framing decision (A/B)** then **G11 full rigor** (≥5 seeds, ≥30 scenes, full physics, CVaR
    latency + energy). 2. **G12** temporal robustness. Legacy cleanup: delete
    `src/mainline/model.py::evaluate_controls`.

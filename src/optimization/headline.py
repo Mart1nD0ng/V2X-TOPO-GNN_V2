@@ -52,6 +52,7 @@ def evaluate_policies_paired(
     num_trials: int,
     link_override: float | None = 1.0,
     crn_base_seed: int = 100_000,
+    verbose: bool = False,
 ) -> dict[str, PolicyScores]:
     """Score every policy on every scene under paired CRN.
 
@@ -60,7 +61,7 @@ def evaluate_policies_paired(
     features). All policies on a given scene share generator seed ``crn_base_seed + scene_seed``.
     """
     scores: dict[str, PolicyScores] = {}
-    for scene, evidence, scene_seed in scene_specs:
+    for si, (scene, evidence, scene_seed) in enumerate(scene_specs):
         policies = make_policies(scene)
         for name, policy in policies.items():
             gen = torch.Generator().manual_seed(crn_base_seed + int(scene_seed))   # CRN
@@ -73,6 +74,8 @@ def evaluate_policies_paired(
             s.latency_cvar.append(r.latency_cvar)
             s.energy.append(r.mean_energy)
             s.finished_fraction.append(r.finished_fraction)
+        if verbose:
+            print(f"  scene {si + 1}/{len(scene_specs)} (seed {scene_seed}) scored", flush=True)
     return scores
 
 
