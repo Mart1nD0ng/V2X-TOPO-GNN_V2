@@ -294,13 +294,33 @@ grad); 14 G4 tests passing.
   (S_all/F_wrong/F_disagree/c_ir, 1e-9) — the wiring anchor; real non-diagonal CDQ episode runs
   and is differentiable in `(quality, diversity)`. 25 sampling tests passing.
 
+### D12 — Phase 7 topology-oracle ceiling (stop-condition #2) — PASSED
+* `src/optimization/topology_oracle.py`: direct per-scene edge-logit optimizer
+  (`optimize_logweight_topology`, Adam on the analytic `F_disagree+F_wrong`) + `oracle_vs_
+  heuristics` comparison with dynamic-MC confirmation. `LearnedLogWeightPolicy` (ESP, MC-
+  supported). The oracle is a per-scene UPPER BOUND (uses the scene's evidence via the
+  objective; NOT deployable — the GNN must approach it from observables, constraint #10).
+* **Result (clears stop-condition #2; justifies G9):** on one-biased-region (perfect link,
+  isolating the peer-selection lever) the oracle drives `F_wrong` 0.041→~0 analytically; the
+  **distance heuristic is WORSE than uniform** (0.150 vs 0.041 — concentrating on nearby
+  same-region peers = the §9.1 redundancy tension). Independent dynamic MC (5000 trials, 3
+  scene seeds): oracle `F_wrong≈0.003` vs uniform `≈0.117`, **MC gain 0.110/0.118/0.123**,
+  CIs cleanly separated → significant, MC-confirmed topology lever.
+* **Evidence** (`tests/optimization/test_topology_oracle.py`, 3 passing): oracle ≫ heuristics
+  analytically + non-overlapping MC CIs; distance worse than uniform under correlation; loss
+  decreases. Manifest: `result/topology_oracle_ceiling/ceiling.json` (multi-seed, verdict PASS).
+  Verified by the independent MC (multi-seed) — no separate workflow needed.
+
 ## Next slices (planned order)
-1. **Topology-oracle ceiling** (Phase 7, stop-condition #2): directly optimize the per-scene
-   CDQ kernel (quality+diversity) by gradient descent on the constrained objective; if it does
-   NOT significantly beat the uniform/distance/ESP heuristics (confirmed by dynamic MC), STOP +
-   report (no topology lever → no point in the GNN).
-3. **G7 effective-sampling diagnostics** (spec §5: response-conditioned `π̃`, progress/drift,
-   ESS, mixing, load — hand-scenario direction tests; feeds G9 aux losses).
-4. **G9 ESD-GNN**: multi-graph encoder → `(q,b)` heads → CDQ; primal-dual constrained training;
-   then G10/G11 large-scale, G12 temporal.
+Viability gates passed: stop-condition #1 (G8 feasibility) ✅ and #2 (topology oracle, D12) ✅.
+1. **G7 effective-sampling diagnostics** (spec §5): response-conditioned `π̃`, progress `g_i`,
+   drift `Δ_i`, ESS `k_eff`, region mixing/conductance, receiver load — differentiable
+   diagnostics on the canonical path, hand-scenario direction tests (symmetric loss→progress↓;
+   opinion-correlated loss→drift; weak cut→mixing↓; hub→load↑; redundant peers→ESS↓). Feeds G9.
+2. **G9 ESD-GNN**: multi-graph encoder (G_comm/G_int/G_corr/G_region) → quality `q` + diversity
+   `b` heads → CDQ k-DPP query (G4) + determinantal quorum (G5) on the canonical path;
+   topology-only headline (fixed PHY); primal-dual reliability-constrained training; multi-seed;
+   the GNN must approach the D12 oracle ceiling from OBSERVABLE features (constraint #10).
+3. **G10/G11** large-scale (N=100–10000) complexity + reliability-constrained superiority vs
+   capability-matched baselines (dynamic-MC headline). **G12** temporal extension.
 Deferred legacy cleanup: delete `src/mainline/model.py::evaluate_controls` (tau_proxy/Q=1).
