@@ -10,6 +10,12 @@
 Primal-dual reliability-constrained training of the ESD-GNN is added at G9.
 """
 
+from .headline import (
+    PairedComparison,
+    PolicyScores,
+    compare_to_reference,
+    evaluate_policies_paired,
+)
 from .primal_dual import (
     DualState,
     ReliabilityThresholds,
@@ -32,4 +38,8 @@ __all__ = [
     "episode_metrics",
     "lagrangian",
     "train_esd_gnn",
+    "PolicyScores",
+    "PairedComparison",
+    "evaluate_policies_paired",
+    "compare_to_reference",
 ]
