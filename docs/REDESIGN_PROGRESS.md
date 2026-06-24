@@ -19,7 +19,7 @@ Branch: `effective-sampling-redesign`.
 | G5  | determinantal quorum exactness | 🟢 P_i(m,n) via det(I+zLD_g) grid-interpolation; exact vs brute force + recovers quorum_dp (diagonal), grad rel-err<1e-4; (wired at G9) |
 | G6  | independent dynamic MC | 🟢 forward MC + ranking agreement + exact-joint-chain agreement (MC unbiased, within CI); CRN/rare-event optional refinements |
 | G7  | effective-sampling diagnostics | ☐ |
-| G8  | protocol feasibility (perfect-link floors) | ☐ |
+| G8  | protocol feasibility (perfect-link floors) | 🟢 well-mixed perfect-link floor (MC-validated); FEASIBLE at N≤10000 for correct-majority≥0.6; 50/50 correctly infeasible → greenlights G9 |
 | G9  | model mechanism & ablations | ☐ |
 | G10 | large-N complexity/performance | ☐ |
 | G11 | reliability-constrained superiority | ☐ |
@@ -256,11 +256,29 @@ grad); 14 G4 tests passing.
   machine-precision edge-case probes (k=1, p0=0, degenerate kernel, quality~1e6, no-response)
   — no separate adversarial workflow needed (already triangulated).
 
+### D10 — G8 perfect-link feasibility (2026-06-24) — VIABILITY GATE PASSED
+* `src/validation/feasibility.py`: well-mixed perfect-link Snowball floor — self-consistent
+  binomial-quorum recursion reusing the `binary_snowball` components (`wellmixed_terminal`),
+  network floors over N exchangeable nodes via inclusion-exclusion (`network_floors`, log
+  domain), `is_feasible`, `scan_feasibility`.
+* **Result (greenlights G9, no stop-condition #1):** FEASIBLE at N∈{100,1000,10000} for any
+  correct-majority init ≥ 0.6 with modest params (β=2–4, k=3–7, R_max=8–16); floors met with
+  margin (F_wrong ~1e-6–1e-8 vs ε_v/10=1e-4). The 50/50 tie is correctly INFEASIBLE (gate has
+  teeth). Exponential β-safety confirmed (per-node wrong w: 1.8e-7 @β=3 → 1.5e-27 @β=5).
+* **Verification (the rigor):** the well-mixed recursion is validated against the INDEPENDENT
+  dynamic MC in a complete-graph perfect-link setting at a measurable rate (recursion c/w match
+  MC within finite-N bias). Exactness boundary: well-mixed mean-field floor (idealised best
+  case, NOT the local-topology headline evaluator); the deep ~1e-7 tail rests on the
+  MC-validated recursion + classic exp(-β) Snowball safety — direct MC of 1e-7 needs rare-event
+  methods (spec §8.1 lvl 4).
+* **Evidence** (`tests/validation/test_feasibility.py`, 5 passing): monotone in β/init; floor
+  formulas; scan feasible at target N; 50/50 infeasible; recursion matches dynamic MC.
+
 ## Next slice
-**G8 perfect-link feasibility scan** (`src/validation/feasibility.py` + a scan script, spec
-§3.3, plan Phase 5) — the VIABILITY gate (loop stop-condition #1). Using `link_override=1`
-(ideal link) calibrate `(k,α,β,R_max)` so the perfect-link floors meet `F_·^floor ≤ ε_·/10`
-at the target `N` under the correlated-evidence scenarios; freeze `T_d`. If infeasible →
-STOP + report (cannot let the GNN rescue an infeasible protocol). Then G7 effective-sampling
-diagnostics (spec §5: response-conditioned `π̃`, progress/drift, ESS, mixing, load with
-hand-scenario direction tests), then G9 ESD-GNN (wires CDQ into the canonical path).
+G9 **ESD-GNN** (spec §9, plan Phase 9) — the model that WIRES CDQ into the canonical path:
+multi-graph encoder (G_comm/G_int/G_corr/G_region) → quality `q` + diversity `b` heads → CDQ
+k-DPP query (G4) + determinantal quorum (G5) inside `run_consensus_episode`; topology-only
+headline (fixed PHY). Big slice. Precede with G7 effective-sampling diagnostics (spec §5,
+smaller, feeds G9 aux losses) OR the Phase-7 topology-oracle check (stop-condition #2: confirm
+a direct per-scene topology optimizer beats heuristics before investing in the GNN).
+Recommended order: topology-oracle ceiling (viability) → G7 diagnostics → G9 ESD-GNN.

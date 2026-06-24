@@ -14,5 +14,22 @@ are added in follow-up slices.
 """
 
 from .dynamic_mc import DynamicMCResult, run_dynamic_mc
+from .feasibility import (
+    FeasibilityFloors,
+    binomial_tail,
+    is_feasible,
+    network_floors,
+    scan_feasibility,
+    wellmixed_terminal,
+)
 
-__all__ = ["DynamicMCResult", "run_dynamic_mc"]
+__all__ = [
+    "DynamicMCResult",
+    "run_dynamic_mc",
+    "FeasibilityFloors",
+    "binomial_tail",
+    "wellmixed_terminal",
+    "network_floors",
+    "is_feasible",
+    "scan_feasibility",
+]
