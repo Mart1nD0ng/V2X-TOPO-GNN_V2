@@ -56,13 +56,20 @@ __all__ = [
 ]
 
 
-def low_rank_kernel(quality: torch.Tensor, diversity: torch.Tensor) -> torch.Tensor:
-    """``B[..., j, :] = sqrt(q_j) b_j`` from quality ``[..., d]`` and diversity ``[..., d, r]``."""
+def low_rank_kernel(quality: torch.Tensor, diversity: torch.Tensor, *, eps: float = 1e-12) -> torch.Tensor:
+    """``B[..., j, :] = sqrt(q_j) b_j`` from quality ``[..., d]`` and diversity ``[..., d, r]``.
+
+    ``quality`` is clamped to ``[eps, inf)`` before the square root so a zero/near-zero
+    quality (e.g. a masked/padded candidate) gives a vanishing kernel row with a
+    WELL-DEFINED (zero) gradient -- ``sqrt`` at exactly 0 has an infinite derivative that
+    would NaN-poison a batched backward; ``clamp_min(eps)`` saturates there so the gradient
+    is 0 (it does not flow through the clamp for inputs below ``eps``).
+    """
     if diversity.shape[:-1] != quality.shape:
         raise ValueError("diversity must be [..., d, r] matching quality [..., d]")
     if bool(torch.any(quality.detach() < 0).cpu()):
         raise ValueError("quality must be nonnegative")
-    return torch.sqrt(quality.clamp_min(0)).unsqueeze(-1) * diversity
+    return torch.sqrt(quality.clamp_min(eps)).unsqueeze(-1) * diversity
 
 
 def _gram(B: torch.Tensor) -> torch.Tensor:
@@ -97,19 +104,18 @@ def kdpp_elementary_symmetric(M: torch.Tensor, k: int) -> torch.Tensor:
     return torch.stack(e, dim=-1)                 # [..., k+1]
 
 
-def kdpp_normalizer(B: torch.Tensor, k: int) -> torch.Tensor:
-    """``e_k(lambda(L))`` with ``L = B B^T`` (the ``k``-DPP normaliser). ``[...]``.
+def _check_k(B: torch.Tensor, k: int) -> tuple[int, int]:
+    """Validate ``0 <= k <= min(d, r)`` (a k-DPP needs >= k distinct candidates and k <= rank)."""
+    d, r = B.shape[-2], B.shape[-1]
+    mn = min(d, r)
+    if k < 0 or k > mn:
+        raise ValueError(f"k={k} must satisfy 0 <= k <= min(d, r) = {mn} (d={d}, r={r})")
+    return d, r
 
-    Uses the exact identity ``e_k(lambda(M)) = sum_{|T|=k} det(M_T)`` (sum of ``k x k``
-    principal minors of ``M = B^T B``) -- accurate to float64 (no Newton accumulation) and
-    differentiable. ``C(r, k)`` minors; ``r`` is the small embedding rank.
-    """
-    M = _gram(B)
+
+def _ek_principal_minors(M: torch.Tensor, k: int) -> torch.Tensor:
+    """``e_k(lambda(M)) = sum_{|T|=k} det(M_T)`` (sum of k x k principal minors). ``[...]``."""
     r = M.shape[-1]
-    if k < 0 or k > r:
-        raise ValueError(f"k={k} must satisfy 0 <= k <= r={r}")
-    if k == 0:
-        return M.new_ones(M.shape[:-2])
     total = M.new_zeros(M.shape[:-2])
     for T in combinations(range(r), k):
         idx = torch.tensor(T, dtype=torch.long, device=M.device)
@@ -118,9 +124,37 @@ def kdpp_normalizer(B: torch.Tensor, k: int) -> torch.Tensor:
     return total
 
 
-def kdpp_log_normalizer(B: torch.Tensor, k: int, *, eps: float = 0.0) -> torch.Tensor:
-    ek = kdpp_normalizer(B, k)
-    return torch.log(ek.clamp_min(eps) if eps > 0 else ek)
+def kdpp_normalizer(B: torch.Tensor, k: int) -> torch.Tensor:
+    """``e_k(lambda(L))`` with ``L = B B^T`` (the ``k``-DPP normaliser). ``[...]``.
+
+    Exact identity ``e_k(lambda(M)) = sum_{|T|=k} det(M_T)`` (principal minors of
+    ``M = B^T B``) -- float64-accurate (no Newton accumulation), differentiable. For very
+    large quality use :func:`kdpp_log_normalizer` (this linear form can overflow).
+    """
+    _check_k(B, k)
+    M = _gram(B)
+    if k == 0:
+        return M.new_ones(M.shape[:-2])
+    return _ek_principal_minors(M, k)
+
+
+def kdpp_log_normalizer(B: torch.Tensor, k: int) -> torch.Tensor:
+    """``log e_k(lambda(L))`` computed in a SCALE-STABLE way (no overflow for large quality).
+
+    Factors the mean eigenvalue ``s = tr(M)/r`` out of ``M`` (``e_k`` is degree-``k``
+    homogeneous: ``e_k(M) = s^k e_k(M/s)``), so ``log e_k = k log s + log e_k(M/s)`` with the
+    scaled minors ``O(1)``. Exact (the scaling is an exact reparameterisation, so the autograd
+    gradient is the true ``d log e_k / d.``), and differentiable.
+    """
+    _check_k(B, k)
+    M = _gram(B)
+    if k == 0:
+        return M.new_zeros(M.shape[:-2])
+    r = M.shape[-1]
+    s = (torch.diagonal(M, dim1=-2, dim2=-1).sum(dim=-1) / r).clamp_min(torch.finfo(M.dtype).tiny)
+    M_s = M / s.unsqueeze(-1).unsqueeze(-1)
+    ek_s = _ek_principal_minors(M_s, k)
+    return k * torch.log(s) + torch.log(ek_s)
 
 
 def kdpp_inclusion(quality: torch.Tensor, diversity: torch.Tensor, k: int) -> torch.Tensor:
@@ -129,12 +163,18 @@ def kdpp_inclusion(quality: torch.Tensor, diversity: torch.Tensor, k: int) -> to
     Computed exactly as ``pi_j = q_j * d log e_k / d q_j`` via autograd. ``sum_j pi_j = k``.
     Differentiable w.r.t. ``quality`` and ``diversity`` when they require grad.
     """
+    if k == 0:
+        z = torch.zeros_like(quality)
+        return z if (quality.requires_grad or diversity.requires_grad) else z.detach()
     need_graph = quality.requires_grad or diversity.requires_grad
-    q = quality if quality.requires_grad else quality.detach().requires_grad_(True)
-    B = low_rank_kernel(q, diversity)
-    log_ek = kdpp_log_normalizer(B, k)
-    grad = torch.autograd.grad(log_ek.sum(), q, create_graph=need_graph)[0]
-    pi = q * grad
+    # enable_grad so the internal autograd works even under an ambient torch.no_grad()
+    # (the value-only inference path) -- requires_grad_ alone is a no-op when grad is off.
+    with torch.enable_grad():
+        q = quality if quality.requires_grad else quality.detach().requires_grad_(True)
+        B = low_rank_kernel(q, diversity)
+        log_ek = kdpp_log_normalizer(B, k)
+        grad = torch.autograd.grad(log_ek.sum(), q, create_graph=need_graph)[0]
+        pi = q * grad
     return pi if need_graph else pi.detach()
 
 
@@ -148,7 +188,7 @@ def kdpp_subset_log_prob(B: torch.Tensor, subset, k: int) -> torch.Tensor:
     Bs = B[idx]                                   # [k, r]
     Ls = Bs @ Bs.transpose(-1, -2)                # [k, k]
     sign, logabsdet = torch.linalg.slogdet(Ls)
-    log_ek = torch.log(kdpp_normalizer(B, k))
+    log_ek = kdpp_log_normalizer(B, k)            # scale-stable (no overflow at large quality)
     return logabsdet - log_ek
 
 

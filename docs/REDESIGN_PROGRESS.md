@@ -222,6 +222,18 @@ with per-finding independent verification. 5 confirmed-real findings (3 were the
 * **Note (constraint #13):** CDQ is the math layer; it is wired into the canonical query path
   when the ESD-GNN emits `(q, b)` at G9. Until then the canonical query remains the ESP policy.
 
+### D8b — adversarial verification of G4 (2026-06-24)
+`verify-cdq-kdpp` workflow (11 agents). Core math confirmed exact; 7 real **robustness** edge
+-case defects found + all fixed (none affected the validated exact values, but all matter once
+CDQ trains at G9 with padding/large logits/inference): (1) **[high]** `sqrt(0)` infinite
+gradient in `low_rank_kernel` → now `clamp_min(eps)` (saturates → zero grad for masked/padded
+candidates); (2) `kdpp_inclusion` crashed under `torch.no_grad()` → wrapped in
+`enable_grad()`; (3) `k≤min(d,r)` now enforced (was only `k≤r`; `d<k` returned float noise);
+(4) `kdpp_log_normalizer` now scale-stable (factors mean eigenvalue; no overflow at large
+quality, still recovers ESP); (5) `k=0` inclusion short-circuits to zeros. 5 regression tests
+added (no_grad, k>min(d,r), k=0, large-quality stability+ESP recovery, zero-quality finite
+grad); 14 G4 tests passing.
+
 ## Next slice
 G5 **determinantal heterogeneous quorum law** (`sampling/determinantal_quorum.py`, spec §9.5):
 `P_i(m,n) = [zᵏxᵐyⁿ] det(I + z L D_g) / e_k(λ(L))` via `[z^k]det = Σ_{|T|=k} det((BᵀD_g B)_T(x,y))`

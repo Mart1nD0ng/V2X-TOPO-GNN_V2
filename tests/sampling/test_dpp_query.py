@@ -144,3 +144,56 @@ def test_k_greater_than_rank_raises():
     q, b, B = _rand_kernel(d=5, r=2, seed=0)
     with pytest.raises(ValueError):
         kdpp_normalizer(B, 3)        # k=3 > r=2
+
+
+# ---------------------------------------------- robustness (adversarial findings)
+def test_inclusion_works_under_no_grad():
+    """Inference path: inclusion marginals must be computable inside torch.no_grad()."""
+    q, b, _ = _rand_kernel(d=6, r=4, seed=2)
+    with torch.no_grad():
+        pi = kdpp_inclusion(q, b, 3)
+    assert abs(float(pi.sum()) - 3) < 1e-9 and bool(torch.isfinite(pi).all())
+
+
+def test_k_exceeds_candidate_count_raises():
+    """d < k <= r must error (cannot pick k distinct peers from d candidates), not return noise."""
+    q, b, B = _rand_kernel(d=2, r=4, seed=0)
+    with pytest.raises(ValueError):
+        kdpp_normalizer(B, 3)
+    with pytest.raises(ValueError):
+        kdpp_inclusion(q, b, 3)
+
+
+def test_k_zero_inclusion_is_zero():
+    q, b, _ = _rand_kernel(d=5, r=3, seed=1)
+    pi = kdpp_inclusion(q, b, 0)
+    assert torch.allclose(pi, torch.zeros_like(pi))
+
+
+def test_large_quality_is_stable_and_recovers_esp():
+    """Log-normaliser must not overflow for large quality, and still recover the ESP law."""
+    d, k = 6, 2
+    g = torch.Generator().manual_seed(4)
+    quality = torch.rand(d, generator=g, dtype=torch.float64) * 1e6 + 1e3   # large scale
+    from src.sampling.dpp_query import kdpp_log_normalizer
+    B = low_rank_kernel(quality, diagonal_diversity(d))
+    log_ek = kdpp_log_normalizer(B, k)
+    assert bool(torch.isfinite(log_ek))
+    pi = kdpp_inclusion(quality, diagonal_diversity(d), k)
+    pi_esp = edge_inclusion_probability(torch.log(quality), k)
+    assert bool(torch.isfinite(pi).all()) and abs(float(pi.sum()) - k) < 1e-7
+    assert torch.allclose(pi, pi_esp, atol=1e-9)
+
+
+def test_zero_quality_gives_finite_gradient():
+    """A masked/padded candidate (quality 0) must not NaN-poison the backward pass."""
+    d, r, k = 5, 4, 2
+    g = torch.Generator().manual_seed(8)
+    quality = torch.rand(d, generator=g, dtype=torch.float64) + 0.2
+    quality[0] = 0.0                       # a "masked" candidate
+    quality = quality.requires_grad_(True)
+    diversity = torch.randn(d, r, generator=g, dtype=torch.float64).requires_grad_(True)
+    pi = kdpp_inclusion(quality, diversity, k)
+    pi.sum().backward()
+    assert bool(torch.isfinite(quality.grad).all()) and bool(torch.isfinite(diversity.grad).all())
+    assert bool(torch.isfinite(pi).all())
