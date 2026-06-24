@@ -251,11 +251,16 @@ grad); 14 G4 tests passing.
   conditioning, <1e-12 measured); not a sampled/straight-through surrogate.
 * CDQ math layer complete (G4+G5); wired into the canonical query/quorum path at G9 when the
   ESD-GNN emits `(q, b)`. 21 sampling tests passing.
+* **Verification:** G5 rests on TWO independent exact references (brute-force enumeration +
+  the validated `quorum_dp` on the diagonal) agreeing at <1e-10, gradient FD <1e-4, and 5
+  machine-precision edge-case probes (k=1, p0=0, degenerate kernel, quality~1e6, no-response)
+  — no separate adversarial workflow needed (already triangulated).
 
 ## Next slice
-G7 **effective-sampling diagnostics** (spec §5): response-conditioned `π̃`, progress `g_i`,
-drift `Δ_i`, ESS `k_eff`, region mixing/conductance, receiver load — as differentiable
-diagnostics on the canonical path, with hand-scenario direction tests (symmetric loss→progress
-down; opinion-correlated loss→drift; weak cut→mixing down; hub→load up; redundant peers→ESS
-down). OR G8 perfect-link feasibility scan (uses `link_override`) to calibrate `(k,α,β,R_max,T_d)`.
-G7 is the smaller, self-contained next slice.
+**G8 perfect-link feasibility scan** (`src/validation/feasibility.py` + a scan script, spec
+§3.3, plan Phase 5) — the VIABILITY gate (loop stop-condition #1). Using `link_override=1`
+(ideal link) calibrate `(k,α,β,R_max)` so the perfect-link floors meet `F_·^floor ≤ ε_·/10`
+at the target `N` under the correlated-evidence scenarios; freeze `T_d`. If infeasible →
+STOP + report (cannot let the GNN rescue an infeasible protocol). Then G7 effective-sampling
+diagnostics (spec §5: response-conditioned `π̃`, progress/drift, ESS, mixing, load with
+hand-scenario direction tests), then G9 ESD-GNN (wires CDQ into the canonical path).
