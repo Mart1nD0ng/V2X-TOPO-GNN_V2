@@ -26,6 +26,14 @@ from .dpp_query import (
     low_rank_kernel,
 )
 from .cdq_query import DiagonalCDQPolicy, cdq_bucketed_quorum, cdq_edge_inclusion
+from .effective_dynamics import (
+    cross_region_response_mass,
+    effective_sample_size,
+    progress_drift,
+    region_response_kernel,
+    region_spectral_gap,
+    response_conditioned_marginal,
+)
 from .determinantal_quorum import (
     QuorumDecisionCDQ,
     bruteforce_determinantal_quorum,
@@ -43,6 +51,12 @@ __all__ = [
     "cdq_edge_inclusion",
     "cdq_bucketed_quorum",
     "DiagonalCDQPolicy",
+    "response_conditioned_marginal",
+    "progress_drift",
+    "effective_sample_size",
+    "cross_region_response_mass",
+    "region_response_kernel",
+    "region_spectral_gap",
     "QueryPolicy",
     "UniformQueryPolicy",
     "DistanceQueryPolicy",

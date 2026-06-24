@@ -18,7 +18,7 @@ Branch: `effective-sampling-redesign`.
 | G4  | CDQ k-DPP subset exactness | 🟢 normalizer/subset/inclusion/sampler exact vs brute force; diagonal recovers ESP; differentiable (math layer; wired into canonical path at G9) |
 | G5  | determinantal quorum exactness | 🟢 P_i(m,n) via det(I+zLD_g) grid-interpolation; exact vs brute force + recovers quorum_dp (diagonal), grad rel-err<1e-4; (wired at G9) |
 | G6  | independent dynamic MC | 🟢 forward MC + ranking agreement + exact-joint-chain agreement (MC unbiased, within CI); CRN/rare-event optional refinements |
-| G7  | effective-sampling diagnostics | ☐ |
+| G7  | effective-sampling diagnostics | 🟢 response-conditioned π̃, progress/drift, ESS, region mixing+spectral gap, load; all hand-scenario directions pass |
 | G8  | protocol feasibility (perfect-link floors) | 🟢 well-mixed perfect-link floor (MC-validated); FEASIBLE at N≤10000 for correct-majority≥0.6; 50/50 correctly infeasible → greenlights G9 |
 | G9  | model mechanism & ablations | ☐ |
 | G10 | large-N complexity/performance | ☐ |
@@ -311,13 +311,23 @@ grad); 14 G4 tests passing.
   decreases. Manifest: `result/topology_oracle_ceiling/ceiling.json` (multi-seed, verdict PASS).
   Verified by the independent MC (multi-seed) — no separate workflow needed.
 
+### D13 — G7 effective-sampling diagnostics (2026-06-24)
+* `src/sampling/effective_dynamics.py` (spec §5, the namesake layer): `response_conditioned_
+  marginal` (π̃=πℓ/Σπℓ, §5.2), `progress_drift` (g=h⁺+h⁻, Δ=h⁺−h⁻, ν_prog=g/τ, ν_drift=Δ/τ,
+  §5.4-5.5), `effective_sample_size` (k_eff=1/(wᵀR_i w) with R from `pairwise_correlation_
+  theory`, §5.6), `region_response_kernel`+`cross_region_response_mass`+`region_spectral_gap`
+  (additive reversibilization, §5.7), `receiver_load` re-export (Λ). All differentiable, O(E)
+  (ESS O(Σdeg²)), no N×N. Diagnostics/aux signals only — do not replace safety/deadline.
+* **Evidence** (`tests/sampling/test_effective_dynamics.py`, 6 passing): all hand-scenario
+  directions hold — symmetric loss→progress↓ (drift~0); opinion split→drift moves ±;
+  redundant (correlated) peers→ESS↓; weak cut→cross-region mass↓ + spectral gap↓; hub→load↑.
+  Reuses validated components (quorum_dp, pairwise-correlation, receiver_load) — direction
+  -tested, no separate workflow. 31 sampling tests passing.
+* These feed the G9 primal-dual auxiliary losses (spec §5.8).
+
 ## Next slices (planned order)
-Viability gates passed: stop-condition #1 (G8 feasibility) ✅ and #2 (topology oracle, D12) ✅.
-1. **G7 effective-sampling diagnostics** (spec §5): response-conditioned `π̃`, progress `g_i`,
-   drift `Δ_i`, ESS `k_eff`, region mixing/conductance, receiver load — differentiable
-   diagnostics on the canonical path, hand-scenario direction tests (symmetric loss→progress↓;
-   opinion-correlated loss→drift; weak cut→mixing↓; hub→load↑; redundant peers→ESS↓). Feeds G9.
-2. **G9 ESD-GNN**: multi-graph encoder (G_comm/G_int/G_corr/G_region) → quality `q` + diversity
+Viability gates passed: #1 (G8 feasibility) ✅, #2 (topology oracle, D12) ✅. G7 ✅.
+1. **G9 ESD-GNN**: multi-graph encoder (G_comm/G_int/G_corr/G_region) → quality `q` + diversity
    `b` heads → CDQ k-DPP query (G4) + determinantal quorum (G5) on the canonical path;
    topology-only headline (fixed PHY); primal-dual reliability-constrained training; multi-seed;
    the GNN must approach the D12 oracle ceiling from OBSERVABLE features (constraint #10).
