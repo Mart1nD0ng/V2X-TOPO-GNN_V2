@@ -11,10 +11,10 @@ Branch: `effective-sampling-redesign`.
 
 | Gate | Scope | Status |
 |------|-------|--------|
-| G0  | canonical execution closure (single `run_consensus_episode`) | ☐ not started |
+| G0  | canonical execution closure (single `run_consensus_episode`) | 🟡 analytic episode + mechanism trace + activation sentinels done; dynamic_mc + unused-config enforcement pending |
 | G1  | protocol semantics — true binary Snowball + single-node exact ref | 🟡 core done (per-node chain); joint exact ref pending (Phase 2) |
 | G2  | correlated-evidence environment | 🟢 evidence model + correlation theory + geometry/graphs + evidence scenarios done (geometric weak-cut/hub deferred to G7) |
-| G3  | round-coupled full physics | 🟡 two physical graphs G_comm/G_int done (spec §7.1); round closed-loop pending |
+| G3  | round-coupled full physics | 🟢 two graphs + round_physics + closed loop in canonical episode; all mechanisms causal-tested + activation-sentinelled |
 | G4  | CDQ k-DPP subset exactness | ☐ |
 | G5  | determinantal quorum exactness | ☐ |
 | G6  | independent dynamic MC | ☐ |
@@ -102,11 +102,32 @@ Branch: `effective-sampling-redesign`.
   correlated within region, zero cross-region; two-opposing has both opinion clusters;
   unknown/geometric name raises.
 
+### D5 — G0/G3 round physics + canonical episode (2026-06-24)
+* `src/environment/round_physics.py`: spec §7.2-§7.4 single-round chain — request/response
+  distinct phases, cross-destination interference over `G_int`, Mode-2 collision,
+  half-duplex (duty cycle over the `W`-slot window), M/M/1 queueing (drop+delay), FBL/HARQ;
+  load/quality-coupled `τ` (no `tau_proxy`); contention over `S_eff = subchannels·W`.
+  Response activity gated by full request-leg delivery (real hub-overload feedback).
+* `src/sampling/esp_query.py` (exact per-edge `π_ij`), `baseline_policies.py`
+  (uniform/distance, observable-only).
+* `src/environment/canonical_episode.py::run_consensus_episode`: THE single entry. Closed
+  loop `X_t→τ_t→Π→Λ_t→γ_t,ℓ_t→(h⁺,h⁻,h⁰)→X_{t+1}` over `[N,Q,S]`; shared-latent reliability
+  `F_disagree`/`F_wrong`/`S_allcorrect` (spec §4.1-§4.2); runtime mechanism trace; ablation
+  flags. `dynamic_mc` mode raises (G6, must not reuse analytic marginals).
+* `evidence_model.analytic_scenarios` now enumerates only **non-degenerate** regions
+  (`0<p_g<1`) ⇒ iid→1 scenario, one-biased→2 (tractable analytic `Q`).
+* **Validation result**: perfect/iid evidence → `S_allcorrect≈1, F_wrong≈0`; one-biased
+  region → `F_wrong≈0.40` (correlated wrong decisions) — the environment produces exactly
+  the spec's safety/validity failures. Op-point `k=3,α=2,β=3,r_max≥16` finalizes cleanly.
+* **Evidence** (`tests/environment/test_round_physics.py` 10 + `test_canonical_episode.py`
+  9, all passing): mechanism causal directions; cross-destination interference; reliability
+  ordering across scenarios; accurate runtime trace; each mechanism on the canonical path
+  (activation sentinel); policy never sees truth/votes; differentiable in query weights.
+* **Pending:** dynamic_mc (G6), unused-config enforcement (G0 full), CVaR/deadline metric
+  (objectives slice), CDQ generalization of the quorum (G4/G5).
+
 ## Next slice
-Round-coupled **canonical episode** (G0/G3): tie protocol + evidence + two graphs +
-round physics into a single `run_consensus_episode(..., mode="analytic")` with a mechanism
-trace and per-round closed loop `X_t → τ_t → Π → Λ_t → γ_t,ℓ_t → (h⁺,h⁻,h⁰) → X_{t+1}`
-(spec §7.2), no fixed `tau_proxy`. Reuse `src/mainline/finite_blocklength.py` (FBL/HARQ/
-path-loss) for `ℓ`, and `src/mainline/quorum_dp.py` for `(h⁺,h⁻,h⁰)` until CDQ (G4/G5)
-generalizes it. Also wire the scenario set (one biased region / two opposing / weak cut /
-hub) via the evidence model to finish G2.
+G6 **independent dynamic MC** (`src/validation/dynamic_mc.py`): per-trial sampling of query
+subsets, fading, request/response and Snowball counters — must NOT reuse analytic terminal
+marginals (spec §8). Three-way agreement (small-`N` exact chain / analytic / dynamic MC) and
+common random numbers. This is the independent judge that validates the analytic episode.

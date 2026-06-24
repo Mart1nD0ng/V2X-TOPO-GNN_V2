@@ -29,6 +29,8 @@ from .interference_graph import (
     non_intended_interferers,
     received_interference_mw,
 )
+from .canonical_episode import EpisodeResult, ProtocolConfig, run_consensus_episode
+from .round_physics import RoundPhysicsConfig, RoundPhysicsResult, edge_geometry, round_physics
 from .scenarios import EVIDENCE_SCENARIOS, GEOMETRIC_SCENARIOS, build_scenario
 from .urban_scene import ManhattanScene, build_manhattan_scene
 
@@ -36,6 +38,13 @@ __all__ = [
     "EVIDENCE_SCENARIOS",
     "GEOMETRIC_SCENARIOS",
     "build_scenario",
+    "EpisodeResult",
+    "ProtocolConfig",
+    "run_consensus_episode",
+    "RoundPhysicsConfig",
+    "RoundPhysicsResult",
+    "round_physics",
+    "edge_geometry",
     "EvidenceModel",
     "EvidenceSample",
     "pairwise_correlation_theory",

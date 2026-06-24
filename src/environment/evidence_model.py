@@ -129,34 +129,48 @@ class EvidenceModel:
         )
 
     # ------------------------------------------------- analytic scenario decomp
-    def analytic_scenarios(self, *, max_scenarios: int = 1 << 16
+    def analytic_scenarios(self, *, max_scenarios: int = 1 << 16, tol: float = 1e-12
                            ) -> tuple[torch.Tensor, torch.Tensor]:
         """Exact shared-latent decomposition ``(omega [Q], init_correct_pref [N, Q])``.
 
-        Enumerates the ``Q = 2^G`` region-bit configurations. Raises if ``Q`` exceeds
-        ``max_scenarios`` (use the dynamic MC / a reduced scenario set instead -- no
-        silent truncation).
+        Only the **non-degenerate** regions (``tol < p_g < 1-tol``) are enumerated; a region
+        with ``p_g = 0`` always has ``B_g = 0`` and one with ``p_g = 1`` always ``B_g = 1``,
+        so they need no enumeration. Hence ``Q = 2^{#active regions}`` -- e.g. an iid scene
+        (all ``p_g = 0``) is a single scenario, a one-biased-region scene is two. Raises if
+        ``Q`` exceeds ``max_scenarios`` (no silent truncation; use the dynamic MC / a reduced
+        scenario set for many simultaneously-biased regions, spec §6 boundary).
         """
         G, N = self.num_regions, self.num_nodes
-        Q = 1 << G
-        if Q > max_scenarios:
-            raise ValueError(
-                f"2^G = {Q} region scenarios exceeds max_scenarios={max_scenarios}; "
-                f"use the dynamic MC or a reduced dominant-scenario set (spec §6 boundary)"
-            )
         pg = self.p_region
         pi = self.p_node
         dtype = pi.dtype
         device = pi.device
-        # bit table [Q, G]
-        idx = torch.arange(Q, device=device)
-        bit = ((idx.unsqueeze(1) >> torch.arange(G, device=device).unsqueeze(0)) & 1).to(dtype)  # [Q,G]
-        # omega_r = prod_g pg^b (1-pg)^(1-b)
-        log_w = bit * torch.log(pg.clamp_min(1e-300)) + (1 - bit) * torch.log((1 - pg).clamp_min(1e-300))
-        omega = torch.exp(log_w.sum(dim=1))  # [Q]
-        omega = omega / omega.sum()
-        # init_correct_pref[i, r] = (1-p_i) if b_{g(i)}=0 else p_i
-        b_node = bit[:, self.region_of].transpose(0, 1)  # [N, Q]
+        active = [g for g in range(G) if tol < float(pg[g]) < 1.0 - tol]
+        Ga = len(active)
+        Q = 1 << Ga
+        if Q > max_scenarios:
+            raise ValueError(
+                f"2^{Ga} = {Q} active-region scenarios exceeds max_scenarios={max_scenarios}; "
+                f"use the dynamic MC or a reduced dominant-scenario set (spec §6 boundary)"
+            )
+        # deterministic base bits for degenerate regions
+        base_bit = (pg >= 1.0 - tol).to(dtype)                       # [G]
+        bits = base_bit.unsqueeze(0).repeat(Q, 1)                    # [Q, G]
+        if Ga > 0:
+            idx = torch.arange(Q, device=device)
+            sub = ((idx.unsqueeze(1) >> torch.arange(Ga, device=device).unsqueeze(0)) & 1).to(dtype)  # [Q,Ga]
+            active_idx = torch.tensor(active, device=device, dtype=torch.long)
+            bits[:, active_idx] = sub
+        # omega_r = prod over active regions of pg^b (1-pg)^(1-b)  (degenerate -> factor 1)
+        if Ga > 0:
+            pga = pg[active_idx]                                     # [Ga]
+            ba = bits[:, active_idx]                                 # [Q, Ga]
+            log_w = ba * torch.log(pga.clamp_min(1e-300)) + (1 - ba) * torch.log((1 - pga).clamp_min(1e-300))
+            omega = torch.exp(log_w.sum(dim=1))
+            omega = omega / omega.sum()
+        else:
+            omega = torch.ones(1, dtype=dtype, device=device)
+        b_node = bits[:, self.region_of].transpose(0, 1)            # [N, Q]
         init_cp = (1 - b_node) * (1 - pi).unsqueeze(1) + b_node * pi.unsqueeze(1)  # [N, Q]
         return omega, init_cp
 
