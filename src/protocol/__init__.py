@@ -25,6 +25,10 @@ from .binary_snowball import (
     transition_matrix,
 )
 
+# NOTE: ``exact_small_n`` is a higher-level reference (it depends on ``src.environment``)
+# and is intentionally NOT imported here to keep this low-level package import-cycle-free.
+# Import it directly: ``from src.protocol.exact_small_n import exact_joint_terminal``.
+
 __all__ = [
     "SnowballLayout",
     "apply_round",

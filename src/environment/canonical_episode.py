@@ -134,6 +134,7 @@ def run_consensus_episode(
     disable_collision: bool = False,
     disable_half_duplex: bool = False,
     disable_queueing: bool = False,
+    link_override: float | None = None,
     max_scenarios: int = 1 << 16,
 ) -> EpisodeResult:
     """Run one consensus episode through the canonical round-coupled loop (spec §7.2).
@@ -213,7 +214,8 @@ def run_consensus_episode(
         w_traj.append(w0)
 
     abl = dict(disable_interference=disable_interference, disable_collision=disable_collision,
-               disable_half_duplex=disable_half_duplex, disable_queueing=disable_queueing)
+               disable_half_duplex=disable_half_duplex, disable_queueing=disable_queueing,
+               link_override=link_override)
 
     # ---- the spec §7.2 per-round closed loop ----
     for _ in range(r_max):
@@ -259,6 +261,8 @@ def run_consensus_episode(
             "correlated_evidence": any_region_bias and Q > 1,
             "tau_proxy": False,
             "policy_uses_truth_or_vote": False,
+            "link_override": link_override,            # None on the headline path (full PHY)
+            "full_physics": link_override is None,
             "k": k, "alpha": alpha, "beta": beta, "r_max": r_max,
             "snowball_states": S,
         }

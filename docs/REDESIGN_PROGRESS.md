@@ -12,12 +12,12 @@ Branch: `effective-sampling-redesign`.
 | Gate | Scope | Status |
 |------|-------|--------|
 | G0  | canonical execution closure (single `run_consensus_episode`) | 🟡 analytic episode + mechanism trace + activation sentinels done; dynamic_mc + unused-config enforcement pending |
-| G1  | protocol semantics — true binary Snowball + single-node exact ref | 🟡 core done (per-node chain); joint exact ref pending (Phase 2) |
+| G1  | protocol semantics — true binary Snowball + single-node exact ref | 🟢 per-node chain + small-N exact JOINT chain; MC matches exact within CI |
 | G2  | correlated-evidence environment | 🟢 evidence model + correlation theory + geometry/graphs + evidence scenarios done (geometric weak-cut/hub deferred to G7) |
 | G3  | round-coupled full physics | 🟢 two graphs + round_physics + closed loop in canonical episode; all mechanisms causal-tested + activation-sentinelled |
 | G4  | CDQ k-DPP subset exactness | ☐ |
 | G5  | determinantal quorum exactness | ☐ |
-| G6  | independent dynamic MC | 🟡 forward-simulation MC done + ranking agreement validated; small-N exact joint chain + CRN pending |
+| G6  | independent dynamic MC | 🟢 forward MC + ranking agreement + exact-joint-chain agreement (MC unbiased, within CI); CRN/rare-event optional refinements |
 | G7  | effective-sampling diagnostics | ☐ |
 | G8  | protocol feasibility (perfect-link floors) | ☐ |
 | G9  | model mechanism & ablations | ☐ |
@@ -185,9 +185,27 @@ with per-finding independent verification. 5 confirmed-real findings (3 were the
   (`tau.max()` over N and T); now `tau.max(dim=0).values` → per-trial `[T]` (broadcasts in the
   mean-field mode).
 
+### D7 — G1+G6 small-N exact joint chain + three-way agreement (2026-06-24)
+* `src/protocol/exact_small_n.py::exact_joint_terminal`: exact enumeration of the true joint
+  binary-Snowball Markov chain for tiny `N` under a FIXED link `ell` (time-homogeneous;
+  per-joint-state quorum via the §5 DP with peer colours as indicators; joint transition =
+  `p[x]`-weighted Kronecker product of per-node transition rows). Exact terminal
+  `F_disagree/F_wrong/S_allcorrect`. Cost `O(R_max·S^{2N})`, capped (`N` tiny).
+* Added an **ideal/fixed-link override** (`link_override`) to `round_physics` and threaded it
+  through `run_consensus_episode` + `run_dynamic_mc` (trace records it; `full_physics=False`).
+  Isolates the protocol layer for the three-way check AND provides the spec §3.3 perfect-link
+  feasibility mode for G8. NOT the headline path (headline asserts `link_override is None`).
+* **Decisive validation**: on a tiny coupled config (N=3, k=2, ℓ=0.9) the dynamic MC's S_all
+  (0.5746, CI [0.5697,0.5794]) and F_wrong **bracket the exact** (0.5779 / 0.1022) — the MC
+  is an **unbiased estimator of the true process** (validates the judge, finishes G1+G6). The
+  analytic mean-field shows a large gap here (S_all 0.393) — expected at tiny strong coupling
+  (mean-field is exact only in the weak-coupling/large-`N` limit); direction agrees.
+* **Evidence** (`tests/protocol/test_exact_small_n.py`, 5 passing, fast): perfect+all-correct
+  = 1 exactly; probabilities valid + monotone in link; **MC brackets exact** (S_all & F_wrong);
+  analytic mean-field gap documented + direction agrees; link_override trace marks non-headline.
+
 ## Next slice
-Small-`N` exact joint chain (`src/protocol/exact_small_n.py`): enumerate the joint protocol
-state for tiny `N` (k=1, alpha=1) as an exact ground truth; three-way agreement
-exact/analytic/MC; common random numbers. Finishes G1 (joint exact ref) and hardens G6.
-Then G4/G5 CDQ k-DPP + determinantal quorum (generalize the ESP/quorum to the diversity
--aware kernel).
+G4/G5 **CDQ** (spec §9): low-rank `k`-DPP query layer (`sampling/dpp_query.py`) generalizing
+the ESP diagonal kernel + the exact determinantal heterogeneous quorum generating law
+(`sampling/determinantal_quorum.py`), validated against brute force (<1e-10) and reducing to
+the current ESP/quorum when the kernel is diagonal. This is the core model-math contribution.

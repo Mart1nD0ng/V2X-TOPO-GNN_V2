@@ -92,6 +92,7 @@ def run_dynamic_mc(
     generator: torch.Generator | None = None,
     eligible_mask: torch.Tensor | None = None,
     physics_per_trial: bool = False,
+    link_override: float | None = None,
     dtype: torch.dtype = torch.float64,
 ) -> DynamicMCResult:
     """Run the independent dynamic Monte-Carlo (spec §8). See module docstring."""
@@ -149,7 +150,8 @@ def run_dynamic_mc(
             active_phys = active.to(dtype).transpose(0, 1)            # [N, T]
         else:
             active_phys = active.to(dtype).mean(dim=0, keepdim=True).transpose(0, 1)  # [N, 1] mean active
-        phys = round_physics(gc, gi, pi, active_phys, phy_cfg, geom_comm=geom_c, geom_int=geom_i)
+        phys = round_physics(gc, gi, pi, active_phys, phy_cfg, geom_comm=geom_c, geom_int=geom_i,
+                             link_override=link_override)
         ell = phys.ell_poll                                # [E, Bphys]
         ell_slot = ell[slot_edge]                          # [N, nmax, Bphys]
         if physics_per_trial:

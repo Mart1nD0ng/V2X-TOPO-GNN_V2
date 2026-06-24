@@ -207,6 +207,7 @@ def round_physics(
     disable_collision: bool = False,
     disable_half_duplex: bool = False,
     disable_queueing: bool = False,
+    link_override: float | None = None,
 ) -> RoundPhysicsResult:
     """One round of the full physical chain (spec §7.3, steps 1-9 + tau/energy 11-12).
 
@@ -233,6 +234,28 @@ def round_physics(
         raise ValueError("graph node counts must match active's N")
     if inclusion_prob.shape[0] != graph_comm.num_edges:
         raise ValueError("inclusion_prob must have one entry per G_comm edge")
+
+    # Ideal / fixed-link mode (spec §3.3 perfect-link feasibility floor; protocol-isolation
+    # validation, G6). Bypasses the physical chain: every poll succeeds with a FIXED
+    # probability and the round takes the base request+response slots. This is NOT the
+    # headline path (constraint #7) -- the canonical episode records it in the trace and the
+    # headline asserts link_override is None.
+    if link_override is not None:
+        if not (0.0 <= float(link_override) <= 1.0):
+            raise ValueError("link_override must be a probability in [0, 1]")
+        E = graph_comm.num_edges
+        ell = active.new_full((E, Bn), float(link_override))
+        base = cfg.slot_time_s * (cfg.request_slots + cfg.response_slots)
+        tau = active.new_full((N, Bn), base)
+        e_unit = cfg.tx_power_mw * base
+        energy = active * e_unit
+        z_n = active.new_zeros((N, Bn))
+        z_e = active.new_zeros((E, Bn))
+        return RoundPhysicsResult(
+            ell_poll=ell, tau=tau, energy=energy,
+            load_request=z_n, load_response=z_n, receiver_load=z_n,
+            gamma_request=z_e, gamma_response=z_e, succ_request=ell, succ_response=ell,
+        )
 
     gc = geom_comm or edge_geometry(graph_comm, cfg)
     gi = geom_int or edge_geometry(graph_int, cfg)
