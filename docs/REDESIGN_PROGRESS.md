@@ -280,14 +280,22 @@ grad); 14 G4 tests passing.
   uses the log-domain `1-(1-w)^N` form (was naive subtraction with ~1e-7 cancellation, below
   the gate but a docstring/code mismatch). No verdict impact; viability conclusion unchanged.
 
+### D11 — CDQ wired into the canonical path (G9 infra) (2026-06-24)
+* `src/sampling/cdq_query.py`: `cdq_edge_inclusion` (per-source bucketed `kdpp_inclusion` → π,
+  Σπ=k) + `cdq_bucketed_quorum` (per-source bucketed `determinantal_quorum_decision` → h⁺,h⁻,h⁰
+  with p⁺=ℓu, p⁻=ℓv, batched over Q). Masked/padded slots excluded EXACTLY by zeroing kernel
+  rows (zero B row ⇒ no contribution, inclusion 0). `r≥k` (need not exceed degree — low-rank
+  dual handles w>r). `DiagonalCDQPolicy` reproduces an ESP policy via diagonal kernel.
+* `run_consensus_episode` now branches on `query_law` ("esp" default | "cdq"): CDQ policies emit
+  `(quality[E], diversity[E,r])` via `.kernel(graph)`; same physics+protocol; trace records
+  `query_law`. **CDQ (G4/G5) is now on the canonical headline path** (resolves constraint #13).
+* **Evidence** (`tests/sampling/test_cdq_wiring.py`, 4 passing): bucketed inclusion/quorum match
+  the single-source CDQ math (1e-10); **diagonal-CDQ episode == ESP episode bit-for-bit**
+  (S_all/F_wrong/F_disagree/c_ir, 1e-9) — the wiring anchor; real non-diagonal CDQ episode runs
+  and is differentiable in `(quality, diversity)`. 25 sampling tests passing.
+
 ## Next slices (planned order)
-1. **Wire CDQ into the canonical episode** (G9 infra; where G4/G5 finally enter the headline
-   path, resolving the constraint-#13 "wired at G9" note): a query policy that emits
-   `(quality[E], diversity[E,r])`; per-source bucketed `kdpp_inclusion` (load) +
-   `determinantal_quorum_decision` (h⁺,h⁻,h⁰). Unify with the ESP path; the diagonal kernel
-   must reproduce the current ESP episode exactly (consistency check). Add a `cdq` mode to
-   `run_consensus_episode`; trace records `query_law`.
-2. **Topology-oracle ceiling** (Phase 7, stop-condition #2): directly optimize the per-scene
+1. **Topology-oracle ceiling** (Phase 7, stop-condition #2): directly optimize the per-scene
    CDQ kernel (quality+diversity) by gradient descent on the constrained objective; if it does
    NOT significantly beat the uniform/distance/ESP heuristics (confirmed by dynamic MC), STOP +
    report (no topology lever → no point in the GNN).

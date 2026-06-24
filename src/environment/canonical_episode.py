@@ -186,11 +186,22 @@ def run_consensus_episode(
     init_cp = init_cp.to(device)
     Q = int(omega.numel())
 
-    # ---- query policy -> scenario-independent log-weights -> inclusion (consumed by physics) ----
-    log_weights = query_policy.log_weights(gc).to(device)        # [E]  (no truth/vote)
-    from src.sampling.esp_query import edge_inclusion_probabilities
-    pi = edge_inclusion_probabilities(gc.src_index, gc.dst_index, N, log_weights, k, padding=padding)
-    a_edge = log_weights.unsqueeze(-1).expand(gc.num_edges, Q)   # [E, Q] quorum query weights
+    # ---- query policy -> scenario-independent inclusion pi + quorum query law ----
+    # Two query laws share one interface (constraint #3, same policy train+deploy): the ESP
+    # product law (diagonal kernel) and the CDQ low-rank k-DPP (G4/G5). The policy declares
+    # which via ``query_law``; both feed the SAME canonical physics + protocol.
+    query_law = getattr(query_policy, "query_law", "esp")
+    if query_law == "cdq":
+        from src.sampling.cdq_query import cdq_bucketed_quorum, cdq_edge_inclusion
+        quality, diversity = query_policy.kernel(gc)             # [E], [E, r]  (no truth/vote)
+        quality = quality.to(device)
+        diversity = diversity.to(device)
+        pi = cdq_edge_inclusion(gc.src_index, gc.dst_index, N, quality, diversity, k, padding=padding)
+    else:
+        from src.sampling.esp_query import edge_inclusion_probabilities
+        log_weights = query_policy.log_weights(gc).to(device)    # [E]  (no truth/vote)
+        pi = edge_inclusion_probabilities(gc.src_index, gc.dst_index, N, log_weights, k, padding=padding)
+        a_edge = log_weights.unsqueeze(-1).expand(gc.num_edges, Q)   # [E, Q] quorum query weights
 
     if eligible_mask is None:
         eligible_mask = torch.ones(N, dtype=torch.bool, device=device)
@@ -223,7 +234,11 @@ def run_consensus_episode(
         u, v = readout_preference(p, layout)                        # [N, Q] answer when polled
         phys = round_physics(gc, gi, pi, undec, phy_cfg,
                              geom_comm=geom_c, geom_int=geom_i, **abl)
-        h_plus, h_minus, h_zero = _bucketed_quorum(padding, a_edge, phys.ell_poll, u, v, k, alpha)
+        if query_law == "cdq":
+            h_plus, h_minus, h_zero = cdq_bucketed_quorum(
+                padding, quality, diversity, phys.ell_poll, u, v, k, alpha)
+        else:
+            h_plus, h_minus, h_zero = _bucketed_quorum(padding, a_edge, phys.ell_poll, u, v, k, alpha)
         p = apply_round(p, h_plus, h_minus, h_zero, layout)
         energy = energy + phys.energy.sum(dim=0)                    # [Q]
         rd = phys.tau.max(dim=0).values                            # [Q] slowest node sets round
@@ -244,6 +259,7 @@ def run_consensus_episode(
         trace = {
             "protocol": "binary_snowball",
             "query_policy": getattr(query_policy, "name", type(query_policy).__name__),
+            "query_law": query_law,
             "mode": mode,
             "num_nodes": N,
             "num_regions": evidence.num_regions,

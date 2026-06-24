@@ -25,6 +25,7 @@ from .dpp_query import (
     kdpp_subset_log_prob,
     low_rank_kernel,
 )
+from .cdq_query import DiagonalCDQPolicy, cdq_bucketed_quorum, cdq_edge_inclusion
 from .determinantal_quorum import (
     QuorumDecisionCDQ,
     bruteforce_determinantal_quorum,
@@ -39,6 +40,9 @@ __all__ = [
     "determinantal_quorum_distribution",
     "determinantal_quorum_decision",
     "bruteforce_determinantal_quorum",
+    "cdq_edge_inclusion",
+    "cdq_bucketed_quorum",
+    "DiagonalCDQPolicy",
     "QueryPolicy",
     "UniformQueryPolicy",
     "DistanceQueryPolicy",
