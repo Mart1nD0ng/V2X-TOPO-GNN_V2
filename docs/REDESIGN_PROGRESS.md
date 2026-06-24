@@ -500,12 +500,27 @@ validation, plan §2), so the gate correctly detects the intended new structure 
 ENFORCES no cap — regex matched the function name) and a legacy figure script; constraint #4
 holds. (Note: the full `tests/` run also exceeds the 10-min tool timeout; run per-dir.)
 
-## Next slices  — direction **C** + framing **B**; **redesign G1–G12 all green** (132 tests).
-Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9 ✅; CDQ-MC ✅; G10 ✅; G11 ✅; **G12 ✅**.
-1. **G0 closure** — retire the obsolete legacy single-mainline gate + write the REDESIGN
-   canonical-path hygiene gate (no degree cap/truncation #4; single canonical evaluator #6; no
-   tau_proxy #7; policy reads no truth/vote #10; no orphaned mechanism in results #13). Migrate
-   the legacy figure script's top-k usage or quarantine it.
+### D25 — G0 closure: canonical-path hygiene gate ✅ (2026-06-24)
+* `tests/test_g0_canonical_hygiene.py` (4 passing) — the REDESIGN hygiene gate, discriminative on
+  the live ESD surface: **#4** no degree cap/truncation (token scan + behavioural dense-graph
+  out-deg==N−1); **#7** no numeric tau_proxy; **#6** comparison/training/oracle layers (headline,
+  topology_oracle, primal_dual, scaling) all reach a canonical evaluator (run_consensus_episode/
+  run_dynamic_mc); **#10** deployable policies don't read truth/votes. Sentinel `# G0-allow`.
+* **Retired** the OLD single-mainline gate (asserted `src/` has only `mainline` — superseded by the
+  spec module layout): deleted `tests/test_g10_single_mainline.py` + `scripts/gates/gate_g10.py`,
+  removed the G10 runner entry. Frozen at tag `legacy-global-fde-v1`. Verified: the redesign reuses
+  only legacy MATH PRIMITIVES (global_evaluator/FBL/symmetric_polynomials/quorum_dp/topology); the
+  legacy `model.py` (evaluate_controls/tau_proxy) is imported by NO redesign module.
+
+## Status — direction **C** + framing **B**; **ESD redesign G0–G12 ALL GREEN.**
+Viability (#1 G8, #2 oracle) ✅; G1–G7 ✅; G9 ✅; CDQ-MC ✅; G10 ✅; G11 ✅; G12 ✅; **G0 ✅**. 136 tests.
+Remaining (non-gating finalization):
+1. **Honest final report** under framing B — supersede/annotate `FINAL_REPORT_CN.md` with the ESD
+   results: exact CDQ math (generalizes ESP) + region-aware ESD-GNN(ESP) headline (beats heuristics,
+   scale + link-noise + temporal-drift robust) + the rigorous CDQ-no-benefit negative result.
+2. **(offline)** publication-grade G11: ≥5 seeds, ≥30 scenes, full physics, high trials.
+3. **(optional)** quarantine legacy figure scripts that carry an independent evaluator
+   (`baseline_comparison.py` etc.) so they cannot be mistaken for the redesign canonical path.
 2. **Finalize**: honest final report reflecting framing B (supersede/annotate `FINAL_REPORT_CN.md`);
    legacy cleanup (delete `src/mainline/model.py::evaluate_controls` tau_proxy/Q=1, migrate figures).
 3. **(offline)** publication-grade G11: ≥5 seeds, ≥30 scenes, full physics, high trials.
