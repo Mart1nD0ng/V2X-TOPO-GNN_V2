@@ -437,10 +437,27 @@ uniform 0.106, distance 0.232, **esd_gnn_cdq 0.054, esd_gnn_esp 0.017**.
   region-aware ESD-GNN + the negative diversity finding) vs **A pursue** (finer-than-region
   correlation §6.3 to give CDQ a lever). Asking the user.
 
-## Next slices (planned order)  — direction **C**; G10 ✅; G11 superiority-over-baselines ✅ (verdict above).
+### D21 — framing decision: **B (reframe honestly + finish)** (2026-06-24)
+User chose **B**. The project's contribution is reframed (honestly, on the verified results):
+1. **Exact determinantal heterogeneous quorum / CDQ math (G4/G5)** — a correlation-aware
+   generalization of independent ESP sampling (ESP = the diagonal special case), exact to machine
+   precision, near-linear cost. A theoretical contribution.
+2. **Region-aware multi-graph ESD-GNN (G9)** — the deployable headline policy, **in ESP mode**:
+   significantly beats heuristics (−0.088 F_wrong vs uniform) and transfers train-small/deploy
+   -large. The empirical systems contribution.
+3. **Rigorous negative result** — determinantal diversity gives NO reliability advantage over
+   region-aware ESP in the region-block V2X regime, with the structural explanation (D18: analytic
+   correlation-blindness; near-exchangeable region-block correlation; ESP can select any best
+   subset). Honest, explanatory, publishable.
+**Canonical deployable policy = ESD-GNN with `use_cdq=False`.** CDQ stays as the exact-math layer,
+NOT claimed as empirically superior. Finer-correlation pursuit (option A) parked as future work.
+
+## Next slices (planned order)  — direction **C** + framing **B**; G10 ✅; G11-vs-baselines ✅.
 Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9a+G9b ✅; CDQ-MC ✅; G9c infra ✅; G10 ✅.
-* **G11 full rigor** (after framing decision): ≥5 model seeds, ≥30 scene seeds, FULL physics
-  (link_override=None), CVaR tail-latency + energy headline metrics, multiple-comparison.
+1. **G11 full rigor** (ESP headline): extend the MC to return per-trial latency + energy ⇒ CVaR_q
+   tail-latency + mean energy headline metrics; then ≥5 model seeds, ≥30 scene seeds, **FULL
+   physics (`link_override=None`)**, paired CRN + multiple-comparison. Confirms ESD-GNN(ESP) ≫
+   baselines under the real physical chain + the reliability constraint.
 1. **Framing decision (A/B)** then **G11 full rigor** (≥5 seeds, ≥30 scenes, full physics, CVaR
    latency + energy). 2. **G12** temporal robustness. Legacy cleanup: delete
    `src/mainline/model.py::evaluate_controls`.
