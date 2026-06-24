@@ -488,10 +488,24 @@ NOT claimed as empirically superior. Finer-correlation pursuit (option A) parked
   generalization with NO hidden state). The contractive temporal-MEMORY model (§9.7) is a deferred
   extension, unneeded for robustness here (plan §15: add only if it earns a benefit).
 
-## Next slices  — direction **C** + framing **B**; **G1–G12 all green** (static mainline complete).
+### D24 — full-suite audit: redesign all-green; obsolete legacy gate isolated (2026-06-24)
+Ran the full `tests/` tree. **All 132 redesign tests pass** (107 in tests/{environment,models,
+optimization,protocol,sampling} + 25 in tests/validation; verified per-dir). **4 failures, all in
+`tests/test_g10_single_mainline.py`** — the OLD project's single-mainline hygiene gate
+(`scripts/gates/gate_g10.py`) asserting `src/` contains ONLY `mainline`. The redesign deliberately
+added the spec's module architecture (environment/models/optimization/protocol/sampling/
+validation, plan §2), so the gate correctly detects the intended new structure and fails.
+**Benign — confirmed NO real violation:** the gate's "degree cap" flag points at
+`tests/environment/test_physical_graphs.py:50` = `test_no_degree_cap_dense_cluster` (a test that
+ENFORCES no cap — regex matched the function name) and a legacy figure script; constraint #4
+holds. (Note: the full `tests/` run also exceeds the 10-min tool timeout; run per-dir.)
+
+## Next slices  — direction **C** + framing **B**; **redesign G1–G12 all green** (132 tests).
 Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9 ✅; CDQ-MC ✅; G10 ✅; G11 ✅; **G12 ✅**.
-1. **G0 closure** — unused-config enforcement (every config field used on the canonical path,
-   constraint #13); confirm no orphaned mechanism leaks into results/docs.
+1. **G0 closure** — retire the obsolete legacy single-mainline gate + write the REDESIGN
+   canonical-path hygiene gate (no degree cap/truncation #4; single canonical evaluator #6; no
+   tau_proxy #7; policy reads no truth/vote #10; no orphaned mechanism in results #13). Migrate
+   the legacy figure script's top-k usage or quarantine it.
 2. **Finalize**: honest final report reflecting framing B (supersede/annotate `FINAL_REPORT_CN.md`);
    legacy cleanup (delete `src/mainline/model.py::evaluate_controls` tau_proxy/Q=1, migrate figures).
 3. **(offline)** publication-grade G11: ≥5 seeds, ≥30 scenes, full physics, high trials.
