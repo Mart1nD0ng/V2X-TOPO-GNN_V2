@@ -16,7 +16,7 @@ Branch: `effective-sampling-redesign`.
 | G2  | correlated-evidence environment | 🟢 evidence model + correlation theory + geometry/graphs + evidence scenarios done (geometric weak-cut/hub deferred to G7) |
 | G3  | round-coupled full physics | 🟢 two graphs + round_physics + closed loop in canonical episode; all mechanisms causal-tested + activation-sentinelled |
 | G4  | CDQ k-DPP subset exactness | 🟢 normalizer/subset/inclusion/sampler exact vs brute force; diagonal recovers ESP; differentiable (math layer; wired into canonical path at G9) |
-| G5  | determinantal quorum exactness | ☐ |
+| G5  | determinantal quorum exactness | 🟢 P_i(m,n) via det(I+zLD_g) grid-interpolation; exact vs brute force + recovers quorum_dp (diagonal), grad rel-err<1e-4; (wired at G9) |
 | G6  | independent dynamic MC | 🟢 forward MC + ranking agreement + exact-joint-chain agreement (MC unbiased, within CI); CRN/rare-event optional refinements |
 | G7  | effective-sampling diagnostics | ☐ |
 | G8  | protocol feasibility (perfect-link floors) | ☐ |
@@ -234,8 +234,28 @@ quality, still recovers ESP); (5) `k=0` inclusion short-circuits to zeros. 5 reg
 added (no_grad, k>min(d,r), k=0, large-quality stability+ESP recovery, zero-quality finite
 grad); 14 G4 tests passing.
 
+### D9 — G5 CDQ determinantal heterogeneous quorum law (2026-06-24)
+* `src/sampling/determinantal_quorum.py`: exact `P_i(m,n) = [zᵏxᵐyⁿ] det(I+z L D_g)/e_k(λ(L))`
+  (spec §9.5). Low-rank: `[z^k]det(I_r+zM(x,y)) = e_k(λ(M(x,y)))`, `M=BᵀD_g B = C0+C+x+C-y`
+  (r×r linear in x,y). Computed EXACTLY (no sampling) by evaluating that bivariate degree-≤k
+  polynomial on a (k+1)² grid — each point is the G4 principal-minor normalizer of a numeric
+  r×r matrix — and recovering coefficients via the inverse Vandermonde (2-D poly interpolation).
+  `determinantal_quorum_decision` → `(h⁺,h⁻,h⁰)`; `bruteforce_determinantal_quorum` reference.
+* **Diagonal kernel recovers `quorum_dp` exactly** (the §5 elementary-symmetric quorum) — CDQ
+  generalizes both the ESP query (G4) and its quorum (G5).
+* **Evidence** (`tests/sampling/test_determinantal_quorum.py`, 7 passing): P(m,n) & (h⁺,h⁻,h⁰)
+  vs brute-force subset×ternary enumeration (<1e-10, dual-referenced); diagonal→quorum_dp
+  (1e-10); unreachable `m+n>k` support ~0; gradient rel-err <1e-4 vs central differences;
+  batched+differentiable; strict majority enforced. Vandermonde conditioning verified to k=6
+  (maxerr 1.1e-12). Exactness boundary: exact for degree-≤k (only float64 Vandermonde
+  conditioning, <1e-12 measured); not a sampled/straight-through surrogate.
+* CDQ math layer complete (G4+G5); wired into the canonical query/quorum path at G9 when the
+  ESD-GNN emits `(q, b)`. 21 sampling tests passing.
+
 ## Next slice
-G5 **determinantal heterogeneous quorum law** (`sampling/determinantal_quorum.py`, spec §9.5):
-`P_i(m,n) = [zᵏxᵐyⁿ] det(I + z L D_g) / e_k(λ(L))` via `[z^k]det = Σ_{|T|=k} det((BᵀD_g B)_T(x,y))`
-(k×k principal minors of an r×r polynomial-in-(x,y) matrix). Validate vs brute subset×ternary
-enumeration (<1e-10), gradient rel-err <1e-4, diagonal recovers `quorum_dp`. Core of G5.
+G7 **effective-sampling diagnostics** (spec §5): response-conditioned `π̃`, progress `g_i`,
+drift `Δ_i`, ESS `k_eff`, region mixing/conductance, receiver load — as differentiable
+diagnostics on the canonical path, with hand-scenario direction tests (symmetric loss→progress
+down; opinion-correlated loss→drift; weak cut→mixing down; hub→load up; redundant peers→ESS
+down). OR G8 perfect-link feasibility scan (uses `link_override`) to calibrate `(k,α,β,R_max,T_d)`.
+G7 is the smaller, self-contained next slice.

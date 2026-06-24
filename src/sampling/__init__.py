@@ -25,10 +25,20 @@ from .dpp_query import (
     kdpp_subset_log_prob,
     low_rank_kernel,
 )
+from .determinantal_quorum import (
+    QuorumDecisionCDQ,
+    bruteforce_determinantal_quorum,
+    determinantal_quorum_decision,
+    determinantal_quorum_distribution,
+)
 from .esp_query import edge_inclusion_probabilities
 
 __all__ = [
     "edge_inclusion_probabilities",
+    "QuorumDecisionCDQ",
+    "determinantal_quorum_distribution",
+    "determinantal_quorum_decision",
+    "bruteforce_determinantal_quorum",
     "QueryPolicy",
     "UniformQueryPolicy",
     "DistanceQueryPolicy",
