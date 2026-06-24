@@ -280,11 +280,19 @@ grad); 14 G4 tests passing.
   uses the log-domain `1-(1-w)^N` form (was naive subtraction with ~1e-7 cancellation, below
   the gate but a docstring/code mismatch). No verdict impact; viability conclusion unchanged.
 
-## Next slice
-G9 **ESD-GNN** (spec §9, plan Phase 9) — the model that WIRES CDQ into the canonical path:
-multi-graph encoder (G_comm/G_int/G_corr/G_region) → quality `q` + diversity `b` heads → CDQ
-k-DPP query (G4) + determinantal quorum (G5) inside `run_consensus_episode`; topology-only
-headline (fixed PHY). Big slice. Precede with G7 effective-sampling diagnostics (spec §5,
-smaller, feeds G9 aux losses) OR the Phase-7 topology-oracle check (stop-condition #2: confirm
-a direct per-scene topology optimizer beats heuristics before investing in the GNN).
-Recommended order: topology-oracle ceiling (viability) → G7 diagnostics → G9 ESD-GNN.
+## Next slices (planned order)
+1. **Wire CDQ into the canonical episode** (G9 infra; where G4/G5 finally enter the headline
+   path, resolving the constraint-#13 "wired at G9" note): a query policy that emits
+   `(quality[E], diversity[E,r])`; per-source bucketed `kdpp_inclusion` (load) +
+   `determinantal_quorum_decision` (h⁺,h⁻,h⁰). Unify with the ESP path; the diagonal kernel
+   must reproduce the current ESP episode exactly (consistency check). Add a `cdq` mode to
+   `run_consensus_episode`; trace records `query_law`.
+2. **Topology-oracle ceiling** (Phase 7, stop-condition #2): directly optimize the per-scene
+   CDQ kernel (quality+diversity) by gradient descent on the constrained objective; if it does
+   NOT significantly beat the uniform/distance/ESP heuristics (confirmed by dynamic MC), STOP +
+   report (no topology lever → no point in the GNN).
+3. **G7 effective-sampling diagnostics** (spec §5: response-conditioned `π̃`, progress/drift,
+   ESS, mixing, load — hand-scenario direction tests; feeds G9 aux losses).
+4. **G9 ESD-GNN**: multi-graph encoder → `(q,b)` heads → CDQ; primal-dual constrained training;
+   then G10/G11 large-scale, G12 temporal.
+Deferred legacy cleanup: delete `src/mainline/model.py::evaluate_controls` (tau_proxy/Q=1).
