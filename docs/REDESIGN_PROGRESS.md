@@ -473,12 +473,27 @@ NOT claimed as empirically superior. Finer-correlation pursuit (option A) parked
   under full physics. Confirms the D18/D21 framing **B**. **G11 ✅ at dev rigor**; publication-grade
   seed/scene counts parameterized.
 
-## Next slices (planned order)  — direction **C** + framing **B**; G10 ✅; **G11 ✅** (dev rigor).
-Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9a/b ✅; CDQ-MC ✅; G9c ✅; G10 ✅; G11 ✅.
-1. **G12 temporal robustness** — evaluate the trained ESD-GNN(ESP) under temporal scene drift
-   (vehicle mobility between rounds / across episodes); confirm reliability holds.
-2. **Finalize**: honest report reflecting framing B; **G0 closure** (unused-config enforcement);
-   legacy cleanup (delete `src/mainline/model.py::evaluate_controls`, migrate any figure scripts).
+### D23 — G12 temporal robustness ✅ (2026-06-24)
+* `src/environment/mobility.py::drift_scene` — vehicles drive ALONG their segments (region
+  -preserving topology churn; optional `churn_frac` relocates a fraction = hand-offs/weak-cut).
+  Rebuilds positions only; regions/endpoints/radii unchanged ⇒ evidence model stays valid; O(N).
+* **Evidence** (`tests/environment/test_mobility.py`, 3 passing): drift preserves regions, keeps
+  vehicles on-segment (perp dist < lane jitter), genuinely churns the candidate graph, and is
+  reproducible; the MEMORYLESS trained ESD-GNN(ESP) re-adapts to a never-seen drifted topology —
+  beats uniform on it and stays reliable.
+* **Drift sweep** (MC, trained ESP-GNN vs uniform, ideal link): GNN(ESP) F_wrong stays **flat
+  ~0.004** across drift {0, 0.15, 0.30+10%churn, 0.50+20%churn} while uniform degrades to 0.16 at
+  heavy drift — the gap WIDENS (38× better at heavy churn). The static region-aware policy is
+  temporally robust because it recomputes observable features per topology (temporal
+  generalization with NO hidden state). The contractive temporal-MEMORY model (§9.7) is a deferred
+  extension, unneeded for robustness here (plan §15: add only if it earns a benefit).
+
+## Next slices  — direction **C** + framing **B**; **G1–G12 all green** (static mainline complete).
+Viability gates passed (#1 G8, #2 oracle); G7 ✅; G9 ✅; CDQ-MC ✅; G10 ✅; G11 ✅; **G12 ✅**.
+1. **G0 closure** — unused-config enforcement (every config field used on the canonical path,
+   constraint #13); confirm no orphaned mechanism leaks into results/docs.
+2. **Finalize**: honest final report reflecting framing B (supersede/annotate `FINAL_REPORT_CN.md`);
+   legacy cleanup (delete `src/mainline/model.py::evaluate_controls` tau_proxy/Q=1, migrate figures).
 3. **(offline)** publication-grade G11: ≥5 seeds, ≥30 scenes, full physics, high trials.
 1. **Framing decision (A/B)** then **G11 full rigor** (≥5 seeds, ≥30 scenes, full physics, CVaR
    latency + energy). 2. **G12** temporal robustness. Legacy cleanup: delete

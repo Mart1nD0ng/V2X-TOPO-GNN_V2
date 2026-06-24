@@ -30,6 +30,7 @@ from .interference_graph import (
     received_interference_mw,
 )
 from .canonical_episode import EpisodeResult, ProtocolConfig, run_consensus_episode
+from .mobility import drift_scene
 from .round_physics import RoundPhysicsConfig, RoundPhysicsResult, edge_geometry, round_physics
 from .scenarios import EVIDENCE_SCENARIOS, GEOMETRIC_SCENARIOS, build_scenario
 from .urban_scene import ManhattanScene, build_manhattan_scene
@@ -58,4 +59,5 @@ __all__ = [
     "received_interference_mw",
     "ManhattanScene",
     "build_manhattan_scene",
+    "drift_scene",
 ]
