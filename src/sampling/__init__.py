@@ -14,6 +14,17 @@ from .baseline_policies import (
     QueryPolicy,
     UniformQueryPolicy,
 )
+from .dpp_query import (
+    diagonal_diversity,
+    enumerate_kdpp_distribution,
+    kdpp_elementary_symmetric,
+    kdpp_inclusion,
+    kdpp_log_normalizer,
+    kdpp_normalizer,
+    kdpp_sample,
+    kdpp_subset_log_prob,
+    low_rank_kernel,
+)
 from .esp_query import edge_inclusion_probabilities
 
 __all__ = [
@@ -21,4 +32,13 @@ __all__ = [
     "QueryPolicy",
     "UniformQueryPolicy",
     "DistanceQueryPolicy",
+    "low_rank_kernel",
+    "kdpp_elementary_symmetric",
+    "kdpp_normalizer",
+    "kdpp_log_normalizer",
+    "kdpp_inclusion",
+    "kdpp_subset_log_prob",
+    "enumerate_kdpp_distribution",
+    "kdpp_sample",
+    "diagonal_diversity",
 ]

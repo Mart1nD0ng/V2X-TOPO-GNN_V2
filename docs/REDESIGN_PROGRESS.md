@@ -15,7 +15,7 @@ Branch: `effective-sampling-redesign`.
 | G1  | protocol semantics — true binary Snowball + single-node exact ref | 🟢 per-node chain + small-N exact JOINT chain; MC matches exact within CI |
 | G2  | correlated-evidence environment | 🟢 evidence model + correlation theory + geometry/graphs + evidence scenarios done (geometric weak-cut/hub deferred to G7) |
 | G3  | round-coupled full physics | 🟢 two graphs + round_physics + closed loop in canonical episode; all mechanisms causal-tested + activation-sentinelled |
-| G4  | CDQ k-DPP subset exactness | ☐ |
+| G4  | CDQ k-DPP subset exactness | 🟢 normalizer/subset/inclusion/sampler exact vs brute force; diagonal recovers ESP; differentiable (math layer; wired into canonical path at G9) |
 | G5  | determinantal quorum exactness | ☐ |
 | G6  | independent dynamic MC | 🟢 forward MC + ranking agreement + exact-joint-chain agreement (MC unbiased, within CI); CRN/rare-event optional refinements |
 | G7  | effective-sampling diagnostics | ☐ |
@@ -204,8 +204,26 @@ with per-finding independent verification. 5 confirmed-real findings (3 were the
   = 1 exactly; probabilities valid + monotone in link; **MC brackets exact** (S_all & F_wrong);
   analytic mean-field gap documented + direction agrees; link_override trace marks non-headline.
 
+### D8 — G4 CDQ low-rank k-DPP query layer (2026-06-24)
+* `src/sampling/dpp_query.py`: kernel `L=BBᵀ`, `B[j]=√(qⱼ)bⱼ` (spec §9.4).
+  - `kdpp_normalizer` = `e_k(λ(L))` via the exact identity `Σ_{|T|=k} det(M_T)` (principal
+    minors of `M=BᵀB`, r×r) — float64-exact, differentiable, `O(C(r,k)·k³)`.
+  - `kdpp_inclusion` = `π_j = q_j·∂log e_k/∂q_j` (autograd; each principal minor is degree-1
+    homogeneous in `qⱼ` for `j∈S`), `Σπ=k`. Single backward → all marginals.
+  - `kdpp_subset_log_prob`, `enumerate_kdpp_distribution` (brute), `kdpp_sample`
+    (Kulesza–Taskar exact sampler via the r×r dual eigendecomposition).
+* **Diagonal kernel exactly recovers the §4 ESP product policy** (normalizer = elementary
+  symmetric, inclusion = ESP inclusion, subset = ∏q/e_k) — CDQ is a strict generalization.
+* **Evidence** (`tests/sampling/test_dpp_query.py`, 9 passing): normalizer/subset/inclusion
+  vs brute force (<1e-10, measured ~1e-16); `Σπ=k`; diagonal→ESP (1e-10); diversity suppresses
+  similar-peer co-selection (the mechanism ESP can't express); exact sampler matches
+  distribution (40k samples, <0.02); differentiable in quality+diversity; `k≤r` enforced.
+* Found a float32 test bug (`torch.tensor(pyfloat)` defaults float32) — fixed; impl is exact.
+* **Note (constraint #13):** CDQ is the math layer; it is wired into the canonical query path
+  when the ESD-GNN emits `(q, b)` at G9. Until then the canonical query remains the ESP policy.
+
 ## Next slice
-G4/G5 **CDQ** (spec §9): low-rank `k`-DPP query layer (`sampling/dpp_query.py`) generalizing
-the ESP diagonal kernel + the exact determinantal heterogeneous quorum generating law
-(`sampling/determinantal_quorum.py`), validated against brute force (<1e-10) and reducing to
-the current ESP/quorum when the kernel is diagonal. This is the core model-math contribution.
+G5 **determinantal heterogeneous quorum law** (`sampling/determinantal_quorum.py`, spec §9.5):
+`P_i(m,n) = [zᵏxᵐyⁿ] det(I + z L D_g) / e_k(λ(L))` via `[z^k]det = Σ_{|T|=k} det((BᵀD_g B)_T(x,y))`
+(k×k principal minors of an r×r polynomial-in-(x,y) matrix). Validate vs brute subset×ternary
+enumeration (<1e-10), gradient rel-err <1e-4, diagonal recovers `quorum_dp`. Core of G5.
