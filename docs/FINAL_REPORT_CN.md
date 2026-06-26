@@ -1,3 +1,7 @@
+> ⚠️ **已被取代（历史文档）。** 本报告记录旧的 11-gate global-FDE 主线（依据已废弃的
+> `GLOBAL_CONSENSUS_MATH_REDESIGN.md`），冻结于 tag `legacy-global-fde-v1`。当前主线是
+> Effective-Sampling-Dynamics 重构，见 [`ESD_FINAL_REPORT_CN.md`](ESD_FINAL_REPORT_CN.md)。
+
 # 最终报告 — V2X-TOPO-GNN 数学重构（全部 11 个 gate 已绿）
 
 > 生成于 2026-06-22，gate 驱动重构完成时（规范 §8）。
