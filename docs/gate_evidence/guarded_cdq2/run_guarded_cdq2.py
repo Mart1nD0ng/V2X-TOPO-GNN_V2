@@ -53,11 +53,15 @@ GRID = (5, 5, 3)
 ETA_RAW = 8.0
 R_D = 14
 SEEDS = [0] if SMOKE else [0, 1, 2]
-TRIALS = 40 if SMOKE else 150
-# (regime label, base_node_err, corr_strength) -- feasible: slack+pressure; safety_critical: no slack.
-# matched_marginal_high requires corr_strength <= base_node_err.
-REGIMES = [("feasible", 0.25, 0.20), ("safety_critical", 0.42, 0.30)]
-TARGETS = {"strict_eps_1e-3": 1e-3, "moderate_eps_5e-2": 0.05}
+TRIALS = 40 if SMOKE else 100
+# (regime label, base_node_err, corr_strength) -- CALIBRATED operating points (run_guard_calibration):
+# enable = moderate covariance + low error + stressed deadline (reliability slack AND an eta deadline
+# lever); safety_critical = high covariance/error (no slack; fixed-eta RAISES F_wrong). corr <= err.
+REGIMES = [("enable", 0.20, 0.10), ("safety_critical", 0.30, 0.25)]
+# SERVICE-TARGET sweep (NOT a pass-knob): the default eps=1e-3 is unachievable in these correlated-error
+# regimes -> the guard correctly defaults to ESP everywhere; looser targets show the guard ENABLE eta
+# only where ESP has slack, capturing the deadline gain while keeping F_wrong UCB <= eps.
+TARGETS = {"strict_eps_1e-3": 1e-3, "eps_0.05": 0.05, "eps_0.10": 0.10}
 
 
 def log(m):
@@ -140,21 +144,26 @@ def main():
                       "esp_Fw_UCB": esp_fw_ucb, "cdq2_Fw_UCB": cdq2_fw_ucb, "deadline_pressure": p_d,
                       "targets": {}}
 
+        # MC cache keyed by rounded eta so repeated guard arms across service targets reuse runs.
+        mc_cache = {0.0: esp, ETA_RAW: cdq2}
+
+        def arm(eta_eff):
+            if eta_eff <= 1e-9:
+                return esp, "ESP(disabled)"
+            if abs(eta_eff - ETA_RAW) < 1e-9:
+                return cdq2, f"CDQ2(eta={ETA_RAW})"
+            key = round(eta_eff, 2)
+            if key not in mc_cache:
+                mc_cache[key] = _run(scene_evs, lambda sc, ev: CDQ2Policy(
+                    DistanceQueryPolicy(beta_per_m=0.04), r=div_r[scene_evs[0][2]][1], eta=eta_eff,
+                    diversity=div_r_lookup(div_r, scene_evs, sc)), prof_ref, proto)
+            return mc_cache[key], f"CDQ2(eta={eta_eff:.2f})"
+
         for tname, eps in TARGETS.items():
             cfg = GuardConfig.from_profile(_profile(eps), delta_frac=0.2, delta_d=0.05, T_d=0.02)
             eta_hard = hard_guard_eta(ETA_RAW, Fw_ucb=esp_fw_ucb, Fs_ucb=esp_fs_ucb, cfg=cfg)
             eta_soft = soft_guard_eta(ETA_RAW, Fw_ucb=esp_fw_ucb, Fs_ucb=esp_fs_ucb, p_d=p_d, cfg=cfg)
             eta_oracle = hard_guard_eta(ETA_RAW, Fw_ucb=cdq2_fw_ucb, Fs_ucb=cdq2_fs_ucb, cfg=cfg)
-
-            def arm(eta_eff):
-                if eta_eff <= 1e-9:
-                    return esp, "ESP(disabled)"
-                if abs(eta_eff - ETA_RAW) < 1e-9:
-                    return cdq2, f"CDQ2(eta={ETA_RAW})"
-                m = _run(scene_evs, lambda sc, ev: CDQ2Policy(DistanceQueryPolicy(beta_per_m=0.04),
-                         r=div_r[scene_evs[0][2]][1], eta=eta_eff,
-                         diversity=div_r_lookup(div_r, scene_evs, sc)), prof_ref, proto)
-                return m, f"CDQ2(eta={eta_eff:.2f})"
 
             hard_m, hard_lbl = arm(eta_hard)
             soft_m, soft_lbl = arm(eta_soft)
