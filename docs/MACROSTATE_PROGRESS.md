@@ -60,7 +60,7 @@ are HARD constraints; `macro_F_deadline`/tail-latency/energy are optimization ta
 | G-ESP-PERFORMANCE-SCALE | trained ESP/ESD-GNN checkpoints, **real macrostate-basin outcomes** (not runtime) across N=100…10000; fixed-protocol vs fixed-service-profile; scale-regret + feasibility-retention; ≥5 model seeds, dynamic-MC judged, UCB for rare failure | 🟢 GS3: 5-seed shared checkpoint transfers (Pc≈0.95 N=120/336/660, reliability-safe); regret −0.007 vs expert; fixed-proto Fd→1@N=1248 **recovered** by service-profile R_d∝√N (Pc=1.0); N≥9840 documented approx; 14 tests |
 | G-ETA-RISK-LIVENESS | η∈{0,.25,.5,1,2,4,8,16} sweep over ≥4 env families (iid/mm-low/mm-high/overlapping/split) × {fixed-link, full-physics}; identify how mass moves (deadline→correct / deadline→wrong / split→correct / none); CIs | 🟢 GS4: trade-off governed by **deadline regime** — η moves mass **deadline→correct** in feasible-deadline window (R_d=14 mm_high: Fd 0.100→0.065@η=8) but **deadline-up** when too-tight (R_d=6); iid flat; mechanism = diversity picks distant/weak-link peers. 6 tests |
 | G-GUARDED-CDQ2 | `src/policies/guarded_cdq2.py` hard + soft differentiable guard `η=G(m_w,m_s,p_d)·η_raw`; arms ESP/fixed/learned/hard/soft/oracle; must satisfy wrong/split UCB AND improve deadline/tail in covariance-stressed scenes AND fall back to ESP in safety-critical; guard-activation stats | 🟢 GS5: guard **enables** η=8 in the feasible regime (deadline +0.020, stays feasible @ε=0.10) and **disables→ESP** in safety-critical/strict-ε (where fixed-η is infeasible / raises F_wrong); never violates the budget. Honest: small gain, narrow regime; primary value = safety. 7 tests |
-| G-HAZARD-PROFILES | `src/config/hazard_profile.py` + `src/evaluation/hazard_utility.py`; hazard-weighted `B_CDQ` net benefit; ≥5 profiles (safety-first/balanced/deadline-critical/fail-safe/energy); policy selection changes rationally with cost ratios under the feasibility gate | 🟡 GS6: `hazard_profile.py` (5 profiles) + `hazard_utility.py` (feasibility-gated B + selection); 10 tests green; **selection run executing** (per-profile ESP/CDQ2/Guarded over the GS5 regimes) |
+| G-HAZARD-PROFILES | `src/config/hazard_profile.py` + `src/evaluation/hazard_utility.py`; hazard-weighted `B_CDQ` net benefit; ≥5 profiles (safety-first/balanced/deadline-critical/fail-safe/energy); policy selection changes rationally with cost ratios under the feasibility gate | 🟢 GS6: **all 5 acceptance flags pass** — safety/fail-safe→ESP, balanced/deadline-critical→Guarded-CDQ2, energy→ESP (CDQ2 costs more energy), safety-critical→all-ESP (feasibility gate). Honest: small deadline gain; routing driven by the gate + costs. 10 tests |
 | G-FINAL-SYNTHESIS | unified report (ESP scale + η-curve + guarded + hazard) deciding when ESP vs CDQ2 vs Guarded-CDQ2; figures read results only (constraint #13); no ambiguous names; all reproducible via manifest hashes | ☐ |
 
 **Adopted defaults (Guarded-CDQ2 round; override-flagged per stop-condition #4/#5):** guard margins
@@ -878,3 +878,31 @@ hashing (train==eval enforcement) and the macrostate-objective rewrite (Phase 5)
   hazard-weighted net benefit `B_CDQ` over ≥5 profiles (safety-first / balanced / deadline-critical /
   fail-safe / energy); show policy selection (ESP vs CDQ2 vs Guarded-CDQ2) changes rationally with the cost
   ratios under the feasibility gate. Reuses the enable/safety-critical macro outcomes already measured.
+
+### GM6 — Slice GS6: hazard-weighted service profiles (G-HAZARD-PROFILES 🟢) (2026-06-27)
+* `src/config/hazard_profile.py` (5 `STANDARD_PROFILES` with cost weights `c_w/c_s/c_d/c_T/c_E` + a
+  per-profile reliability budget `ε`) + `src/evaluation/hazard_utility.py` (`hazard_benefit`,
+  `is_eligible`, `select_policy`) + `run_hazard_profiles.py`. 10 tests. The net benefit
+  `B = c_d·ΔF_d + c_T·(ΔD_q/D_q^ESP) + c_E·(ΔE/E^ESP) − c_w·[ΔF_w]_+ − c_s·[ΔF_s]_+` (ESP baseline 0);
+  a policy is eligible only if its wrong/split UCB are within the profile's ε (the hard feasibility gate).
+* **Rational selection matrix (dynamic-MC judged, full physics, all 5 acceptance flags pass):**
+  - **safety_first / fail_safe_available → ESP** (strict ε=1e-3 ⇒ guard off / low `c_d`).
+  - **balanced → Guarded-CDQ2** (B=+0.165) and **deadline_critical → Guarded-CDQ2** (B=+1.749) — the guard
+    enables at the looser ε (0.08 / 0.10) and the deadline/tail benefit (no wrong increase in this
+    low-error regime) gives a positive net benefit.
+  - **energy_constrained → ESP** — the guard *would* enable, but CDQ2 uses **more energy** (846→856 @N=336,
+    distant peers) so its B<0 ⇒ ESP. ("Guarded-CDQ2 only if energy improves" — it doesn't.)
+  - **safety_critical regime (err=0.30, corr=0.25): ALL profiles → ESP** — ESP's own `F_wrong` UCB (0.176)
+    exceeds every ε, so CDQ2 is ineligible everywhere; the feasibility gate forces ESP.
+* **Two issues found + fixed honestly (not papered over):** (1) the first MC run had an **absolute-energy
+  scale bug** (joules ~300 swamping probability-scale basins) → `hazard_benefit` now **normalises** tail and
+  energy to fractional changes; (2) the N=120 enable regime had **low deadline pressure** (small/noisy gain)
+  → re-ran at **N=336**. **Honest caveat:** even at N=336 the deadline gain is small (`macro_F_deadline`
+  0.003→0.000) — consistent with the round's finding that CDQ2's liveness benefit is small/conditional. The
+  rational routing is driven by the **feasibility gate + the cost-weight ordering + the real energy cost of
+  diversity**, NOT by a large liveness gain. ε is a per-profile **service target**, never lowered to pass.
+* **Stop-condition #4 (hazard utility unstable) NOT met:** the only instability was a unit-scale bug (fixed);
+  the utility is deterministic and monotone in the cost ratios. Manifest slice `GS6`.
+* **Next: G-FINAL-SYNTHESIS** — the unified report (ESP scale + η-curve + Guarded-CDQ2 + hazard profiles)
+  deciding when to use ESP / CDQ2 / Guarded-CDQ2; figures read results only (constraint #13); no ambiguous
+  names; all reproducible via manifest hashes. The LAST gate of the round.

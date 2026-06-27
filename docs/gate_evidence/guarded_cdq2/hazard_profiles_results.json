@@ -1,0 +1,329 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment": "hazard_profiles",
+  "smoke": false,
+  "git_commit": "fb99a98",
+  "eta": 8.0,
+  "R_d": 14,
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "trials": 100,
+  "note": "policy selection per hazard-weighted service profile via the feasibility-gated net benefit B (spec \u00a75.2). ESP is the default; Guarded-CDQ2's outcome per profile is the guard's decision at that profile's eps. Dynamic-MC judged, full physics.",
+  "regimes": {
+    "enable": {
+      "base_node_err": 0.2,
+      "ESP": {
+        "macro_P_correct": 0.9866666666666667,
+        "macro_F_wrong": 0.01,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.0033333333333333335,
+        "macro_P_correct_ci": [
+          0.9662239391535501,
+          0.9948031223153204
+        ],
+        "macro_F_wrong_ci": [
+          0.003406556762718113,
+          0.028984004635062833
+        ],
+        "macro_F_split_ci": [
+          0.0,
+          0.012643429997735661
+        ],
+        "macro_F_deadline_ci": [
+          0.0005886425761407378,
+          0.018637164554943353
+        ]
+      },
+      "CDQ2": {
+        "macro_P_correct": 0.99,
+        "macro_F_wrong": 0.01,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.0,
+        "macro_P_correct_ci": [
+          0.9710159953649372,
+          0.9965934432372819
+        ],
+        "macro_F_wrong_ci": [
+          0.003406556762718113,
+          0.028984004635062833
+        ],
+        "macro_F_split_ci": [
+          0.0,
+          0.012643429997735661
+        ],
+        "macro_F_deadline_ci": [
+          0.0,
+          0.012643429997735661
+        ]
+      },
+      "energy": {
+        "ESP": 846.1848323104339,
+        "CDQ2": 855.911139799819
+      },
+      "tail_latency": {
+        "ESP": 0.030975014921314034,
+        "CDQ2": 0.031462116598852924
+      },
+      "profiles": {
+        "safety_first": {
+          "selected": "ESP",
+          "benefit": 0.0,
+          "eligible": [],
+          "benefits": {
+            "ESP": 0.0,
+            "Guarded-CDQ2": 0.0,
+            "CDQ2": 0.016458270990417818
+          },
+          "esp_eligible": false,
+          "guard_enabled": false,
+          "eps_w": 0.001,
+          "expected": "ESP"
+        },
+        "balanced": {
+          "selected": "Guarded-CDQ2",
+          "benefit": 0.1645827099041782,
+          "eligible": [
+            "ESP",
+            "Guarded-CDQ2",
+            "CDQ2"
+          ],
+          "benefits": {
+            "ESP": 0.0,
+            "Guarded-CDQ2": 0.1645827099041782,
+            "CDQ2": 0.1645827099041782
+          },
+          "esp_eligible": true,
+          "guard_enabled": true,
+          "eps_w": 0.08,
+          "expected": "Guarded-CDQ2"
+        },
+        "deadline_critical": {
+          "selected": "Guarded-CDQ2",
+          "benefit": 1.749275854044226,
+          "eligible": [
+            "ESP",
+            "Guarded-CDQ2",
+            "CDQ2"
+          ],
+          "benefits": {
+            "ESP": 0.0,
+            "Guarded-CDQ2": 1.749275854044226,
+            "CDQ2": 1.749275854044226
+          },
+          "esp_eligible": true,
+          "guard_enabled": true,
+          "eps_w": 0.1,
+          "expected": "CDQ2 or Guarded-CDQ2"
+        },
+        "fail_safe_available": {
+          "selected": "ESP",
+          "benefit": 0.0,
+          "eligible": [],
+          "benefits": {
+            "ESP": 0.0,
+            "Guarded-CDQ2": 0.0,
+            "CDQ2": -0.013541729009582183
+          },
+          "esp_eligible": false,
+          "guard_enabled": false,
+          "eps_w": 0.001,
+          "expected": "ESP"
+        },
+        "energy_constrained": {
+          "selected": "ESP",
+          "benefit": 0.0,
+          "eligible": [
+            "ESP",
+            "Guarded-CDQ2",
+            "CDQ2"
+          ],
+          "benefits": {
+            "ESP": 0.0,
+            "Guarded-CDQ2": -1.2733535951227055,
+            "CDQ2": -1.2733535951227055
+          },
+          "esp_eligible": true,
+          "guard_enabled": true,
+          "eps_w": 0.08,
+          "expected": "Guarded-CDQ2 only if energy improves"
+        }
+      },
+      "hashes": {
+        "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+        "service_profile_hash": "65b086d9a75fba100034b163004565450d3ef062dd4a6bd6269dfa14e51a8721",
+        "evidence_hash": "74d57e6899b7ae06940c8ccff4f57fedc23b548fbfbe267670ce78473be6efaa",
+        "scene_distribution_hash": "a1e6683a6f58f63a12bd4be8821e9a3e7cd50c2a9d2ff32873661f95f14e92c5",
+        "protocol_hash": "438bb4e95f5736a997c70b4ac7b7020372b2d36907862d064f1528adedb5ba68",
+        "policy_hash": "hazard_selection",
+        "checkpoint_hash": "fixed-quality+Z",
+        "experiment_config_hash": "96f0bcabf38142fa7ca4cf53ae57a6af2dab8e8392d433f616d44702643c9a9f",
+        "query_law": "cdq2",
+        "full_physics": true,
+        "git_commit": "fb99a98",
+        "manifest_id": "GS6-hazard",
+        "model_seeds": [
+          0,
+          1,
+          2
+        ]
+      }
+    },
+    "safety_critical": {
+      "base_node_err": 0.3,
+      "ESP": {
+        "macro_P_correct": 0.86,
+        "macro_F_wrong": 0.13333333333333333,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.006666666666666667,
+        "macro_P_correct_ci": [
+          0.816167500252694,
+          0.8947292301489362
+        ],
+        "macro_F_wrong_ci": [
+          0.09946587636064692,
+          0.17647263897102589
+        ],
+        "macro_F_split_ci": [
+          0.0,
+          0.012643429997735661
+        ],
+        "macro_F_deadline_ci": [
+          0.0018301100329710777,
+          0.02397807423146144
+        ]
+      },
+      "CDQ2": {
+        "macro_P_correct": 0.8633333333333333,
+        "macro_F_wrong": 0.13666666666666666,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.0,
+        "macro_P_correct_ci": [
+          0.8198437047874653,
+          0.8976354027475134
+        ],
+        "macro_F_wrong_ci": [
+          0.10236459725248649,
+          0.18015629521253473
+        ],
+        "macro_F_split_ci": [
+          0.0,
+          0.012643429997735661
+        ],
+        "macro_F_deadline_ci": [
+          0.0,
+          0.012643429997735661
+        ]
+      },
+      "energy": {
+        "ESP": 840.1154059987306,
+        "CDQ2": 858.719373233063
+      },
+      "tail_latency": {
+        "ESP": 0.031004256115466464,
+        "CDQ2": 0.03158494693909739
+      },
+      "profiles": {
+        "safety_first": {
+          "selected": "ESP",
+          "benefit": 0.0,
+          "eligible": [],
+          "benefits": {
+            "ESP": 0.0,
+            "Guarded-CDQ2": 0.0,
+            "CDQ2": -3.287610511049935
+          },
+          "esp_eligible": false,
+          "guard_enabled": false,
+          "eps_w": 0.001,
+          "expected": "ESP"
+        },
+        "balanced": {
+          "selected": "ESP",
+          "benefit": 0.0,
+          "eligible": [],
+          "benefits": {
+            "ESP": 0.0,
+            "Guarded-CDQ2": 0.0,
+            "CDQ2": 0.12389488950058553
+          },
+          "esp_eligible": false,
+          "guard_enabled": false,
+          "eps_w": 0.08,
+          "expected": "Guarded-CDQ2"
+        },
+        "deadline_critical": {
+          "selected": "ESP",
+          "benefit": 0.0,
+          "eligible": [],
+          "benefits": {
+            "ESP": 0.0,
+            "Guarded-CDQ2": 0.0,
+            "CDQ2": 4.604916400478042
+          },
+          "esp_eligible": false,
+          "guard_enabled": false,
+          "eps_w": 0.1,
+          "expected": "CDQ2 or Guarded-CDQ2"
+        },
+        "fail_safe_available": {
+          "selected": "ESP",
+          "benefit": 0.0,
+          "eligible": [],
+          "benefits": {
+            "ESP": 0.0,
+            "Guarded-CDQ2": 0.0,
+            "CDQ2": -3.347610511049935
+          },
+          "esp_eligible": false,
+          "guard_enabled": false,
+          "eps_w": 0.001,
+          "expected": "ESP"
+        },
+        "energy_constrained": {
+          "selected": "ESP",
+          "benefit": 0.0,
+          "eligible": [],
+          "benefits": {
+            "ESP": 0.0,
+            "Guarded-CDQ2": 0.0,
+            "CDQ2": -2.6684143373602014
+          },
+          "esp_eligible": false,
+          "guard_enabled": false,
+          "eps_w": 0.08,
+          "expected": "Guarded-CDQ2 only if energy improves"
+        }
+      },
+      "hashes": {
+        "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+        "service_profile_hash": "65b086d9a75fba100034b163004565450d3ef062dd4a6bd6269dfa14e51a8721",
+        "evidence_hash": "2f497d0b893f3c403d3269cb5d29cd4dc3c967a6a0d00f56e157faa1b311c840",
+        "scene_distribution_hash": "a1e6683a6f58f63a12bd4be8821e9a3e7cd50c2a9d2ff32873661f95f14e92c5",
+        "protocol_hash": "438bb4e95f5736a997c70b4ac7b7020372b2d36907862d064f1528adedb5ba68",
+        "policy_hash": "hazard_selection",
+        "checkpoint_hash": "fixed-quality+Z",
+        "experiment_config_hash": "4616899fd1d955e9add0b1828eb72fe7c7decb18d0910f89d4584193910063b4",
+        "query_law": "cdq2",
+        "full_physics": true,
+        "git_commit": "fb99a98",
+        "manifest_id": "GS6-hazard",
+        "model_seeds": [
+          0,
+          1,
+          2
+        ]
+      }
+    }
+  },
+  "acceptance": {
+    "safety_first_is_esp": true,
+    "deadline_critical_uses_cdq2": true,
+    "balanced_is_guarded": true,
+    "fail_safe_is_esp": true,
+    "safety_critical_all_esp": true
+  },
+  "runtime_total_s": 166.4
+}

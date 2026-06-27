@@ -115,6 +115,24 @@
         "forbidden_shortcuts_respected": "did NOT enable CDQ2 when wrong/split violated (guard disables when slack<margin); did NOT lower a threshold to pass (eps is a swept service target; strict-eps default = ESP); a deadline benefit is framed as liveness, NOT reliability (constraint #1/#12)."
       },
       "acceptance": "Guarded-CDQ2 satisfies wrong/split UCB in every service profile (feasible wherever ESP is; never worse) (✓); improves deadline in the covariance-stressed feasible scene at a moderate target (✓, +0.020 @eps=0.10); falls back to ESP in safety-critical at every target (✓); exposes guard-activation stats (eta_hard/soft/oracle, feasibility, active flags) (✓). Stop-condition #2 (cannot satisfy wrong/split in any profile) NOT met."
+    },
+    "GS6-hazard-profiles": {
+      "date": "2026-06-27",
+      "contributes_to": ["G-HAZARD-PROFILES"],
+      "modules": [
+        "src/config/hazard_profile.py (HazardProfile + 5 STANDARD_PROFILES)",
+        "src/evaluation/hazard_utility.py (hazard_benefit, is_eligible, select_policy)",
+        "docs/gate_evidence/guarded_cdq2/run_hazard_profiles.py"
+      ],
+      "tests": ["tests/evaluation/test_hazard_profiles.py (10 passed under -W error::UserWarning)"],
+      "evidence": {
+        "result_json": "hazard_profiles_results.json",
+        "utility": "B = c_d*dF_deadline + c_T*(dD_q/D_q_ESP) + c_E*(dE/E_ESP) - c_w*[dF_wrong]_+ - c_s*[dF_split]_+ (ESP baseline B=0). Tail/energy NORMALISED to fractional changes so all optimisation terms share a 0..1 scale (a first MC run had an absolute-energy scale bug that swamped the deadline term -- fixed). A policy is ELIGIBLE only if its wrong/split UCB are within the profile's eps (the hard feasibility gate, constraint #4/#5).",
+        "selection_matrix": "ENABLE regime (err=0.20, corr=0.10, N=336; dynamic-MC, full physics): safety_first -> ESP (strict eps, guard off); balanced -> Guarded-CDQ2 (B=+0.165); deadline_critical -> Guarded-CDQ2 (B=+1.749); fail_safe -> ESP; energy_constrained -> ESP (guard would enable, but CDQ2 uses MORE energy 846->856 so its B<0). SAFETY-CRITICAL regime (err=0.30, corr=0.25): ALL profiles -> ESP (ESP F_wrong UCB 0.176 >> any eps -> CDQ2 ineligible). All 5 acceptance flags pass.",
+        "honest_caveat": "the deadline gain at the feasible (low-error, reliability-slack) operating point is SMALL (macro_F_deadline 0.003->0.000) -- consistent with the round's finding that CDQ2's liveness benefit is small/conditional. The RATIONAL selection is driven by (a) the feasibility gate (excludes CDQ2 where unsafe), (b) the cost-weight ordering, and (c) the REAL energy cost of diversity (distant peers) -- NOT by a large liveness gain. eps is a per-profile SERVICE TARGET, not lowered to force a pass.",
+        "energy_finding": "CDQ2 diversity selects physically more distant peers (G-ETA-RISK-LIVENESS) -> ~1.2% more TX energy (846->856 @N=336); the energy_constrained profile therefore correctly selects ESP."
+      },
+      "acceptance": "policy selection changes RATIONALLY with hazard weights (spec §5.5): safety-first/fail-safe -> ESP; deadline-critical -> CDQ2/Guarded-CDQ2; balanced -> Guarded-CDQ2; energy-constrained -> ESP (energy worse); safety-critical scene -> all ESP via the feasibility gate (✓ all 5 flags). Stop-condition #4 (hazard utility unstable) NOT met: the only instability was a unit-scale bug (fixed); the utility is deterministic + monotone in the cost ratios."
     }
   }
 }
