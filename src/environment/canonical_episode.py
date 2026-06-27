@@ -82,6 +82,14 @@ class ProtocolConfig:
         if self.r_max < 1:
             raise ValueError("r_max must be >= 1")
 
+    def config_hash(self) -> str:
+        """Deterministic SHA-256 of the protocol parameters (ExperimentSpec, plan §4)."""
+        import hashlib
+        import json
+        payload = json.dumps({"k": self.k, "alpha": self.alpha, "beta": self.beta,
+                              "r_max": self.r_max}, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
 
 @dataclass(frozen=True)
 class EpisodeResult:
@@ -197,6 +205,13 @@ def run_consensus_episode(
         quality = quality.to(device)
         diversity = diversity.to(device)
         pi = cdq_edge_inclusion(gc.src_index, gc.dst_index, N, quality, diversity, k, padding=padding)
+    elif query_law == "cdq2":
+        from src.sampling.cdq2_wiring import cdq2_bucketed_quorum, cdq2_edge_inclusion
+        quality, diversity = query_policy.kernel(gc)             # [E], [E, r]  (no truth/vote)
+        quality = quality.to(device)
+        diversity = diversity.to(device)
+        eta = getattr(query_policy, "eta", 0.0)                  # CDQ 2.0 diversity strength (eta=0 => ESP)
+        pi = cdq2_edge_inclusion(gc.src_index, gc.dst_index, N, quality, diversity, eta, k, padding=padding)
     else:
         from src.sampling.esp_query import edge_inclusion_probabilities
         log_weights = query_policy.log_weights(gc).to(device)    # [E]  (no truth/vote)
@@ -237,6 +252,9 @@ def run_consensus_episode(
         if query_law == "cdq":
             h_plus, h_minus, h_zero = cdq_bucketed_quorum(
                 padding, quality, diversity, phys.ell_poll, u, v, k, alpha)
+        elif query_law == "cdq2":
+            h_plus, h_minus, h_zero = cdq2_bucketed_quorum(
+                padding, quality, diversity, eta, phys.ell_poll, u, v, k, alpha)
         else:
             h_plus, h_minus, h_zero = _bucketed_quorum(padding, a_edge, phys.ell_poll, u, v, k, alpha)
         p = apply_round(p, h_plus, h_minus, h_zero, layout)
@@ -255,7 +273,17 @@ def run_consensus_episode(
 
     trace = {}
     if return_trace:
-        any_region_bias = bool((evidence.p_region > 0).any().cpu())
+        # accurate correlated-evidence sentinel (constraint #13): use the model's own predicate so
+        # correlation living in sensor/map common causes (overlapping model) is not missed by a
+        # road-only p_region check.
+        _hce = getattr(evidence, "has_correlated_evidence", None)
+        any_region_bias = (bool(_hce()) if callable(_hce)
+                           else bool((evidence.p_region > 0).any().cpu()))
+        # The physical chain is BYPASSED under an ideal link_override (round_physics early-returns
+        # a constant ell). So the physical-mechanism flags must be reported HONESTLY: they are on
+        # the live path only when the full chain actually ran (constraint #9 — no flag may claim a
+        # mechanism executed when it did not).
+        full_phys = link_override is None
         trace = {
             "protocol": "binary_snowball",
             "query_policy": getattr(query_policy, "name", type(query_policy).__name__),
@@ -266,14 +294,21 @@ def run_consensus_episode(
             "num_scenarios": Q,
             "num_edges_comm": gc.num_edges,
             "num_edges_int": gi.num_edges,
-            "cross_destination_interference": gi.num_edges > gc.num_edges and not disable_interference,
-            "interference_graph": not disable_interference,
-            "mode2_collision": not disable_collision,
-            "half_duplex": not disable_half_duplex,
-            "queueing": not disable_queueing,
+            "cross_destination_interference": (gi.num_edges > gc.num_edges
+                                               and not disable_interference and full_phys),
+            "interference_graph": (not disable_interference) and full_phys,
+            "mode2_collision": (not disable_collision) and full_phys,
+            "half_duplex": (not disable_half_duplex) and full_phys,
+            "queueing": (not disable_queueing) and full_phys,
             "request_response": True,
-            "finite_harq": phy_cfg.max_harq_attempts > 1,
-            "fbl_dispersion": True,
+            "finite_harq": (phy_cfg.max_harq_attempts > 1) and full_phys,
+            "fbl_dispersion": full_phys,
+            # ---- plan §4 mandatory mechanism flags (the canonical path has them all) ----
+            "parallel_unicast": True,                  # k parallel unicast request-response polls (§5.1)
+            "poll_window_ms": phy_cfg.poll_window_s * 1e3,   # Δ_poll (P0-E)
+            "source_destination_accounting": full_phys,  # explicit scatter_source/destination (P0-C)
+            "collision_self_exclusion": full_phys,     # L_{j,-ij} = L_j - a_ij (P0-D)
+            "dynamic_transient_load": full_phys,       # load follows the evolving active mass (§7.3.1)
             "correlated_evidence": any_region_bias and Q > 1,
             "tau_proxy": False,
             "policy_uses_truth_or_vote": False,

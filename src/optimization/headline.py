@@ -50,7 +50,8 @@ def evaluate_policies_paired(
     physics_cfg,
     *,
     num_trials: int,
-    link_override: float | None = 1.0,
+    link_override: float | None = None,
+    allow_ideal_ablation: bool = False,
     crn_base_seed: int = 100_000,
     verbose: bool = False,
 ) -> dict[str, PolicyScores]:
@@ -59,7 +60,17 @@ def evaluate_policies_paired(
     ``scene_specs``: iterable of ``(scene, evidence, scene_seed)``. ``make_policies``: callable
     ``scene -> dict[name, policy]`` (rebuilt per scene so trained models attach to the scene's
     features). All policies on a given scene share generator seed ``crn_base_seed + scene_seed``.
+
+    The headline default is FULL physics (``link_override=None``, constraint #7). Using an ideal
+    ``link_override`` quarantines the run as an explicit ablation: it must be opted into with
+    ``allow_ideal_ablation=True`` so a bare ideal link can never silently become a headline.
     """
+    if link_override is not None and not allow_ideal_ablation:
+        raise ValueError(
+            "evaluate_policies_paired received an ideal link_override but allow_ideal_ablation is "
+            "False: a bare ideal link cannot be a headline comparison (constraint #9). Pass "
+            "allow_ideal_ablation=True to run it explicitly as an ablation, or use link_override=None "
+            "for the full-physics headline.")
     scores: dict[str, PolicyScores] = {}
     for si, (scene, evidence, scene_seed) in enumerate(scene_specs):
         policies = make_policies(scene)

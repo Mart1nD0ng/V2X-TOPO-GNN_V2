@@ -95,6 +95,10 @@ class EvidenceModel:
     def num_regions(self) -> int:
         return int(self.p_region.numel())
 
+    def has_correlated_evidence(self, *, tol: float = 1e-12) -> bool:
+        """True iff any region carries a shared error (``p_g > 0``) -> correlated evidence."""
+        return bool((self.p_region > tol).any().cpu())
+
     # ---------------------------------------------------------------- marginals
     def correct_observation_prob(self) -> torch.Tensor:
         """Marginal ``q_i = P(C_i = 1) = (1-p_g)(1-p_i) + p_g p_i`` -> ``[N]``."""

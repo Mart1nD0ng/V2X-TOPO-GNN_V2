@@ -73,6 +73,17 @@ class DynamicMCResult:
     latency_cvar: float = float("nan")   # CVaR_0.9 of per-trial elapsed time (worst-10% tail latency)
     energy_cvar: float = float("nan")    # CVaR_0.9 of per-trial energy (worst-10% tail)
     cvar_level: float = 0.9
+    # ---- participation-weighted MACROSTATE basin first-hitting (spec §3-§4; the headline metric) ----
+    # distinct from the legacy node-union F_wrong/F_disagree above; populated when a
+    # service_profile is passed. The four sum to 1 (mutually-exclusive run outcomes).
+    basin_P_correct: float = float("nan")
+    basin_F_wrong: float = float("nan")
+    basin_F_split: float = float("nan")
+    basin_F_deadline: float = float("nan")
+    basin_F_wrong_ci: tuple[float, float] = (float("nan"), float("nan"))
+    basin_F_split_ci: tuple[float, float] = (float("nan"), float("nan"))
+    basin_F_deadline_ci: tuple[float, float] = (float("nan"), float("nan"))
+    basin_tau_correct_mean: float = float("nan")   # mean correct first-hit epoch (T_confirm/Δ_poll)
 
 
 def _cvar_upper(x: torch.Tensor, level: float) -> float:
@@ -110,6 +121,8 @@ def run_dynamic_mc(
     eligible_mask: torch.Tensor | None = None,
     physics_per_trial: bool = False,
     link_override: float | None = None,
+    service_profile=None,
+    participation: torch.Tensor | None = None,
     dtype: torch.dtype = torch.float64,
 ) -> DynamicMCResult:
     """Run the independent dynamic Monte-Carlo (spec §8). See module docstring."""
@@ -147,6 +160,15 @@ def run_dynamic_mc(
         pi = cdq_edge_inclusion(gc.src_index, gc.dst_index, N, quality, diversity, k)
         cdq_sampler = _CDQSubsetSampler(quality, diversity, slot_edge, slot_mask, k)
         slot_logw = None
+    elif query_law == "cdq2":
+        from src.sampling.cdq2_wiring import cdq2_edge_inclusion
+        quality, diversity = query_policy.kernel(gc)
+        quality = quality.to(device=device, dtype=dtype)
+        diversity = diversity.to(device=device, dtype=dtype)
+        eta = getattr(query_policy, "eta", 0.0)
+        pi = cdq2_edge_inclusion(gc.src_index, gc.dst_index, N, quality, diversity, eta, k)
+        cdq_sampler = _CDQ2SubsetSampler(quality, diversity, eta, slot_edge, slot_mask, k)
+        slot_logw = None
     else:
         log_weights = query_policy.log_weights(gc).to(device=device, dtype=dtype)
         pi = edge_inclusion_probabilities(gc.src_index, gc.dst_index, N, log_weights, k)
@@ -169,6 +191,19 @@ def run_dynamic_mc(
     cumulative_time = torch.zeros(T, dtype=dtype, device=device)
     cumulative_energy = torch.zeros(T, dtype=dtype, device=device)
 
+    # ---- macrostate basin first-hitting bookkeeping (spec §3-§4; the headline metric) ----
+    track_basin = service_profile is not None
+    if track_basin:
+        if participation is None:
+            omega_mc = torch.full((N,), 1.0 / N, dtype=dtype, device=device)
+        else:
+            omega_mc = participation.to(device=device, dtype=dtype)
+            if abs(float(omega_mc.sum()) - 1.0) > 1e-6:
+                raise ValueError("participation must sum to 1")
+        # r=0 macrostate: no node finalized yet -> C_0 = W_0 = 0
+        C_traj = [torch.zeros(T, dtype=dtype, device=device)]
+        W_traj = [torch.zeros(T, dtype=dtype, device=device)]
+
     from src.protocol.binary_snowball import PLUS, MINUS  # +1, -1
 
     for t_round in range(1, r_max + 1):
@@ -189,7 +224,7 @@ def run_dynamic_mc(
             ell_slot = ell_slot.squeeze(-1).unsqueeze(0)   # [1, N, nmax] -> broadcast
 
         # ---- sample k-subsets for every (trial, node) from the SAME query law ----
-        chosen = (cdq_sampler.sample(T, generator) if query_law == "cdq"
+        chosen = (cdq_sampler.sample(T, generator) if query_law in ("cdq", "cdq2")
                   else _sample_subsets(slot_logw, slot_mask, k, T, generator))   # [T, N, nmax] bool
 
         # ---- poll outcomes: success ~ Bern(ell), read peer's ACTUAL colour ----
@@ -240,6 +275,11 @@ def run_dynamic_mc(
         energy_pn = phys.energy.transpose(0, 1) if physics_per_trial else phys.energy[:, 0].unsqueeze(0)
         cumulative_energy = cumulative_energy + (elig_active * energy_pn).sum(dim=1)   # [T]
 
+        # ---- macrostate after this epoch: realised participation-weighted decided masses ----
+        if track_basin:
+            C_traj.append((decided == 1).to(dtype) @ omega_mc)        # [T]
+            W_traj.append((decided == -1).to(dtype) @ omega_mc)       # [T]
+
     # ---- terminal statistics ----
     dec = decided
     elig_b = elig.unsqueeze(0)
@@ -261,6 +301,10 @@ def run_dynamic_mc(
     finalised = rounds_to_decide <= r_max
     mean_rounds = float(rounds_to_decide[finalised].to(dtype).mean()) if bool(finalised.any()) else float("nan")
     finished = all_correct
+    # the MC is the independent JUDGE (never differentiated through); its reported time/energy are
+    # detached so the report-only float() casts below carry no autograd warning / phantom graph.
+    cumulative_time = cumulative_time.detach()
+    cumulative_energy = cumulative_energy.detach()
     mean_time = float(cumulative_time[finished].mean()) if bool(finished.any()) else float("nan")
     # tail metrics over ALL trials (unfinished trials are censored at the horizon's elapsed time,
     # a lower bound -> the reported tail latency is conservative-optimistic, noted in the manifest)
@@ -268,6 +312,22 @@ def run_dynamic_mc(
     mean_energy = float(cumulative_energy.mean())
     latency_cvar = _cvar_upper(cumulative_time, cvar_level)
     energy_cvar = _cvar_upper(cumulative_energy, cvar_level)
+
+    # ---- macrostate basin first-hitting outcomes (the headline metric, spec §4) ----
+    basin_kw = {}
+    if track_basin:
+        from src.metrics.first_hitting import basin_outcome_probabilities
+        C_paths = torch.stack(C_traj, dim=1)              # [T, R+1]
+        W_paths = torch.stack(W_traj, dim=1)
+        bo = basin_outcome_probabilities(C_paths, W_paths, service_profile)
+        basin_kw = dict(
+            basin_P_correct=bo["P_correct"], basin_F_wrong=bo["F_wrong"],
+            basin_F_split=bo["F_split"], basin_F_deadline=bo["F_deadline"],
+            basin_F_wrong_ci=_wilson_ci(bo["F_wrong"], T),
+            basin_F_split_ci=_wilson_ci(bo["F_split"], T),
+            basin_F_deadline_ci=_wilson_ci(bo["F_deadline"], T),
+            basin_tau_correct_mean=bo["tau_correct_mean"],
+        )
 
     return DynamicMCResult(
         F_disagree=F_disagree, F_wrong=F_wrong, S_allcorrect=S_allcorrect,
@@ -277,7 +337,7 @@ def run_dynamic_mc(
         undecided_freq=undecided_freq, mean_rounds_to_decide=mean_rounds,
         mean_finalisation_time=mean_time, finished_fraction=float(finished.to(dtype).mean()),
         num_trials=T, mean_energy=mean_energy, latency_cvar=latency_cvar,
-        energy_cvar=energy_cvar, cvar_level=cvar_level,
+        energy_cvar=energy_cvar, cvar_level=cvar_level, **basin_kw,
     )
 
 
@@ -321,6 +381,50 @@ class _CDQSubsetSampler:
         chosen = torch.zeros((T, self.N, self.nmax), dtype=torch.bool, device=self.device)
         for i in range(self.N):
             idx = torch.multinomial(self.node_probs[i], T, replacement=True, generator=generator)  # [T]
+            chosen[:, i, :] = self.node_masks[i][idx]
+        return chosen
+
+
+class _CDQ2SubsetSampler:
+    """Exact per-(trial,node) ``k``-DPP subset sampler for the CDQ 2.0 query law (mirrors
+    :class:`_CDQSubsetSampler` but with the full-rank CDQ 2.0 kernel
+    ``L = D^{1/2}(I+eta ZZ^T)D^{1/2}``).
+
+    Per node we enumerate the exact CDQ 2.0 ``k``-DPP subset distribution ONCE
+    (``cdq2_enumerate_distribution`` is the true law ``det(L_S)/e_k``) and draw fresh subsets each
+    round by multinomial. Exact; raises if any source's ``C(deg, k)`` exceeds ``max_subsets`` (the
+    CDQ MC is dev-scale -- :func:`cdq2_sample` covers large degree but is not needed here).
+    """
+
+    def __init__(self, quality, diversity, eta, slot_edge, slot_mask, k, *, max_subsets: int = 50000):
+        from math import comb
+
+        from src.sampling.cdq2_kernel import cdq2_enumerate_distribution
+        N, nmax = slot_mask.shape
+        self.N, self.nmax = N, nmax
+        self.device, self.dtype = quality.device, quality.dtype
+        self.node_masks: list[torch.Tensor] = []
+        self.node_probs: list[torch.Tensor] = []
+        for i in range(N):
+            valid = slot_mask[i].nonzero().reshape(-1)
+            d = int(valid.numel())
+            if comb(d, k) > max_subsets:
+                raise ValueError(f"node {i}: C({d},{k}) > max_subsets={max_subsets} (CDQ MC is dev-scale)")
+            edges = slot_edge[i][valid]
+            dist = cdq2_enumerate_distribution(quality[edges].detach(), diversity[edges].detach(), eta, k)
+            subs = list(dist.keys())
+            probs = torch.tensor([dist[s] for s in subs], dtype=self.dtype, device=self.device)
+            masks = torch.zeros((len(subs), nmax), dtype=torch.bool, device=self.device)
+            for si, s in enumerate(subs):
+                for j in s:
+                    masks[si, int(valid[j])] = True
+            self.node_masks.append(masks)
+            self.node_probs.append(probs.clamp_min(0.0))
+
+    def sample(self, T: int, generator: torch.Generator) -> torch.Tensor:
+        chosen = torch.zeros((T, self.N, self.nmax), dtype=torch.bool, device=self.device)
+        for i in range(self.N):
+            idx = torch.multinomial(self.node_probs[i], T, replacement=True, generator=generator)
             chosen[:, i, :] = self.node_masks[i][idx]
         return chosen
 

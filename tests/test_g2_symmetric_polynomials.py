@@ -144,6 +144,45 @@ def test_gradient_matches_finite_difference():
         assert rel < 1e-4, (j, fd, float(grad[j]), rel)
 
 
+def test_logaddexp_is_double_differentiable():
+    """Regression (CDQ2 audit wf_c696e8e5-3d6, finding #5): _LogAddExp must be double-
+    differentiable so a loss backpropagated THROUGH an inclusion marginal pi = a*grad(log e_k)
+    reaches the logits correctly. The old backward saved constant softmax weights (no grad_fn),
+    silently dropping the (analytically known) second derivative. Here we backprop an
+    inclusion-based loss to the logits and compare to finite differences.
+    """
+    n, k = 6, 3
+    s = torch.randn(n, dtype=DT, generator=torch.Generator().manual_seed(7))
+    s = s.clone().requires_grad_(True)
+    pi = edge_inclusion_probability(s, k)            # uses log_elementary_symmetric -> _LogAddExp
+    loss = (pi ** 2).sum()
+    (ana,) = torch.autograd.grad(loss, s)
+    eps = 1e-6
+    num = torch.zeros(n, dtype=DT)
+    base = s.detach()
+    for j in range(n):
+        plus = base.clone(); plus[j] += eps
+        minus = base.clone(); minus[j] -= eps
+        fp = float((edge_inclusion_probability(plus, k) ** 2).sum())
+        fm = float((edge_inclusion_probability(minus, k) ** 2).sum())
+        num[j] = (fp - fm) / (2 * eps)
+    rel = (ana - num).norm() / (num.norm() + 1e-12)
+    assert float(rel) < 1e-4, (ana, num, float(rel))
+
+
+def test_logaddexp_neg_inf_safe_after_double_backward_fix():
+    """The double-backward fix must keep the -inf (masked candidate) gradient at exactly 0
+    (no 0/0 NaN), the property the custom _LogAddExp existed for in the first place."""
+    n, k = 5, 2
+    s = torch.randn(n, dtype=DT, requires_grad=True)
+    mask = torch.tensor([True, True, False, True, True])   # one masked-out candidate
+    le = log_elementary_symmetric(s, k, mask=mask)[k]
+    (g,) = torch.autograd.grad(le, s, create_graph=True)
+    assert torch.isfinite(g).all()
+    g.sum().backward()                                      # second-order, must stay finite
+    assert torch.isfinite(s.grad).all()
+
+
 def test_uniform_weights_give_uniform_subsets():
     # spec §4.1: all a_ij equal -> uniform distinct-peer sampling
     n, k = 6, 3

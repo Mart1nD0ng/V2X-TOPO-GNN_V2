@@ -58,8 +58,8 @@ def test_metrics_and_lagrangian_differentiable():
     res = run_consensus_episode(inst[0][0], inst[0][1], ESDGNNQueryPolicy(model, inst[0][0]),
                                 PROTO, PHY, return_trajectory=True, link_override=1.0)
     m = episode_metrics(res, None)
-    assert 0.0 <= float(m["F_deadline"]) <= 1.0
-    assert float(m["ET"]) > 0.0
+    assert 0.0 <= float(m["F_deadline"].detach()) <= 1.0
+    assert float(m["ET"].detach()) > 0.0
     loss = lagrangian(m, DualState(), ReliabilityThresholds())
     loss.backward()
     assert any(p.grad is not None and torch.isfinite(p.grad).all() for p in model.parameters())

@@ -26,6 +26,25 @@ from .dpp_query import (
     low_rank_kernel,
 )
 from .cdq_query import DiagonalCDQPolicy, cdq_bucketed_quorum, cdq_edge_inclusion
+from .cdq2_kernel import (
+    bruteforce_cdq2_normalizer,
+    cdq2_enumerate_distribution,
+    cdq2_inclusion,
+    cdq2_k2_diversity_factor,
+    cdq2_log_normalizer,
+    cdq2_normalizer,
+    cdq2_sample,
+    cdq2_subset_log_prob,
+    cdq2_subset_logdet,
+    cdq2_unit_normalize,
+)
+from .cdq2_quorum import cdq2_quorum_decision, cdq2_quorum_distribution
+from .cdq2_correlation import (
+    bruteforce_cdq2_pairwise_inclusion,
+    cdq2_correlation_cost,
+    cdq2_pairwise_inclusion,
+)
+from .cdq2_wiring import CDQ2Policy, cdq2_bucketed_quorum, cdq2_edge_inclusion
 from .effective_dynamics import (
     cross_region_response_mass,
     effective_sample_size,
@@ -69,4 +88,22 @@ __all__ = [
     "enumerate_kdpp_distribution",
     "kdpp_sample",
     "diagonal_diversity",
+    "cdq2_unit_normalize",
+    "cdq2_k2_diversity_factor",
+    "cdq2_subset_logdet",
+    "cdq2_log_normalizer",
+    "cdq2_normalizer",
+    "cdq2_subset_log_prob",
+    "cdq2_inclusion",
+    "cdq2_enumerate_distribution",
+    "bruteforce_cdq2_normalizer",
+    "cdq2_sample",
+    "cdq2_quorum_distribution",
+    "cdq2_quorum_decision",
+    "cdq2_pairwise_inclusion",
+    "cdq2_correlation_cost",
+    "bruteforce_cdq2_pairwise_inclusion",
+    "CDQ2Policy",
+    "cdq2_edge_inclusion",
+    "cdq2_bucketed_quorum",
 ]

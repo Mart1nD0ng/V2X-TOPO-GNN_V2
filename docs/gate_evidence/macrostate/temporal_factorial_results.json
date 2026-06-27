@@ -1,0 +1,27 @@
+{
+  "config": {
+    "T": 8,
+    "trials": 800,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "rho": 0.3,
+    "eta": 8.0
+  },
+  "regimes": {
+    "persistent": {
+      "ESP": 0.6538,
+      "no_memory": 0.6411,
+      "memory": 0.6435,
+      "oracle": 0.6342
+    },
+    "iid_in_time": {
+      "ESP": 0.6526,
+      "no_memory": 0.6414,
+      "memory": 0.6431,
+      "oracle": 0.6435
+    }
+  }
+}

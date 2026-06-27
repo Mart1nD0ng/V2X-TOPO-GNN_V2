@@ -1,0 +1,84 @@
+{
+  "config": {
+    "k": 3,
+    "r_max": 6,
+    "comm_radius": 95.0,
+    "block_m": 120.0,
+    "quality": "distance(0.04)",
+    "eta": 4.0
+  },
+  "scaling": [
+    {
+      "N": 120,
+      "E": 932,
+      "maxdeg": 12,
+      "total_cells": 1024,
+      "total_cells_le_2E": true,
+      "t_ESP": 0.0646,
+      "t_CDQ2": 0.1796
+    },
+    {
+      "N": 336,
+      "E": 2816,
+      "maxdeg": 12,
+      "total_cells": 2992,
+      "total_cells_le_2E": true,
+      "t_ESP": 0.1234,
+      "t_CDQ2": 0.2845
+    },
+    {
+      "N": 1092,
+      "E": 9608,
+      "maxdeg": 12,
+      "total_cells": 9952,
+      "total_cells_le_2E": true,
+      "t_ESP": 0.3281,
+      "t_CDQ2": 0.6956
+    },
+    {
+      "N": 2772,
+      "E": 24936,
+      "maxdeg": 12,
+      "total_cells": 25504,
+      "total_cells_le_2E": true,
+      "t_ESP": 0.8254,
+      "t_CDQ2": 1.6643
+    },
+    {
+      "N": 5952,
+      "E": 54176,
+      "maxdeg": 12,
+      "total_cells": 55024,
+      "total_cells_le_2E": true,
+      "t_ESP": 1.7776,
+      "t_CDQ2": 3.4895
+    },
+    {
+      "N": 9840,
+      "E": 90068,
+      "maxdeg": 12,
+      "total_cells": 91168,
+      "total_cells_le_2E": true,
+      "t_ESP": 2.9779,
+      "t_CDQ2": 6.1459
+    }
+  ],
+  "ood": {
+    "fixed_hashes_across_N": {
+      "protocol_hash_constant": true,
+      "service_profile_hash_constant": true,
+      "physics_hash_constant": true,
+      "scene_distribution_hash_varies": true
+    },
+    "node_count_registered_allowed": true,
+    "unregistered_node_count_blocked": true,
+    "protocol_mismatch_blocked": true,
+    "ideal_full_link_always_blocked": true
+  },
+  "runtime_slope_loglog": {
+    "ESP": 0.882,
+    "CDQ2": 0.814
+  },
+  "maxdeg_constant": true,
+  "all_total_cells_le_2E": true
+}

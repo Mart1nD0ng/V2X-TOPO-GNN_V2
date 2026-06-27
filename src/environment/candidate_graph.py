@@ -25,6 +25,8 @@ __all__ = [
     "build_radius_graph",
     "build_candidate_graph",
     "aggregate_over_graph",
+    "scatter_source",
+    "scatter_destination",
     "edge_set",
 ]
 
@@ -120,16 +122,39 @@ def build_candidate_graph(positions: torch.Tensor, comm_radius: float,
     return build_radius_graph(positions, comm_radius, cell_size=cell_size)
 
 
-def aggregate_over_graph(graph: RadiusGraph, edge_value: torch.Tensor) -> torch.Tensor:
-    """Scatter-add a per-edge value to its destination: ``out[j] = sum_{i->j} value``.
+def scatter_source(graph: RadiusGraph, edge_value: torch.Tensor, num_nodes: int) -> torch.Tensor:
+    """Scatter-add a per-edge value to its SOURCE: ``out[i] = sum_{i->* } value`` (P0-C).
 
-    The generic ``O(E)`` aggregation used by the receiver-load / interference chains.
-    Differentiable in ``edge_value``.
+    The explicit *source-ownership* aggregation (spec §5.4): poller epoch completion,
+    request TX energy and source request activity ``A_i^req = sum_j a_ij`` are charged to the
+    transmitting source ``i``. Differentiable in ``edge_value``; ``O(E)``; no ``N x N``.
     """
     if edge_value.shape[0] != graph.num_edges:
         raise ValueError("edge_value must have one entry per edge")
-    out = edge_value.new_zeros((graph.num_nodes, *edge_value.shape[1:]))
+    out = edge_value.new_zeros((num_nodes, *edge_value.shape[1:]))
+    return out.index_add(0, graph.src_index, edge_value)
+
+
+def scatter_destination(graph: RadiusGraph, edge_value: torch.Tensor, num_nodes: int) -> torch.Tensor:
+    """Scatter-add a per-edge value to its DESTINATION: ``out[j] = sum_{*->j} value`` (P0-C).
+
+    The explicit *destination-ownership* aggregation (spec §5.4): receiver addressed load
+    ``Lambda_j``, receiver congestion / queueing and response TX energy are charged to the
+    receiving / responding destination ``j``. Differentiable; ``O(E)``; no ``N x N``.
+    """
+    if edge_value.shape[0] != graph.num_edges:
+        raise ValueError("edge_value must have one entry per edge")
+    out = edge_value.new_zeros((num_nodes, *edge_value.shape[1:]))
     return out.index_add(0, graph.dst_index, edge_value)
+
+
+def aggregate_over_graph(graph: RadiusGraph, edge_value: torch.Tensor) -> torch.Tensor:
+    """Scatter-add a per-edge value to its destination: ``out[j] = sum_{i->j} value``.
+
+    Thin wrapper over :func:`scatter_destination` kept for back-compatibility; new code
+    should call the explicitly-named source/destination helpers (P0-C).
+    """
+    return scatter_destination(graph, edge_value, graph.num_nodes)
 
 
 def edge_set(graph: RadiusGraph) -> set[tuple[int, int]]:

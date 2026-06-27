@@ -46,6 +46,11 @@ class ReliabilityThresholds:
     deadline_round: int | None = None   # round for F_deadline (default: full horizon)
 
 
+def _to_float(x) -> float:
+    """Detach-safe scalar cast (the duals/history are report-only, off the training graph)."""
+    return float(x.detach()) if isinstance(x, torch.Tensor) else float(x)
+
+
 @dataclass
 class DualState:
     mu_s: float = 1.0
@@ -53,9 +58,9 @@ class DualState:
     mu_d: float = 1.0
 
     def update(self, m: dict, thr: ReliabilityThresholds, eta_mu: float) -> None:
-        self.mu_s = max(0.0, self.mu_s + eta_mu * (float(m["F_disagree"]) - thr.eps_s))
-        self.mu_v = max(0.0, self.mu_v + eta_mu * (float(m["F_wrong"]) - thr.eps_v))
-        self.mu_d = max(0.0, self.mu_d + eta_mu * (float(m["F_deadline"]) - thr.eps_d))
+        self.mu_s = max(0.0, self.mu_s + eta_mu * (_to_float(m["F_disagree"]) - thr.eps_s))
+        self.mu_v = max(0.0, self.mu_v + eta_mu * (_to_float(m["F_wrong"]) - thr.eps_v))
+        self.mu_d = max(0.0, self.mu_d + eta_mu * (_to_float(m["F_deadline"]) - thr.eps_d))
 
 
 def episode_metrics(res, eligible_mask: torch.Tensor | None, *, deadline_round: int | None = None,
@@ -135,8 +140,8 @@ def train_esd_gnn(
         loss.backward()
         opt.step()
         duals.update(m, thr, eta_mu)                 # dual ascent on the constraint slacks
-        history["loss"].append(float(loss))
+        history["loss"].append(_to_float(loss))
         for key in ("F_disagree", "F_wrong", "F_deadline", "ET", "S_allcorrect"):
-            history[key].append(float(m[key]))
+            history[key].append(_to_float(m[key]))
         history["mu_v"].append(duals.mu_v)
     return {"model": model, "duals": duals, "history": history}

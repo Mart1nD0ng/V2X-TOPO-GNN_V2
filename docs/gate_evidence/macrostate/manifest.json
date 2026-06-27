@@ -1,0 +1,702 @@
+{
+  "round": "macrostate-cdq2",
+  "design_basis": [
+    "docs/MACROSTATE_CONSENSUS_AND_CDQ2_TECHNICAL_SPEC.md",
+    "docs/MACROSTATE_CDQ2_ENGINEERING_PLAN.md",
+    "docs/MECHANISM_IDENTIFIABILITY_CONTRACT.md"
+  ],
+  "slices": {
+    "S1-service-profile-participation": {
+      "date": "2026-06-26",
+      "contributes_to": ["G-CANONICAL-CLOSURE", "G-MACROSTATE"],
+      "modules": [
+        "src/config/service_profile.py",
+        "src/metrics/participation.py"
+      ],
+      "tests": [
+        "tests/config/test_service_profile.py (8 passed)",
+        "tests/metrics/test_participation.py (9 passed)"
+      ],
+      "evidence": {
+        "urban_default_profile_hash": "7e0483691593090a64fc82553f5514f098ea84a42e2fdd56d4189e516683466d",
+        "basin_disjointness (rho_s > 1-rho_f)": "0.45 > 0.40 = True",
+        "correct_basin_mass rho_f": 0.6,
+        "split_basin_mass rho_s": 0.45,
+        "strict_majority 2*alpha>k": "6 > 4 = True",
+        "R_d from T_d=200ms/dpoll=10ms": 20,
+        "config_hash deterministic + field-sensitive": true,
+        "participation uniform sum / app sum": "1.0 / 1.0",
+        "participation requires_grad (must be False)": false,
+        "participation closer-to-event weighted more": true,
+        "participation signature has no policy/model/evidence/truth param": true,
+        "participation exogenous (independent of any global state)": true
+      },
+      "adversarial_audit": {
+        "truth_leakage": "PASS — omega uses only scene.positions + exogenous event_xy; no Y*/vote/future",
+        "policy_immutability": "PASS — participation_measure takes only (scene, rule, app-config); no policy can enter",
+        "gradient_detach": "PASS — omega is .detach()/requires_grad=False BY DESIGN (a fixed measure, not an optimization target; distinct from the §11 correlation objective which must stay differentiable)",
+        "basin_overlap": "PASS — ServiceProfile rejects rho_s <= 1-rho_f, rho_f <= 0.5, rho_s >= 0.5, 2*alpha <= k"
+      }
+    },
+    "S2-p0-source-dest-collision": {
+      "date": "2026-06-26",
+      "contributes_to": ["G-P0-PHYSICS"],
+      "covers": ["P0-C source/destination ownership", "P0-D collision self-exclusion", "P0-B unicast source activity"],
+      "modules": [
+        "src/environment/candidate_graph.py (scatter_source / scatter_destination)",
+        "src/environment/round_physics.py (self-exclusion + poller-source tau/energy + new fields)",
+        "conftest.py (single-thread BLAS/OpenMP to stop a pre-existing MKL eigvalsh abort)"
+      ],
+      "tests": ["tests/environment/test_p0_physics.py (7 passed)"],
+      "evidence": {
+        "single_active_poll_collision (must be exactly 0)": "0.0  (P0-D, L_{j,-ij}=L_j-a_ij)",
+        "collision_returns_with_second_contender": "> 0",
+        "request_TX_energy_to_source / response_TX_energy_to_destination": "PASS (energy_request[poller]>0, [others]=0; energy_response[responder]>0)",
+        "energy == energy_request + energy_response": "PASS",
+        "source_request_activity A_i = k*u_i": "PASS",
+        "tau attributed to poller source": "PASS",
+        "scatter_source==out_degree, scatter_destination==in_degree, separated on asym value": "PASS",
+        "regression test_round_physics (11) + test_canonical_episode (8)": "PASS (direction/range sentinels unchanged by self-exclusion)"
+      },
+      "adversarial_audit": {
+        "collision_excludes_desired_edge": "PASS — request & response both subtract own presence; single transmission -> 0 (constraint #7)",
+        "source_destination_not_confused": "PASS — explicit named scatter_source/scatter_destination; request energy at source, response at destination, tau at poller (constraint #8); legacy code scattered poll time + request energy to the DESTINATION (fixed)",
+        "physics_mismatch": "deferred to P0-F (analytic/MC alignment) once the fixed-Δ_poll window lands"
+      },
+      "note": "P0-A (delay survival-sum off-by-one) and P0-E (unified poll-window ℓ with timeout) are the remaining G-P0-PHYSICS sub-slices; they pair with the fixed-Δ_poll macrostate first-hitting time T_confirm = Σ Δ_poll."
+    },
+    "S3-macrostate-basin-core": {
+      "date": "2026-06-26",
+      "contributes_to": ["G-MACROSTATE"],
+      "modules": [
+        "src/metrics/macrostate.py (C/W/U occupancy + strict-disagreement audit)",
+        "src/metrics/basins.py (B_C/B_W/B_S + disjointness)",
+        "src/metrics/first_hitting.py (first-hitting outcome + mutually-exclusive probabilities)"
+      ],
+      "tests": ["tests/metrics/test_macrostate_basins.py (11 passed)"],
+      "evidence": {
+        "occupancy sums to 1, matches uniform & nonuniform omega": "PASS",
+        "basins pairwise disjoint over the simplex (rho_s>1-rho_f)": "PASS (grid 201x201)",
+        "basin_label classifies correct/wrong/split/none": "PASS",
+        "first-hitting returns first basin + tau; deadline when none": "PASS (tau=R_d+1 on miss)",
+        "four outcome probabilities sum to 1 exactly": "PASS (1e-12)",
+        "ANTI-NODE-UNION: population replication under uniform omega leaves C/W and outcome invariant": "PASS (constraint #1 / forbidden shortcut #1)",
+        "strict disagreement retained as separate fixed-N audit": "PASS"
+      },
+      "exactness_boundary": "pure combinatorics on (C,W) paths — exact by construction; consumes realised MC trajectories (final judge) and exact small-N joint-chain paths (next slice wires both)",
+      "adversarial_audit": {
+        "node_union_smuggling": "PASS — explicit replication-invariance test fails for any 1-(1-p)^N metric",
+        "basin_tie_break": "PASS — disjointness proven so no within-epoch tie; first-hit epoch has exactly one basin",
+        "scope_hiding": "PASS — scope is the exogenous omega (S1), not a hidden eligible set"
+      }
+    },
+    "S4-basin-mc-exact-wiring": {
+      "date": "2026-06-26",
+      "contributes_to": ["G-MACROSTATE"],
+      "modules": [
+        "src/metrics/first_hitting.py (vectorised basin_first_hitting_batched)",
+        "src/metrics/macrostate.py (pairwise_disagreement D_pair, region_disagreement D_region)",
+        "src/protocol/exact_small_n.py (exact_joint_basin_first_hitting + shared _build_joint_chain)",
+        "src/validation/dynamic_mc.py (per-round macrostate snapshot -> basin outcomes + CIs)"
+      ],
+      "tests": [
+        "tests/validation/test_macrostate_mc.py (4 passed)",
+        "tests/metrics/test_macrostate_basins.py (13 passed, incl D_pair/D_region)"
+      ],
+      "evidence": {
+        "Level-1 exact == Level-3 MC basin first-hitting (within Wilson CI)": "PASS (N=3 line, ell=0.9, 40k trials; exact F_wrong/F_deadline bracketed, P_correct within 0.02)",
+        "exact four basin probs sum to 1": "PASS (1e-9, mass conservation via absorption)",
+        "MC four basin probs sum to 1": "PASS (1e-9)",
+        "split basin reachable (balanced opposing clusters)": "PASS (basin_F_split > 0.5)",
+        "node-union 'disagree'=0.33 but macrostate split=0 in median-x scenario": "documented — the macrostate split correctly does NOT fire on a lone dissenter (needs both opinions >= rho_s mass)",
+        "D_pair zero when unanimous, max at C=W": "PASS",
+        "D_region high when regions oppose vs homogeneous": "PASS",
+        "broad physics regression (validation+optimization+models+protocol+sampling)": "90 passed (19m20s), exit 0 — P0-C/D + MC basin edits non-regressing"
+      },
+      "exactness_boundary": "exact joint chain absorbs first-basin-hit mass per epoch (basins monotone-absorbing in the decided-mass process + disjoint => first-hit unambiguous); feasible for N<=3 at these (beta,r_max) under the S^N<=200k cap; MC is the unbiased Level-3 estimator validated against it",
+      "adversarial_audit": {
+        "truth_leak_into_participation": "PASS — MC participation omega is passed in exogenously, not derived from sampled truth (custom omega test)",
+        "physics_mismatch": "N/A here — exact & MC share the same fixed link (link_override) isolating the protocol/basin layer",
+        "level1_level3_disagreement (stop-condition #5 watch)": "NONE — exact and MC AGREE; no systematic ranking conflict"
+      },
+      "note": "pre-existing benign warning at dynamic_mc.py:268 (float() on a grad tensor for mean_energy reporting) — not introduced here; left in place."
+    },
+    "S5-p0a-confirm-time": {
+      "date": "2026-06-26",
+      "contributes_to": ["G-P0-PHYSICS"],
+      "covers": ["P0-A analytic-delay off-by-one / survival sum"],
+      "modules": ["src/metrics/first_hitting.py (confirm_time_stats)"],
+      "tests": ["tests/metrics/test_confirm_time.py (4 passed)"],
+      "evidence": {
+        "first-epoch finish = one poll window (not 0)": "PASS (tau=1 -> T_confirm=Δ_poll)",
+        "survival-sum identity E[tau]=Σ_r P(tau>r)": "PASS (1e-12) — the legacy 1-S[1:] off-by-one breaks this",
+        "CVaR_q(T_confirm|O=C) is the upper tail": "PASS (CVaR_0.95 > mean)",
+        "no correct runs -> nan not 0": "PASS"
+      },
+      "note": "P0-A is fixed structurally by the macrostate first-hitting tau (T_confirm = tau·Δ_poll), not a patched survival sum; this also provides the spec §6 CVaR objective Phase 5 consumes. Remaining G-P0-PHYSICS: P0-E (unified poll-window ℓ with an explicit within-window completion/timeout factor) + P0-F (analytic/MC alignment under the fixed window)."
+    },
+    "S6-p0e-poll-window-timeout": {
+      "date": "2026-06-26",
+      "contributes_to": ["G-P0-PHYSICS"],
+      "covers": ["P0-E unified poll-window ℓ(Δ_poll) with timeout factor"],
+      "modules": [
+        "src/environment/round_physics.py (poll_window_s config; _harq_success_at_budget; M_win round-trip budget on both legs)"
+      ],
+      "tests": ["tests/environment/test_p0e_poll_window.py (6 passed)"],
+      "design_note": "Design judge-panel workflow was attempted but BLOCKED by the monthly spend limit (all 5 subagents failed); implemented solo with the attempt-budget model I had pre-identified as cleanest.",
+      "model": "ell_ij(Δ_poll) = succ_req(M_win)·succ_resp(M_win)·(1-p_col_req)(1-p_hd_req)(1-p_queue_drop)·(1-p_col_resp)(1-p_hd_resp), with M_win = clamp((Δ_poll/slot − queue_slots_j)/(req_slots+resp_slots), 0, M) the HARQ round-trip budget fitting in the FIXED window after the M/M/1 wait; succ(·) is the validated FBL/HARQ averaged_link_success, soft-interpolated at the fractional budget (S(0)=0, linear between integer attempt counts).",
+      "evidence": {
+        "Δ_poll -> large recovers no-timeout ell (1e-9)": "PASS",
+        "Δ_poll -> 0 drives ell -> ~0 (<1e-6)": "PASS",
+        "ell monotone increasing in Δ_poll": "PASS",
+        "heavier M/M/1 queue shortens budget -> lowers ell": "PASS",
+        "differentiable in pi via the queue->budget coupling (grad finite, nonzero)": "PASS",
+        "ell in [0,1] under the window": "PASS",
+        "default poll_window_s=0.02s keeps M_win=M (timeout inactive at light load) -> existing tests unaffected": "by construction; regression pending"
+      },
+      "exactness_boundary": "the linear-from-0 interpolation is the differentiable mean-field SURROGATE for the discrete attempt-fitting (a fractional budget partially helps, consistent with Chase SNR accumulation); the queue delay is the M/M/1 mean. The independent dynamic MC sampling the DISCRETE completion-time process is P0-F (the judge). Known conservative coupling: a heavily overloaded receiver (rho>1) is penalized by BOTH p_queue_drop (overflow) AND the window budget (delay) — distinct physical effects, double-penalized in magnitude; the MC sets absolute values.",
+      "adversarial_audit": {
+        "differentiability": "PASS — frac=b-floor(b) carries grad to budget(queue->pi); succ values carry grad from gamma",
+        "limits": "PASS — Δ_poll->inf recovers ell, ->0 gives 0, perfect-link+adequate-window gives high ell",
+        "complexity": "PASS — O(E·B·M) stack/gather, no NxN",
+        "source_destination": "PASS — budget uses queue_delay_node[dst_c] (the receiver j's wait), correct ownership",
+        "truth_leak": "PASS — M_win depends on load(pi)+config only, no Y*/vote",
+        "double_count_queue": "NOTED — drop(overflow) + window(delay) both bite under rho>1; defensible (distinct effects), MC judges magnitude",
+        "mc_alignment": "DEFERRED to P0-F — under full physics the MC's Bern(ell_poll) already inherits the analytic timeout; P0-F makes the MC sample the discrete completion-time process independently"
+      }
+    },
+    "S7-p0f-window-alignment": {
+      "date": "2026-06-26",
+      "contributes_to": ["G-P0-PHYSICS"],
+      "covers": ["P0-F analytic/MC poll-window alignment"],
+      "modules": [
+        "src/environment/round_physics.py (harq_success_within_window_discrete + public harq_success_at_budget)"
+      ],
+      "tests": ["tests/environment/test_p0f_window_alignment.py (4 passed)"],
+      "evidence": {
+        "discrete reference limits (saturate to succ_M; <1 round-trip -> 0)": "PASS",
+        "soft surrogate tracks the INDEPENDENT discrete model in the operating regime (budget>=1, gap<=0.125)": "PASS",
+        "discrete reference monotone in window and (decreasing) in queue wait": "PASS",
+        "end-to-end: smaller Δ_poll raises the dynamic-MC macrostate deadline-miss (window flows through the SAME physics to the judge)": "PASS (basin_F_deadline_small > big + 0.1)",
+        "MC four basin outcomes still sum to 1 under the window": "PASS"
+      },
+      "honest_finding": "the analytic linear-from-0 soft interpolation is OPTIMISTIC below one complete round-trip (gives partial credit where the discrete floor — which needs a full request+response — gives 0). This is inherent to ANY differentiable monotone relaxation of a floor; it is the documented exactness boundary, validated by the independent discrete reference. At the default 20ms window the budget is >= M so the timeout is inactive; the optimistic band only occurs near heavy queue saturation, where the MC (discrete-ish, the judge) sets absolute numbers.",
+      "exactness_boundary": "analytic ell(Δ_poll) = differentiable mean-field soft surrogate (mean queue + linear budget interp); harq_success_within_window_discrete = independent reference integrating the floor attempt-fitting over the M/M/1 sojourn distribution; the dynamic MC is the Level-3 judge for the headline.",
+      "adversarial_audit": "a 7-lens adversarial verification workflow (collision / source-dest / poll-window / delay / MC-independence / differentiability-complexity / truth-leak), each finding independently refuted, was run over the complete P0-A..F gate — results folded into the gate verdict."
+    },
+    "G-P0-PHYSICS-VERDICT": {
+      "date": "2026-06-26",
+      "status": "GREEN",
+      "covers": ["P0-A", "P0-B", "P0-C", "P0-D", "P0-E", "P0-F"],
+      "tests": "tests/environment/test_p0_physics.py (6) + test_p0e_poll_window.py (6) + test_p0f_window_alignment.py (4) + tests/metrics/test_confirm_time.py (4) = 20 passed; broad physics-dependent regression 94 passed (exit 0)",
+      "adversarial_workflow": {
+        "run_id": "wf_9fc39b4d-70b",
+        "lenses": 7,
+        "agents": 7,
+        "tool_calls": 109,
+        "tokens": 506868,
+        "duration_min": 9.3,
+        "findings_raised": 0,
+        "findings_confirmed": 0,
+        "per_lens": "collision[]  source-dest[]  poll-window[]  delay-confirm[]  mc-independence[]  differentiability-complexity[]  truth-leak[] — all clean after 11-20 tool-calls each reading the actual code"
+      },
+      "conclusion": "G-P0-PHYSICS is verified clean across 7 independent adversarial lenses + self-audit + 20 unit/integration tests + the 94-test regression. No P0 physics/delay defect remains. The polling-epoch ell(Δ_poll), source/destination accounting, collision self-exclusion, unicast source activity, survival-sum delay, and analytic/MC window alignment all hold with honest, documented exactness boundaries."
+    },
+    "S8-canonical-closure": {
+      "date": "2026-06-26",
+      "contributes_to": ["G-CANONICAL-CLOSURE"],
+      "modules": [
+        "src/config/experiment_spec.py (ExperimentSpec + build/check + mechanism & headline guards + episode binding)",
+        "src/environment/canonical_episode.py (ProtocolConfig.config_hash + plan §4 mandatory trace flags)",
+        "src/environment/round_physics.py (RoundPhysicsConfig.config_hash; poll_window_s default 0.01 = profile Δ_poll)"
+      ],
+      "tests": [
+        "tests/config/test_experiment_spec.py (9)",
+        "tests/config/test_episode_spec_binding.py (7)",
+        "tests/environment/test_canonical_closure.py (4)"
+      ],
+      "evidence": {
+        "config hashes deterministic, 64-hex, field-sensitive": "PASS",
+        "physics mismatch blocks headline (train==eval physics enforced)": "PASS",
+        "physics mismatch allowed ONLY with a registered OOD axis (interference/physics)": "PASS",
+        "ideal/full-link mismatch ALWAYS blocked, even with OOD axes (constraint #9)": "PASS",
+        "protocol / query_law mismatch blocks unless registered": "PASS",
+        "a registered scene OOD axis does NOT excuse a physics difference": "PASS",
+        "unknown OOD axis rejected": "PASS",
+        "mandatory mechanism trace present + asserted; disabled mechanism / ideal link FAILS the assertion": "PASS",
+        "assert_headline_grounded rejects an ideal (full_physics=False) spec": "PASS",
+        "profile<->protocol<->physics single-source binding rejects (k,alpha,beta,r_max,Δ_poll) disagreement": "PASS",
+        "default physics poll_window_s == default profile Δ_poll (10 ms)": "PASS",
+        "frozen dataclasses reject unknown/typo config kwargs": "PASS",
+        "every RoundPhysicsConfig field enters physics_hash (no field dropped from fingerprint)": "PASS"
+      },
+      "deferred": "run_consensus_episode does NOT yet take the service_profile in its signature (it takes ProtocolConfig + RoundPhysicsConfig); the binding is enforced via build_episode_experiment_spec instead. Threading the profile as the literal call argument + wiring the macrostate basin objective into the analytic episode is Phase 5 (G-CONSTRAINED-OBJECTIVE). (Adversarial single-source-binding lens raised this; correctly refuted as a documented Phase-5 deferral against a non-green gate.)",
+      "adversarial_audit": {
+        "run_id": "wf_a14306f8-8f8",
+        "lenses": 5,
+        "agents": 14,
+        "tool_calls": 189,
+        "tokens": 801301,
+        "findings_raised": 8,
+        "findings_confirmed": 4,
+        "confirmed_and_FIXED": [
+          "[medium hash-completeness] the fingerprint test excised nested pathloss -> strengthened test_every_physics_field_enters_the_fingerprint to perturb every pathloss sub-field (code was already correct: asdict recurses pathloss; the TEST had a coverage hole).",
+          "[high compatibility-ood] _AXIS_TO_FIELD listed service_profile + query_law as OOD axes (not in the plan §12 catalogue) -> removed them; a profile/query-law mismatch now ALWAYS blocks the headline; updated the query_law test.",
+          "[high ideal-full-guard] src/optimization/headline.py::evaluate_policies_paired defaulted to an ungrounded ideal link (1.0) -> default is now link_override=None (full physics); an ideal link requires explicit allow_ideal_ablation=True else it RAISES (the quarantine is now invoked on the headline path, not merely available); test_headline opts into the ablation explicitly.",
+          "[medium mandatory-mechanisms] assert_canonical_mechanisms could be satisfied by a bypassed ideal-link trace when require_full_physics=False -> added an unconditional `if trace.link_override is not None: raise`, AND made canonical_episode's physical-mechanism trace flags HONEST (gated on full_physics, so an ideal-link trace reports them False)."
+        ],
+        "dismissed_correctly": [
+          "axis cardinality ('one axis at a time') not enforced — correctly refuted as a Phase-11 (G-SCALE-GENERALIZATION) protocol concern, not this static-closure gate; a blanket cap would wrongly reject the documented fixed-service-profile co-vary workflow.",
+          "intra-field OOD coarseness (axes aliasing onto a shared hash) — refuted: cross-FIELD protection holds (node_count cannot excuse physics, tested); intra-field aliasing is an explicit visible design choice; the load-bearing ideal/full guard is intact. (Phase-11 hardening note.)",
+          "trace flags 'lie' under link_override — was cosmetic (full_physics guard fires first); nonetheless HARDENED via the honest-flags + link_override-reject fixes above.",
+          "single-source binding not wired into run_consensus_episode — refuted as the documented Phase-5 deferral."
+        ],
+        "post_fix_tests": "tests/config/test_experiment_spec.py (9) + test_episode_spec_binding.py (7) + test_canonical_closure.py (4) + tests/optimization/test_headline.py (4) = 24 passed"
+      }
+    },
+    "G-CANONICAL-CLOSURE-VERDICT": {
+      "date": "2026-06-26",
+      "status": "GREEN",
+      "tests": "definitive post-fix full redesign regression = 206 passed (exit 0, 17m), identical count to the pre-fix 206 -> the 4 audit fixes are non-regressing; + the 24-test post-fix affected-suite run.",
+      "adversarial_workflow": "wf_a14306f8-8f8 — 5 lenses, 14 agents, 189 tool-calls, 801k tokens; 8 findings raised, 4 confirmed-after-refutation, ALL FIXED and re-verified.",
+      "conclusion": "ExperimentSpec fingerprints (incl. nested pathloss) + train==eval compatibility with an unconditional ideal/full-link guard + plan §4 mandatory-mechanism trace (honest under link_override) + headline-grounding guard + profile<->protocol<->physics single-source binding all hold. The OOD axis set now exactly matches the plan catalogue. The headline harness invokes the ideal-link quarantine. Remaining (Phase-5 deferral, documented): run_consensus_episode profile-arg signature + macrostate-objective wiring.",
+      "known_warning": "pre-existing benign float(grad-tensor) UserWarning in primal_dual.py:56 and dynamic_mc.py mean_energy reporting — not introduced by this round; left for a Phase-5 cleanup (detach before float)."
+    },
+    "S9-macrostate-constrained-objective": {
+      "date": "2026-06-26",
+      "contributes_to": ["G-CONSTRAINED-OBJECTIVE"],
+      "design": "design judge-panel workflow wf_f37372a9-061 (4 propose + 4 judge completed; the SYNTH agent failed the StructuredOutput retry cap, so I synthesized from the transcripts). Top two (both 27/30) were first-passage-hazard designs with Gaussian-CLT occupancy; synthesized = CLT occupancy + increment-share first-passage + bivariate-Mehler split + Rockafellar CVaR + Poisson-binomial exact small-N test cross-check.",
+      "modules": [
+        "src/metrics/basin_surrogate.py (basin_surrogate_outcomes + confirm_cvar_surrogate)",
+        "src/optimization/macrostate_objective.py (macrostate_metrics, macrostate_lagrangian, MacrostateDuals, is_feasible)"
+      ],
+      "tests": [
+        "tests/metrics/test_basin_surrogate.py (9)",
+        "tests/optimization/test_macrostate_objective.py (4)"
+      ],
+      "evidence": {
+        "four basin outcomes in [0,1] and sum to 1 EXACTLY (telescoping first-passage)": "PASS (1e-9)",
+        "all-correct -> P_correct>0.98; all-wrong -> F_wrong>0.98; tiny mass -> F_deadline>0.9": "PASS",
+        "balanced opposing groups -> F_split>0.3": "PASS",
+        "F_wrong monotone in wrong mass; differentiable in the marginals (nonzero grad)": "PASS",
+        "Gaussian-CLT occupancy matches INDEPENDENT Poisson-binomial exact within 5% (N=40, continuity-corrected)": "PASS",
+        "CVaR_q(T_confirm|O=C) finite, >= mean, >0": "PASS",
+        "objective metrics carry the macrostate basins + selection-bias fields (energy_per_attempt/success, deadline_capped_latency)": "PASS",
+        "energy_per_success >= energy_per_attempt": "PASS",
+        "macrostate_lagrangian differentiable; dual ascent raises mu on violation, floors at 0 when satisfied": "PASS",
+        "is_feasible excludes the infeasible (mostly-wrong) policy, admits the good one": "PASS"
+      },
+      "exactness_boundary": "differentiable Level-2 surrogate: EXACT only in the shared-latent model + variance->0/temperature->0 limit; elsewhere CLT tail error O(1/sqrt(N_eff)), Gaussian-closure split, soft-CVaR temperature. The dynamic MC (S4) owns the headline wrong/split/deadline + real CVaR.",
+      "warning_fixes": "fixed the pre-existing float(grad-tensor) warnings: dynamic_mc.py detaches the report-only cumulative_time/energy before the float casts; primal_dual.py uses a detach-safe _to_float for the duals/history.",
+      "remaining_for_gate": "end-to-end training demonstration (train the ESD-GNN on the analytic macrostate objective; show dual ascent enforces the constraints + training reduces the MC's F_wrong toward the topology-oracle), thread the profile into run_consensus_episode / dynamic_mc as the literal single source, and the MC headline basin integration (S4 already reports basin outcomes). Plus the adversarial review verdict (wf_5292ab28-0d8).",
+      "adversarial_audit": {
+        "run_id": "wf_5292ab28-0d8",
+        "lenses": 5,
+        "agents": 7,
+        "findings_raised": 2,
+        "findings_confirmed": 0,
+        "dismissed_then_hardened": [
+          "[mass-conservation] sum-to-1 holds only if omega_scn sums to 1 (the per-scenario partition telescopes to 1e-16 over 300 random instances; mixture inherits it). Dismissed (callers pass normalized weights) BUT hardened: basin_surrogate_outcomes now validates omega_part & omega_scn sum to 1.",
+          "[faithfulness] A=clamp(a_C+a_W+a_S,0,1) could overshoot and floor F_deadline at 0 -> rank flips / false-pass is_feasible. Dismissed: the verifier reproduced the overshoot ONLY from physically-infeasible inputs (c_i+w_i>1); real finalization marginals satisfy c_i+w_i<=1 (mutually-exclusive states) ⇒ mu_C+mu_W<=1 ⇒ basins genuinely disjoint, no overshoot. Hardened: documented the c+w<=1 precondition + clarified is_feasible (surrogate=training check; MC=headline judge)."
+        ],
+        "post_hardening_tests": "13 surrogate+objective tests pass under -W error::UserWarning (no warnings); targeted regression optimization+validation+metrics = 79 passed (exit 0).",
+        "warning_fixes_verified": "the pre-existing production float(grad-tensor) warnings are gone; the last test-side one (test_primal_dual.py:61) is also fixed (detach)."
+      }
+    },
+    "S10-train-macrostate-demo": {
+      "date": "2026-06-26",
+      "contributes_to": ["G-CONSTRAINED-OBJECTIVE"],
+      "modules": ["src/optimization/macrostate_objective.py::train_macrostate"],
+      "tests": ["tests/optimization/test_train_macrostate.py (2 passed, 27s)"],
+      "scenario": "two_opposing_regions + tight deadline R_d=8 + imperfect fixed link (link_override=0.6) -> the DEADLINE basin is the dominant, topology-reducible failure (polling agreeing peers forms quorums faster). link_override isolates the topology lever; full-physics headline training is Phase 7 / G-ESP-BASELINE.",
+      "evidence": {
+        "training raises surrogate P_correct (reduces total reliability failure)": "0.007 -> 0.057 (train) / 0.006 -> 0.060 (held-out)",
+        "violated-constraint dual ascends (F_deadline >> eps_d)": "mu_d 10.4 -> 363.6",
+        "reliability HARD constraint not traded up (F_wrong)": "stays 0.0",
+        "generalises to a held-out scene": "PASS (post P_correct > pre + 0.005)",
+        "INDEPENDENT dynamic-MC confirms basin_P_correct(trained) > basin_P_correct(untrained)": "PASS (1200 trials, CRN seed)",
+        "MC four basin outcomes still sum to 1": "PASS"
+      },
+      "self_audit": "differentiability (loss.backward changes the model -> training works), dual ascent detached (_to_float), no truth leak (policy sees observable features only; participation exogenous), link_override explicitly an ablation. The surrogate+objective were already 5-lens audited (S9, 0 confirmed).",
+      "note": "demonstrated on the DEADLINE basin (the dominant reducible failure in this regime); the same primal-dual mechanism applies to mu_w/mu_s. A high macrostate F_wrong needs the wrong mass to dominate the participation scope (application-weighted) — the mechanism is metric-agnostic."
+    },
+    "G-CONSTRAINED-OBJECTIVE-VERDICT": {
+      "date": "2026-06-26",
+      "status": "GREEN (mechanism)",
+      "exit_criteria": {
+        "dual variables auto-respond to constraint violation": "PASS (mu_d 10->364)",
+        "infeasible policy excluded before D/E comparison": "PASS (is_feasible hard filter)",
+        "reliability never traded for latency/energy": "PASS (F_wrong not traded up; reliability terms are constraints not Pareto axes)"
+      },
+      "evidence": "differentiable basin-hazard surrogate (S9a, Poisson-binomial validated, sum-to-1 exact) + reliability-constrained primal-dual objective with selection-bias metrics (S9b) + end-to-end training demo with INDEPENDENT MC confirmation (S10); 5-lens adversarial audit of the surrogate/objective math (0 confirmed). 15 macrostate-objective tests green.",
+      "deferred_refinements": "thread the ConsensusServiceProfile into run_consensus_episode as a literal arg (the consistency binding is already enforced by build_episode_experiment_spec; canonical closure is 🟢), and retire the analytic node-union F from the headline (the MC already provides the macrostate basin headline (S4); the analytic node-union F remains a legacy fixed-N diagnostic alongside strict_disagreement). These are cosmetic/canonical-closure items, not part of the constrained-objective exit."
+    },
+    "S11-overlapping-correlated-env": {
+      "date": "2026-06-26",
+      "contributes_to": ["G-CORRELATED-ENV"],
+      "modules": ["src/environment/overlapping_evidence.py (OverlappingEvidenceModel + closed-form correlation + matched-marginal + scenario matrix)"],
+      "tests": ["tests/environment/test_overlapping_evidence.py (7)", "tests/environment/test_overlapping_scenarios.py (5)"],
+      "model": "O_i = Y* XOR B_road(i) XOR B_sensor(i) XOR B_map(i) XOR E_i; q_i=(1+mu_i)/2, mu_i=prod(1-2p); Corr(C_i,C_j)=mu_i mu_j (1/rho_sh^2-1)/sqrt((1-mu_i^2)(1-mu_j^2)), rho_sh=prod_{shared groups}(1-2p). Sensor/map groups are crosscutting spatial bands (overlap road segments) so same-road peers are NOT exchangeable — the D18 fix.",
+      "evidence": {
+        "marginal closed form q_i=(1+mu)/2": "PASS (1e-12)",
+        "empirical correlation matches the closed-form theory": "PASS (<0.01 at 200k samples)",
+        "zero-structure control -> zero correlation": "PASS",
+        "more shared groups -> higher correlation": "PASS",
+        "MATCHED-MARGINAL control: identical q_i, different covariance": "PASS (1e-12 marginal match; corr lo<1e-9 vs hi>0.05)",
+        "strength sweep: correlation responds to corr_strength (rising regime)": "PASS",
+        "OVERLAP breaks exchangeability: same-road pairs differ in corr by sensor/map co-membership": "PASS",
+        "truth (Y*/correct/bits) separate from observable group labels": "PASS",
+        "analytic_scenarios reproduce q_i exactly; omega sums to 1": "PASS",
+        "duck-typed integration into run_consensus_episode + run_dynamic_mc": "PASS"
+      },
+      "honest_property": "the XOR correlation is NON-monotone in the shared-bit error: it rises then turns over near p=0.5 (a max-entropy shared bit de-correlates). The strength-sweep test is asserted in the rising operating regime; this is a real model property, documented, not a bug.",
+      "mechanism_contract": {
+        "MECHANISM": "overlapping common-cause evidence correlation (the structure CDQ 2.0 diversity will exploit)",
+        "C1_structure_existence": "PASS — target = same-road peers correlated via shared road/sensor/map bits; generator = XOR of independent Bernoulli common-cause + node bits; strength knob = corr_strength (strength sweep); absent control = iid / matched_marginal_low (zero correlation); matched variable = the MATCHED-MARGINAL pair (same q_i, only covariance differs).",
+        "C2_observability": "PASS — observable proxies = the exogenous road/sensor/map group LABELS (and spatial bands), never Y*/C_i/the sampled bits; truth/proxy separation tested.",
+        "C4_causal_controls": "the matched-marginal pair + zero-structure control + strength sweep are in place; the mechanism-BENEFIT factorial (CDQ on/off x structure on/off) is Phase 10 / G-CDQ2-EVALUATION (needs CDQ 2.0, Phase 8) — the ENVIRONMENT + controls are ready here.",
+        "C3_gradient": "deferred to G-CDQ2-GRADIENT (the differentiable pairwise-correlation objective uses overlapping_pairwise_correlation_matrix)."
+      },
+      "adversarial_audit": {
+        "run_id": "wf_dfd24740-fd3",
+        "lenses": 4,
+        "note": "the VERIFY phase hit the monthly spend limit (4 verify agents failed), so the 4 review-phase findings were UNVERIFIED, not refuted. I evaluated each solo; all 4 were legitimate and FIXED + regression-tested:",
+        "findings_fixed": [
+          "[correlation-math, real] the matrix correlation gave NaN at a p=0.5 SHARED bit (÷rho_sh²=0) and the scalar gave 0 — both wrong. Reimplemented BOTH using the direct cross-moment E[σ_iσ_j] (shared groups contribute 1, unshared contribute both signs) — NaN-free and correct everywhere (true corr at shared p=0.5 is 1). Regression: test_correlation_robust_at_half_probability_shared_bit + scalar==matrix generic.",
+          "[matched-marginal, doc] the |s_node_new|<=1 guard is actually CORRECT (the true feasibility), more permissive than the docstring's 'p_shared<=p_node_target' (which only holds for p<1/2). Aligned the docstring to the exact |1-2p_target|<=|1-2p_shared| condition.",
+          "[matched-marginal, defensive] added upfront [0,1] range validation to matched_marginal_shared (was deferred to a downstream _vp). Regression: test_matched_marginal_validates_inputs.",
+          "[truth-observability, real] the correlated_evidence trace sentinel checked only p_road, misreporting False when correlation lives in sensor/map (incl. matched_marginal_high). Added has_correlated_evidence() to both evidence models (any common cause) and used it in the canonical-episode trace (equivalent for the legacy EvidenceModel). Regression: test_correlated_evidence_sentinel_accurate_for_sensor_only_correlation (constraint #13)."
+        ],
+        "post_fix_tests": "16 overlapping tests (10 evidence + 6 scenario) pass under -W error::UserWarning; env regression 74 passed."
+      }
+    },
+    "S12-cdq2-kernel-math": {
+      "date": "2026-06-26",
+      "contributes_to": ["G-CDQ2-MATH"],
+      "covers": ["CDQ 2.0 kernel L=D^{1/2}(I+eta ZZ^T)D^{1/2}", "ESP exact degeneracy at eta=0", "quality/diversity separation", "k=2 closed form", "exact e_k(lambda(L)) / subset prob / inclusion", "near-linear normaliser (no NxN)"],
+      "modules": ["src/sampling/cdq2_kernel.py"],
+      "tests": ["tests/sampling/test_cdq2_kernel.py (15 passed, -W error)"],
+      "kernel": "L = D^{1/2}(I + eta ZZ^T) D^{1/2}, D=diag(a_j=exp(s_j)>0), Z unit-normalised rows [d,r], eta>=0. This is the FULL-RANK diagonal + rank-r correction that fixes the prior round's low-rank L=BB^T CDQ (which recovered ESP only at r=d).",
+      "algorithm": "Normaliser e_k(lambda(L)) via the EIGENVALUES of the per-source SPD kernel: L_sym=D_c^{1/2}(I+eta ZZ^T)D_c^{1/2} (c=a; eig(L_sym)=eig(L)); e_k=elementary-symmetric(eigvalsh(L_sym)) computed by a cancellation-free LINEAR add-one recursion on the (positive) eigenvalues. UNCONDITIONALLY STABLE (e_k is a sum of products of positives — no subtraction) and SMOOTHLY differentiable in a,Z,eta everywhere incl. eta=0 and repeated eigenvalues (e_k is a symmetric function => eigvalsh eigenvalue-backward has no 1/(lambda_i-lambda_j) gap denominators). Mean(c) factored out only to avoid float OVERFLOW (L_sym(c/s)=L_sym(c)/s exactly). [REPLACED the initial matrix-determinant-lemma z-series det=exp(tr log) — mathematically exact & near-linear-in-d but float64 catastrophic-cancellation-prone at wide dynamic range / large eta, see audit below.]",
+      "evidence": {
+        "eta=0 normaliser == ESP e_k (any Z, any r, k=1..3)": "PASS (rtol 1e-12)",
+        "eta=0 subset log-prob == ESP subset_log_probability (all C(6,3) subsets)": "PASS (1e-10)",
+        "eta=0 inclusion == ESP edge_inclusion_probability, sum=k": "PASS (1e-10)",
+        "separation det(L_S)=(prod a_j)det(I+eta Z_S Z_S^T) vs explicit |S|x|S| L_S logdet": "PASS (1e-10)",
+        "k=2 closed form (1+eta)^2-eta^2(z_j.z_l)^2 == explicit 2x2 det": "PASS (1e-9, +eps norm)",
+        "more-similar peers -> strictly smaller joint weight (diversity lever)": "PASS (monotone in rho)",
+        "normaliser vs brute force (eta in {0.25,1,3}, k=1..4)": "PASS (<=1e-10 rel)",
+        "normaliser vs brute force at rank r<k (r=2,k=3,4; rank-deficient diversity factor)": "PASS (<=1e-10)",
+        "normaliser WIDE-DYNAMIC-RANGE a=[1e-8..1e8] / [1e6,1e-3,..] (audit #1/#3) vs brute force": "PASS (<1e-9, finite)",
+        "normaliser NEAR-COLLINEAR rows + eta up to 1e9 (audit #2) finite & exact": "PASS (<1e-7)",
+        "inclusion HETEROGENEOUS quality (audit #3) nonnegative + matches brute force": "PASS (in [0,1], 1e-9)",
+        "eta gradient at EXACTLY eta=0 (audit #4): backward does not raise; eta.grad vs FD; inclusion eta-grad non-None": "PASS (rel-err <1e-4)",
+        "inclusion-LOSS backprop to logits s (audit #5) vs FD, eta in {0,0.9}": "PASS (rel-err <1e-4)",
+        "subset distribution sums to 1 and matches enumerate (det(L_S)/e_k)": "PASS (1e-10)",
+        "inclusion vs brute-force P(j in S), sum=k, in [0,1]": "PASS (1e-9)",
+        "autograd grad of log e_k vs central finite-diff: wrt a / wrt Z / wrt eta": "PASS (rel-err <1e-4)",
+        "batched [B,d] normaliser == per-source loop": "PASS (1e-10)",
+        "degree-k homogeneity in a at d=400 (no NxN, per-source d x d only)": "PASS (1e-8)",
+        "scale stability at a~50: log e_k vs log(brute force)": "PASS (1e-8)"
+      },
+      "exactness_boundary": "EXACT k-DPP normaliser/subset/inclusion under the CDQ 2.0 kernel for 0<=k<=d, validated vs brute-force enumeration (<1e-10, incl. wide dynamic range / collinear rows / large eta) and finite-diff gradients (<1e-4). Cost per source O(d_i^3 + d_i^2 r) (eigvalsh of the d_i x d_i SPD kernel — NOT global N x N); for bounded candidate degree d_i<=D_max (comm radius) this is O(D_max^2 . E) = near-linear in candidate edges E. The determinant-lemma z-series (spec §10) would shave d^3->d per source but is numerically fragile (audit-confirmed), so stability was chosen. The determinantal quorum P(m,n) under this kernel (spec §10) and the exact k-DPP sampler are the next sub-slices (S12c/S12d) before the gate closes.",
+      "adversarial_audit": {
+        "run_id": "wf_c696e8e5-3d6",
+        "lenses": 5,
+        "agents": 10,
+        "tool_calls": 141,
+        "tokens": 548487,
+        "findings_raised": 5,
+        "findings_confirmed": 5,
+        "findings_refuted": 0,
+        "note": "EXCELLENT catch rate — the verify phase reproduced ALL 5 concretely; complexity-noNxN lens was clean. All 5 FIXED + regression-tested:",
+        "confirmed_and_FIXED": [
+          "[high math-exactness #1] the determinant-lemma z-series assembled e_k = sum_m psi[m] Omega[k-m] in the LINEAR domain; for wide-dynamic-range a (realistic GNN logits [-7,7]) the alternating-sign terms cancelled catastrophically -> negative/NaN e_k -> log(neg)=NaN (97/750 cases bad). ROOT: (I+zD_c)^{-1} geometric series makes Omega coeffs alternate; no scale cures differential cancellation. FIX: replaced the whole z-series core with the eigenvalue route (e_k of eigvalsh(L_sym) via a positive linear recursion — manifestly cancellation-free). Regression: test_normalizer_wide_dynamic_range_no_cancellation.",
+          "[high numerics #2] same root: near-collinear rows + large eta -> negative ek_scaled -> NaN (true e_k provably >0, L SPD). FIXED by the eigenvalue route. Regression: test_normalizer_collinear_rows_large_eta_finite_and_exact (eta up to 1e9).",
+          "[high numerics #3] same root: a.mean() scaling cannot bound the dynamic range of heterogeneous a -> inclusion marginals went NEGATIVE (and NaN at a~1e12). FIXED by the eigenvalue route. Regression: test_inclusion_heterogeneous_quality_nonnegative.",
+          "[medium esp-degeneracy #4] the `if (e==0).all(): return psi[k]` fast path returned a tensor with NO eta dependency -> at exactly eta=0 backward() RAISED (eta sole leaf) / eta.grad was silently None — killing the spec §9 identifiability anchor (init eta~0, LEARN diversity). FIX: the eigenvalue route has no eta fast path; eta enters L_sym linearly so dL/d_eta=D^{1/2}ZZ^TD^{1/2}!=0 and the gradient is live at eta=0. Regression: test_eta_gradient_at_exactly_zero.",
+          "[high gradient-trainpath #5] backprop of an inclusion-based loss to logits s was silently wrong (~0.8 rel-err) because src/mainline/symmetric_polynomials.py::_LogAddExp.backward saved CONSTANT softmax weights (no grad_fn), dropping the (analytically-zero-diagonal) e_k Hessian. TWO fixes: (a) the cdq2 eigenvalue route uses a plain linear ESP recursion (_elem_sym_positive, double-differentiable, no _LogAddExp); (b) ALSO made the shared _LogAddExp double-differentiable (save inputs, recompute weights differentiably) with -inf-safe second order (finite far-negative sentinel + both-(-inf)->0 mask, preserving the masked-candidate zero-grad property). Regressions: test_inclusion_loss_backprops_to_logits (cdq2) + test_logaddexp_is_double_differentiable / test_logaddexp_neg_inf_safe_after_double_backward_fix (shared ESP)."
+        ],
+        "post_fix_tests": "tests/sampling/test_cdq2_kernel.py (20) + tests/test_g2_symmetric_polynomials.py (incl. 2 new double-backward) pass under -W error; targeted symmetric_polynomials-consumer regression 78 passed; FULL-SUITE regression 359 passed (exit 0, 28m) — the shared _LogAddExp double-backward change is non-regressing across the entire codebase (1 pre-existing finite_blocklength warning, unrelated)."
+      }
+    },
+    "S12c-cdq2-determinantal-quorum": {
+      "date": "2026-06-26",
+      "contributes_to": ["G-CDQ2-MATH"],
+      "covers": ["heterogeneous determinantal quorum P(m,n) under the CDQ 2.0 kernel (spec §10)", "eta=0 => ESP quorum", "exact vs brute force + principal-minor reference", "differentiable, no NxN"],
+      "modules": ["src/sampling/cdq2_quorum.py"],
+      "tests": ["tests/sampling/test_cdq2_quorum.py (8 passed, -W error)"],
+      "law": "P(m,n) = [z^k x^m y^n] det(I+zLG) / e_k(lambda(L)), g_j(x,y)=p0_j+p+_j x+p-_j y. Evaluator: [z^k]det(I+zLG) at integer grid (x_a,y_b) = e_k(lambda(LG)) = e_k(lambda((I+eta ZZ^T)diag(c))) with c_j=a_j g_j (the STABLE eigenvalue kernel core at deformed quality c); assemble (k+1)x(k+1) logD, remove ONE common offset M=max(logD) (P=N/sumN invariant to a common scale -> overflow-free + exact), exp, 2-D inverse-Vandermonde N=Vinv D Vinv^T, zero m+n>k, P=N/sum(N). sum_{m,n}P=1 by construction (gen func at x=y=1).",
+      "free_references": "L = B_tilde B_tilde^T with B_tilde=D^{1/2}[I|sqrt(eta)Z], so the EXISTING low-rank bruteforce_determinantal_quorum(B_tilde,..) (subset x 3^k enumeration) and determinantal_quorum_distribution(B_tilde,..) (principal-minor grid) are two INDEPENDENT exact references — both validated <1e-10.",
+      "evidence": {
+        "sum_{m,n} P(m,n) = 1 (eta in {0,0.7,2.5}, k=2..4)": "PASS (1e-10), P>=0",
+        "P(m,n) vs subset x assignment brute force on B_tilde (eta in {0.5,2}, k=2,3)": "PASS (<1e-10)",
+        "P(m,n) vs principal-minor reference determinantal_quorum_distribution(B_tilde)": "PASS (1e-10)",
+        "eta=0 == ESP diagonal-kernel quorum (independent impl)": "PASS (1e-10)",
+        "decision h+ = P[m>=alpha], h- = P[n>=alpha], h++h-+h0 = 1 (k=4,alpha=3)": "PASS (1e-10)",
+        "batched [B,d] == per-source loop": "PASS (1e-10)",
+        "differentiable in a, Z, eta, p_correct (grads finite, eta-grad nonzero)": "PASS",
+        "diversity shifts the quorum: uniform quality + 2 orthogonal collinear clusters of opposite correctness -> eta=3 changes P(m,n) and h+ vs eta=0": "PASS (>1e-3)"
+      },
+      "exactness_boundary": "exact P(m,n) under the CDQ 2.0 kernel for 1<=k<=d; per source O((k+1)^2 (d^3 + d^2 r)) (eigvalsh of the d x d kernel at each of the (k+1)^2 grid points — never N x N). Inherits the kernel core's unconditional stability (no catastrophic cancellation). Wiring into the canonical episode / dynamic MC (the bucketed cdq2 quorum path, replacing/extending cdq_bucketed_quorum) + the exact k-DPP sampler is the remaining S12d sub-slice before G-CDQ2-MATH closes.",
+      "adversarial_audit": {
+        "run_id": "wf_bb1ada4c-747",
+        "lenses": 4,
+        "agents": 4,
+        "tool_calls": 55,
+        "tokens": 203686,
+        "findings_raised": 0,
+        "findings_confirmed": 0,
+        "per_lens": "math-exactness[] (14 tool-calls) · esp-and-numerics[] (18, incl. the all--inf-grid / common-offset concern — clean: the (x,y)=(1,1) grid point always has c=a>0 so M is finite) · differentiability[] (13) · complexity-noNxN[] (10) — ALL CLEAN",
+        "conclusion": "the quorum is a thin, exact layer over the already-audited-and-fixed stable eigenvalue kernel core; reuses the proven Vandermonde interpolation; 0 defects across 4 independent lenses + 8 unit tests (2 independent references <1e-10) + eta=0 ESP collapse."
+      }
+    },
+    "S12d-cdq2-sampler": {
+      "date": "2026-06-27",
+      "contributes_to": ["G-CDQ2-MATH"],
+      "covers": ["exact k-DPP sampler for the CDQ 2.0 kernel (dynamic-MC judge)", "eta=0 => ESP sampler", "empirical convergence to the exact normaliser/inclusion", "no NxN"],
+      "modules": ["src/sampling/cdq2_kernel.py::cdq2_sample"],
+      "tests": ["tests/sampling/test_cdq2_sampler.py (7 passed, -W error)"],
+      "algorithm": "standard Kulesza-Taskar k-DPP eigen-sampler on the full-rank d x d SPD kernel L=D^{1/2}(I+eta ZZ^T)D^{1/2}: eigh(L) -> (1) select k eigenvectors by the elementary-symmetric k-DPP rule (weights=eigenvalues), (2) elementary-DPP sample from the selected eigenvectors. Induced law = P(S)=det(L_S)/e_k(lambda(L)) by construction. No gradient (MC judge). Mean quality factored out before eigh (overflow-safe; the law is scale-invariant — eigenvectors + eigenvalue-ratio marginals are degree-0 in the scale). L is the per-source d x d kernel, never N x N.",
+      "evidence": {
+        "always exactly k distinct candidates in range": "PASS (50 draws + 4000-config sweep in review: 0 bad-cardinality)",
+        "k > d (or > #positive eigenvalues) raises (shortage)": "PASS",
+        "empirical subset frequencies -> exact cdq2_enumerate_distribution (d=4,k=2,40k)": "PASS (<0.02; review N=200k <0.0015)",
+        "empirical inclusion frequencies -> exact cdq2_inclusion (d=6,k=3,30k)": "PASS (<0.02, sum->k)",
+        "eta=0 empirical inclusion == ESP edge_inclusion_probability": "PASS (<0.02)",
+        "diversity (eta>0) avoids co-selecting similar peers: P(same collinear pair) drops below 1/3 (analytic) and the sampler reproduces it (empirical)": "PASS (analytic <1e-9; empirical <0.02)",
+        "huge-magnitude quality (a~1e200) overflow-safe + reproducible + scale-invariant law": "PASS (inclusion huge==unit 1e-9)"
+      },
+      "exactness_boundary": "exact k-DPP sampler (induced law = the kernel law by construction); validated by MC convergence to the EXACT (audited) cdq2_enumerate_distribution / cdq2_inclusion (a sampler is stochastic, so convergence is the right judge, not a deterministic <1e-10). Per source O(d^3) eigh on the d x d kernel (bounded degree), no N x N. eta=0 reduces to the ESP elementary-symmetric subset sampler.",
+      "adversarial_audit": {
+        "method": "single focused independent review agent (general-purpose, 74 tool-calls, 79k tokens) — line-by-line vs the trusted kdpp_sample + own MC (N=200k, 5 stress cases: generic SPD / eta=0 diagonal / collinear pairs / rank-1 Z with 1e-3..1e3 quality / k==d).",
+        "verdict": "CORRECT — 0 distributional defects. All 6 scrutiny points (eigh(L).V vs U=BVp/sqrt(lam); step-1 DP marginal; step-2 projection+QR; eta=0 sign/order invariance; pos-eigenvalue filter + k>m check; generator determinism / no global RNG) verified correct.",
+        "low_finding_fixed": "[low, non-distributional] the sampler built L from raw a (no mean scale-out like the normaliser) -> eigh overflow margin only at extreme magnitude. FIXED (scale c by mean before eigh; law unchanged — scale-invariant). Regression: test_sampler_huge_magnitude_no_overflow (a~1e200)."
+      }
+    },
+    "G-CDQ2-MATH-VERDICT": {
+      "date": "2026-06-27",
+      "status": "GREEN",
+      "covers": ["CDQ 2.0 kernel L=D^{1/2}(I+eta ZZ^T)D^{1/2}", "ESP exact degeneracy at eta=0", "det separation + k=2 form", "exact normaliser / subset / inclusion", "determinantal quorum P(m,n)", "exact k-DPP sampler", "differentiable", "no NxN / near-linear"],
+      "slices": ["S12 (kernel core)", "S12c (determinantal quorum)", "S12d (sampler)"],
+      "tests": "tests/sampling/test_cdq2_kernel.py (20) + test_cdq2_quorum.py (8) + test_cdq2_sampler.py (7) + tests/test_g2_symmetric_polynomials.py (2 new double-backward) — all -W error; full sampling suite 66 passed together (3m10s); pre-sampler full-suite regression 359 passed (the shared _LogAddExp double-backward fix is non-regressing across the codebase).",
+      "adversarial": "kernel audit wf_c696e8e5-3d6 (5 lenses, 5/5 real findings FIXED — the det-lemma z-series catastrophic cancellation replaced by the unconditionally-stable eigenvalue route; eta=0 gradient; _LogAddExp double-backward); quorum audit wf_bb1ada4c-747 (4 lenses, 0 findings); sampler review (1 agent, 0 distributional defects, 1 low robustness fix).",
+      "exit_criteria": {
+        "eta=0 EXACTLY recovers ESP (normaliser/subset/inclusion/quorum/sampler)": "PASS (any Z, any r, <1e-10 / MC-converged)",
+        "det(L_S)=(prod a_j)det(I+eta Z_S Z_S^T) + k=2 closed form": "PASS (1e-10)",
+        "exact normaliser/subset/inclusion vs brute force": "PASS (<1e-10, incl. wide dynamic range / collinear / large eta after the eigenvalue refactor)",
+        "determinantal quorum P(m,n) vs brute force + principal-minor ref": "PASS (<1e-10)",
+        "exact k-DPP sampler (MC -> exact law)": "PASS (<0.0015 at N=200k)",
+        "gradient autograd vs finite-diff": "PASS (rel-err <1e-4; incl. eta=0 and inclusion-loss->logits)",
+        "no NxN / near-linear in E": "PASS (per-source d x d only; O(D_max^2 . E) for bounded degree)"
+      },
+      "deferred_to_phase10": "wiring the CDQ 2.0 inclusion/quorum into the BUCKETED canonical path (cdq2 analogues of cdq_edge_inclusion / cdq_bucketed_quorum + a CDQ2 query policy duck-typed into run_consensus_episode / run_dynamic_mc) is G-CDQ2-EVALUATION (Phase 10), where the ESP-vs-old-CDQ-vs-CDQ2 factorial actually exercises it end-to-end. The MATH gate is the exact kernel/quorum/sampler math + gradients, all complete here. (NOTE: the bucketed path will need a>=0 padded-slot handling — the public cdq2_* keep the a>0 contract; padded exclusion is a Phase-10 wiring detail.)"
+    },
+    "S13-cdq2-correlation-objective": {
+      "date": "2026-06-27",
+      "contributes_to": ["G-CDQ2-GRADIENT", "G-CORRELATED-ENV (closes C3)"],
+      "covers": ["differentiable pairwise-correlation objective L_corr (spec §11)", "first-order-differentiable pairwise inclusion pi^(2) via Schur complement", "eta=0 => ESP pairwise", "C3 matched-marginal gradient discrimination", "no float()/.item()/detached score on the training path"],
+      "modules": ["src/sampling/cdq2_correlation.py"],
+      "tests": ["tests/sampling/test_cdq2_correlation.py (7 passed, -W error)"],
+      "objective": "L_corr = sum_i sum_{j<l} pi^(2)_{i,jl} R_{jl} = E_{S~kDPP}[ sum_{j<l in S} R_{jl} ] (expected within-selected-set total correlation; minimising it trains the diversity head Z,eta to avoid co-selecting correlated peers). R from overlapping_pairwise_correlation_matrix (the deployment-observable proxy).",
+      "pairwise_inclusion": "pi^(2)_{jl} = det(L_{{j,l}})·e_{k-2}(lambda(L/L_{{j,l}}))/e_k via the SCHUR-COMPLEMENT QUOTIENT identity sum_{S superset of T,|S|=k} det(L_S) = det(L_T)·e_{k-|T|}(lambda(L/L_T)) — verified by hand for t=1 (gives sum_{l!=j}det(L_{{j,l}})) and t=2. FIRST-order differentiable (2x2 solve + eigvalsh of the SPD Schur + the positive ESP recursion; e_{k-t} is a symmetric function so no eigen-gap denominators) — deliberately NOT a 2nd-order autograd of e_k (which the training backprop would turn into a fragile 3rd-order op at degenerate eigenvalues).",
+      "evidence": {
+        "pi^(2) vs brute-force subset enumeration (d=6/7/8, r in {3,4,2 (r<k)}, eta in {0.4,1.5}, k=2..4)": "PASS (<1e-9)",
+        "diag(Pi) == single inclusion pi_j": "PASS (1e-9)",
+        "sum_{l!=j} pi^(2)_{jl} = (k-1) pi_j (consistency identity)": "PASS (1e-9)",
+        "sum_{j<l} pi^(2)_{jl} = C(k,2)": "PASS (1e-9)",
+        "eta=0 pairwise == ESP pairwise inclusion": "PASS (1e-9)",
+        "L_corr vs brute-force sum_{j<l} R_{jl} pi^(2)_{jl}": "PASS (<1e-9)",
+        "autograd dL_corr/d(a,Z,eta) vs central finite-diff": "PASS (rel-err <1e-4)",
+        "no float()/.item()/detached score on the differentiable functions (inspected)": "PASS (only a bool(a.detach()...) validation guard)",
+        "C3: matched-marginal pair (same q_i, diff HETEROGENEOUS R) -> different gradient to eta AND Z": "PASS (|dge|>1e-4, ||dgZ||>1e-4) — correlation gradient reaches + discriminates covariance (marginals identical so the difference is PURELY covariance-driven)",
+        "huge-quality (a~1e200) overflow-safe + scale-invariant L_corr": "PASS (1e-9)"
+      },
+      "exactness_boundary": "exact pi^(2)/L_corr for 2<=k<=d, vs brute force <1e-10 + finite-diff grad <1e-4. Per source O(d^2 (d-2)^3) (a Schur eigvalsh per pair on the d x d kernel — never N x N); polynomial in bounded candidate degree, linear in #sources. The constant-factor O(d^3) all-pairs reduction is a scale-phase (Phase 11) optimisation, not a correctness/differentiability/identifiability concern.",
+      "honest_property": "the diversity gradient VANISHES against a UNIFORM (exchangeable) correlation: sum_{j<l} pi^(2)_{jl} = C(k,2) is constant, so a constant R gives a policy-independent cost (dL_corr/d(policy)=0). The mechanism only bites when R is HETEROGENEOUS across pairs — exactly the overlapping environment's D18 fix (crosscutting common causes break exchangeability). The C3 test therefore uses a block-heterogeneous matched-marginal pair, not a uniform one (the first audit-flagged test used an identically-zero low arm; fixed).",
+      "adversarial_audit": {
+        "run_id": "wf_8f8422d1-5ad",
+        "lenses": 4,
+        "agents": 6,
+        "tool_calls": 71,
+        "tokens": 290184,
+        "findings_raised": 2,
+        "findings_confirmed": 1,
+        "findings_refuted": 1,
+        "per_lens": "schur-exactness[] · gradient-purity[] — both CLEAN (the Schur identity + first-order purity verified)",
+        "confirmed_and_FIXED": [
+          "[medium, tests-only, objective-semantics-C3] the C3 matched-marginal test was VACUOUS: build_overlapping_scenario('matched_marginal_low') returns an identically-ZERO R, and L_corr is linear in R, so the lo arm's gradient was bit-exactly 0 — the 'discrimination' assertions collapsed to a presence-vs-absence check a structure-blind gradient would also pass. FIXED: rebuilt the test with TWO non-zero matched-marginal arms (matched_marginal_shared p_shared=0.10 vs 0.20, identical q_i) AND a heterogeneous (two-sensor-group, block) R + group-aligned Z (a uniform R makes dL_corr/d-policy=0 by the C(k,2) identity — discovered while fixing). Now both arms carry non-zero, genuinely different covariance and the eta/Z gradients differ — a true covariance-discrimination test."
+        ],
+        "refuted_but_hardened": [
+          "[low, complexity-noNxN] pi^(2)/L_corr in the un-scaled linear domain could overflow eigh at extreme quality. REFUTED by the verify agent as out-of-regime (no wrong number in the reachable envelope), but HARDENED anyway for consistency with the sampler: cdq2_pairwise_inclusion now factors out mean(a) before building L and computes e_k from the SAME scaled L — every pi^(2)=numerator/e_k ratio is exactly scale-invariant, so this is overflow-safe AND distribution-preserving. Regression: test_correlation_cost_huge_quality_overflow_safe (a~1e200)."
+        ],
+        "post_fix_tests": "tests/sampling/test_cdq2_correlation.py (8) under -W error; sampling regression (excl. slow MC sampler) 65 passed."
+      }
+    },
+    "G-CDQ2-GRADIENT-VERDICT": {
+      "date": "2026-06-27",
+      "status": "GREEN",
+      "covers": ["differentiable pairwise-correlation objective L_corr (spec §11)", "first-order pi^(2) via Schur complement", "eta=0 ESP degeneracy", "no float()/.item()/detached score", "C3 gradient reachability + covariance discrimination"],
+      "slice": "S13",
+      "tests": "tests/sampling/test_cdq2_correlation.py (8) -W error; sampling regression 65 passed (excl. MC sampler).",
+      "adversarial": "wf_8f8422d1-5ad (4 lenses, 6 agents): schur-exactness + gradient-purity CLEAN; 1 confirmed test-vacuity (FIXED with a heterogeneous matched-marginal pair) + 1 refuted-but-hardened overflow.",
+      "closes": "the overlapping environment's Mechanism Contract C3 (the differentiable correlation gradient reaches the CDQ 2.0 diversity params and is identifiable from / discriminates the covariance structure under matched marginals). C4 (mechanism-benefit factorial) remains Phase 10 / G-CDQ2-EVALUATION.",
+      "exit_criteria": {
+        "pi^(2) exact vs brute force": "PASS (<1e-9, incl r<k / k=2 / k=d)",
+        "consistency identities (diag=pi_j, row-sum=(k-1)pi_j, total=C(k,2))": "PASS",
+        "eta=0 => ESP pairwise inclusion": "PASS",
+        "autograd vs finite-diff in a,Z,eta": "PASS (<1e-4)",
+        "no float()/.item()/detached score on the training path": "PASS (inspected)",
+        "C3 matched-marginal gradient discrimination (heterogeneous R, identical marginals)": "PASS",
+        "no NxN": "PASS (per-source d x d Schur only)"
+      }
+    },
+    "S15-cdq2-evaluation-factorial": {
+      "date": "2026-06-27",
+      "contributes_to": ["G-CDQ2-EVALUATION", "G-CORRELATED-ENV (C4)"],
+      "status": "GREEN (user-decided Option 1, 2026-06-27): accept the scoped P_correct win per the plan's 'mechanism effective & scoped' rule, with the F_wrong caveat documented (NOT claimed). No F_wrong reduction faked.",
+      "harness": "src/evaluation/cdq2_factorial.py (reusable: observable_group_diversity, run_factorial_cell, esp_vs_cdq2_cell, wilson_ci) + tests/evaluation/test_cdq2_factorial.py (honest invariants) + docs/gate_evidence/macrostate/run_cdq2_factorial.py -> cdq2_factorial_results.json (reproducible evidence).",
+      "design": "FAIR matched-marginal factorial judged by the INDEPENDENT dynamic-MC basin outcomes (headline judge). ESP and CDQ 2.0 share the SAME distance-based quality (ESP == CDQ2 eta=0), so the ONLY difference is the CDQ 2.0 diversity correction (eta=8, OBSERVABLE sensor-group one-hot Z — the actually-correlated group in matched_marginal_high; deployment-observable labels, no truth leakage). N=36, k=3, r_max=14, base_node_err=0.38, corr_strength=0.33. Arms: iid / matched_marginal_low (zero cov) / matched_marginal_high (positive cov) — the mm pair has IDENTICAL marginal q_i. Fixed-link 0.85 (diversity-FAVORABLE ablation, isolates the lever) + full physics. 6 seeds x 3000 trials (fixed) / 3 x 3000 (full), pooled Wilson CIs.",
+      "result_headline": {
+        "scoped_P_correct_benefit": "CONFIRMED + CI-SEPARATED + matched-marginal-controlled. matched_marginal_high: CDQ2 P_correct [0.634,0.648] vs ESP [0.618,0.632] (fixed-link, CIs disjoint); full physics CDQ2 [0.638,0.658] vs ESP [0.620,0.640]. iid / matched_marginal_low (no cov): CDQ2 ~ ESP (P_correct CIs OVERLAP, dP=-0.005). overlapping_sensor_source (the plan's primary structure-on, sensor+map cov): dP=+0.0057 fixed / +0.0062 full (positive, scoped; smaller because P_correct~0.37 there, the consensus-failure regime). => the benefit is COVARIANCE-driven and SCOPED to the correlated environment (ESP cannot distinguish the identical-marginal high/low arms; CDQ2 can) — exactly the plan's 'CDQ wins only in overlapping correlation => mechanism effective and scoped' rule + the C4 mechanism-benefit.",
+        "channel_caveat_HONEST": "the P_correct gain comes ENTIRELY from FASTER QUORUM (F_deadline -0.025..-0.028, clearly significant), NOT from the intended correlation-avoidance. F_wrong is NOT reduced — point estimate consistently UP (+0.009 fixed / +0.014 full, borderline CI). So the operative mechanism is 'diversity -> broader spatial reach -> faster quorum', NOT 'diversity -> less redundant evidence -> fewer WRONG decisions'.",
+        "mechanistic_explanation": "fundamental, not a tuning artifact: in a MAJORITY-CORRECT regime, polling diversely INCREASES a node's exposure to the MINORITY correlated-wrong clusters, so it slightly raises F_wrong; it only rescues the minority of nodes already inside wrong clusters. Robust across 3 exploratory regimes (uniform/distance quality, all-group/sensor-only oracle Z, eta sweep up to 10) + the rigorous run; F_wrong increases MONOTONICALLY with eta (eta->0 => CDQ2->ESP => dF_wrong->0), so no eta rescues F_wrong.",
+        "surrogate_vs_headline_note": "the sensor-only oracle Z PERFECTLY minimizes the S13 within-poll correlation cost (upper bound on any trained Z), yet does NOT reduce F_wrong — so a policy TRAINED to minimize the correlation surrogate would not improve (would slightly worsen) the F_wrong basin. The surrogate and the MC AGREE on the SUCCESS metric P_correct (both favor diversity in the correlated env) but DISAGREE on F_wrong specifically. This is the boundary of the correlation-objective's fidelity to the reliability headline (stop-condition #5-adjacent, but NOT a systematic P_correct misranking)."
+      },
+      "exit_criteria_assessment": {
+        "fair factorial (same quality, eta=0==ESP, matched-marginal control)": "PASS",
+        "judged by INDEPENDENT dynamic MC, basins sum to 1, not analytic marginals": "PASS",
+        "CDQ benefit SCOPED to correlation (neutral in iid, CI-win in correlated)": "PASS (P_correct)",
+        "CDQ 2.0 LOWERS the wrong/split RELIABILITY basins vs ESP": "NOT MET — F_wrong flat-to-slightly-UP; benefit is via the deadline channel",
+        "reliability not traded for latency/energy (constraint #4)": "AMBIGUOUS — CDQ2 trades F_deadline (down) for F_wrong (slightly up); net P_correct up; whether the F_wrong increase is acceptable is an application/research-priority CALL (a wrong consensus is the most safety-critical V2X failure) -> USER DECISION"
+      },
+      "honest_verdict": "a GENUINE, CI-separated, matched-marginal-controlled, correlation-SCOPED P_correct benefit (the plan's 'mechanism effective and scoped' rule is satisfied on the success metric), BUT the round's central 'CDQ 2.0 lowers F_wrong/F_split' framing is NOT supported — the benefit is faster-quorum, and F_wrong is not improved. Reported per the plan's 'accept the honest result' rule; the gate verdict (does scoped-P_correct-via-deadline constitute a Phase-10 pass for this round's reliability-first framing?) is surfaced to the user, NOT self-declared.",
+      "no_shortcut_attestation": "no threshold lowered, no scenario dropped, no test changed to pass; matched-marginal control done; old low-rank CDQ NOT used as the ESP comparator; full-physics confirmed the fixed-link direction; the negative F_wrong result is reported, not hidden.",
+      "harness_tests": "tests/evaluation/test_cdq2_factorial.py (6 passed, -W error): observable-Z truth-independence (C2), matched-marginal identical q_i, wilson_ci sanity, basins-sum-to-1, eta=0 MC ~ ESP, harness smoke. NO F_wrong-reduction asserted (honest)."
+    },
+    "S16-scale-generalization": {
+      "date": "2026-06-27",
+      "contributes_to": ["G-SCALE-GENERALIZATION"],
+      "covers": ["near-linear scaling N=100..10000 (no NxN)", "bounded degree / total_cells<=2E", "fixed protocol/service-profile/physics across N", "OOD-axis enforcement matrix (node_count registered)", "CDQ2 eta=0==ESP at scale", "basin headline via MC at scale"],
+      "modules": ["src/config/experiment_spec.py (query_law now accepts 'cdq2')"],
+      "evidence_scripts": ["docs/gate_evidence/macrostate/run_scale_generalization.py -> scale_generalization_results.json"],
+      "tests": ["tests/test_scale_generalization.py (6 passed, -W error)"],
+      "scaling": {
+        "N_range": "120, 336, 1092, 2772, 5952, 9840 (covers the plan's 100..10000)",
+        "E_per_N": "~9.15 (E grows linearly with N at fixed density)",
+        "maxdeg": "12 CONSTANT across all N (bounded by comm radius => no per-source NxN blowup)",
+        "total_cells_le_2E": "TRUE at every N (the bucketed layout)",
+        "runtime_loglog_slope": "ESP alpha=0.882, CDQ2 alpha=0.814 (sub-/near-linear; asymptotically ~1.0 — the largest two points (N=5952->9840) give alpha~1.0; small-N fixed-cost overhead makes the overall fit sub-linear)",
+        "CDQ2_vs_ESP": "CDQ2 is a ~2x CONSTANT factor (the per-source eigvalsh) with the SAME scaling slope — diversity does not change the asymptotic complexity",
+        "physics_note": "timing used link_override=0.9 to isolate the ALGORITHMIC scaling from the FBL constant; the FBL physics is itself per-EDGE (O(E)=O(N) for bounded degree), so full physics is also near-linear with a larger constant.",
+        "no_NxN_structural": "grep over src/ for (N,N)/num_nodes x num_nodes/eye(N) allocations => NONE. The canonical path uses only sparse radius graphs + the bucketed [m,w] layout + per-source [d,d] kernels (d=bounded degree)."
+      },
+      "ood_matrix": {
+        "fixed_hashes_across_N": "protocol_hash / service_profile_hash / physics_hash CONSTANT across all N; scene_distribution_hash VARIES => scaling N is exactly the registered 'node_count' OOD axis.",
+        "node_count_registered_allowed": "PASS (check_train_eval_compatible with allowed=('node_count',) succeeds)",
+        "unregistered_node_count_blocked": "PASS (no registered axis => IncompatibleExperimentError)",
+        "protocol_mismatch_blocked": "PASS (a non-OOD axis (beta differs) blocks even with node_count registered)",
+        "ideal_full_link_always_blocked": "PASS (full_physics mismatch raises even with node_count+physics registered — constraint #9)"
+      },
+      "self_audit": "no new math (reuses the audited canonical episode + ExperimentSpec). near-linear honestly framed (sub-linear fit from small-N overhead; ~linear at scale); no-NxN structurally confirmed (grep) not just empirically; OOD matrix complete (registered allow + 3 block cases incl. the unconditional ideal/full guard); fixed protocol/profile/physics across N verified by identical hashes; CDQ2 eta=0==ESP holds at N=300 (not just dev size); basin headline (sum-to-1, P_correct in (0,1)) works at scale via the independent MC (not node-union).",
+      "deferred_note": "the per-source O(d^5) pairwise-inclusion (Schur-per-pair) and O((k+1)^2 d^3) quorum are CONSTANT under bounded degree, so scaling in N is near-linear WITHOUT them needing optimisation; an O(d^3) all-pairs reduction is only needed for HIGH-DEGREE dense graphs (not the bounded-radius V2X regime) — left as a documented future optimisation, not a scale blocker here."
+    },
+    "S17-temporal-memory": {
+      "date": "2026-06-27",
+      "contributes_to": ["G-TEMPORAL"],
+      "covers": ["causal differentiable observable-driven temporal memory (EMA)", "temporal correlated-evidence sequence (persistence knob, matched-marginal-in-time)", "temporal Mechanism Contract C1-C5", "memory-driven CDQ 2.0 diversity MC demonstration (honest basin null)"],
+      "modules": ["src/metrics/temporal_memory.py (causal_ema, no_memory, estimate_quality)", "src/environment/temporal_sequence.py (TemporalCorrelationSequence)"],
+      "evidence_scripts": ["docs/gate_evidence/macrostate/run_temporal_factorial.py -> temporal_factorial_results.json"],
+      "tests": ["tests/test_temporal.py (9 passed, -W error)"],
+      "mechanism": "a sequence of T overlapping-evidence epochs with exactly one ACTIVE correlated sensor band; the band persists (persistence=1) or reshuffles (persistence=0, iid-in-time). matched-marginal-in-time: every node has the SAME q_i every epoch (only the covariance / its persistence changes). A CAUSAL EMA m_t=(1-rho)m_{t-1}+rho x_t over the OBSERVABLE per-band proxy x_t estimates the persistent structure and drives the CDQ 2.0 diversity.",
+      "contract_C1_C5": {
+        "C1_structure_existence": "PASS — persistence knob + active-band Markov schedule (constant under persistence=1, multi-band under 0); matched-marginal-in-time control isolates covariance from marginal.",
+        "C2_observability_no_leak": "PASS — observable_proxy is a per-band MEASUREMENT (schedule + noise), independent of any sampled truth (verified: drawing Y* does not change the proxy); the EMA is CAUSAL (m_t has EXACTLY zero gradient w.r.t. x_{>t} — no future leak).",
+        "C3_gradient_reachable": "PASS — causal_ema is differentiable in x AND rho (finite nonzero grads); the memory-driven diversity reaches the CDQ 2.0 params; no float()/.item()/detach on the path.",
+        "C4_causal_control": "PASS — matched-marginal-in-time (identical q_i across epochs and across the persistence regimes); a marginal-only policy is blind to the temporal structure.",
+        "C5_mainline_consistency": "PASS — rho=1 => m_t=x_t (memory OFF) and eta=0 => CDQ 2.0 == static ESP mainline (MC basin outcomes match within noise)."
+      },
+      "estimate_level_result": "the memory genuinely TRACKS the persistent structure: estimate_quality(EMA(proxy), true_band) is HIGH under persistence (mean >0.3 over 6 seeds) and >0.2 LOWER under iid-in-time — the memory only carries per-epoch information when the structure persists (scoped, matched-marginal-controlled).",
+      "basin_level_result_HONEST": "at the macrostate-basin headline (independent MC, T=8 epochs, 3 seeds x 800 trials, fixed link), the memory-driven CDQ 2.0 diversity does NOT beat ESP: mean basin P_correct ESP=0.654 vs memory=0.644 / no_memory=0.641 / oracle=0.634 (persistent) and ESP=0.653 vs memory=0.643 / no_memory=0.641 / oracle=0.644 (iid). memory edges no_memory by ~+0.002 (denoising) but ALL diversity variants are marginally BELOW ESP, and the oracle (concentrating diversity on the one true band) is even slightly worse. => the basin diversity-benefit is marginal/regime-dependent, INHERITING the Phase-10 (S15) caveat; the temporal memory's value is demonstrated at the ESTIMATE/structure-tracking level, NOT as a basin-reliability gain.",
+      "self_audit": "causality/no-future-leak, observable/no-truth-leak, differentiability, memory-off==static, matched-marginal-in-time all directly tested (9 tests). The basin null is reported honestly, not hidden; the diversity construction was corrected (the kernel unit-normalises Z, so the estimate must change z's DIRECTION (shared+diverse components), not its magnitude — the first formulation was washed out / degenerate and was fixed before recording).",
+      "scope_note": "this slice demonstrates the temporal-memory mechanism on the REGION-CORRELATION persistence structure; the same causal-EMA primitive + matched-marginal-in-time framework extends to effective-sampling drift / load persistence / weak-cut persistence (the other three plan-§13 structures) by swapping the observable proxy x_t — left as documented extensions, the mechanism being identical."
+    },
+    "G-TEMPORAL-VERDICT": {
+      "date": "2026-06-27",
+      "status": "GREEN (mechanism; with documented basin-null caveat, consistent with S15)",
+      "slice": "S17",
+      "basis": "the temporal-memory MECHANISM is fully delivered and Mechanism-Contract-verified (C1-C5): a causal, differentiable, observable-driven memory that tracks persistent correlated structure (estimate-quality scoped to persistence, matched-marginal-in-time controlled) and reduces to the static mainline when off. Headline stays the macrostate basin first-hitting via the independent MC; legacy global-risk emission does NOT enter.",
+      "DOCUMENTED_CAVEAT": "at the basin level the memory-driven CDQ 2.0 diversity does not beat ESP (marginal/null, even the oracle), inheriting the S15 finding that the diversity's basin payoff is marginal/regime-dependent. The temporal contribution is the structure-TRACKING memory (verified at the estimate level), not a basin-reliability gain.",
+      "exit_criteria": {
+        "temporal memory facing persistent structure (region correlation; framework extends to drift/load/weak-cut)": "PASS",
+        "differentiable, observable-driven, causal (no future/truth leak)": "PASS",
+        "Mechanism Contract C1-C5": "PASS",
+        "headline = macrostate basin first-hitting via independent MC (not legacy global-risk)": "PASS",
+        "matched-marginal-in-time control + memory-off==static sanity": "PASS",
+        "memory produces a basin-reliability GAIN over ESP": "NOT MET / NOT CLAIMED (basin null documented; value is at the estimate level)",
+        "no NxN, near-linear in N,E,T": "PASS (per-epoch reuses the near-linear canonical path; EMA is O(T))"
+      }
+    },
+    "G-SCALE-GENERALIZATION-VERDICT": {
+      "date": "2026-06-27",
+      "status": "GREEN",
+      "slice": "S16",
+      "exit_criteria": {
+        "near-linear in N,E (no NxN)": "PASS (loglog slope <1; ~linear at scale; maxdeg constant; total_cells<=2E; grep: no NxN allocation)",
+        "N=100..10000 demonstrated": "PASS (120..9840, episode runs in <7s at N=9840)",
+        "fixed protocol/service-profile/physics across scale (train==eval except OOD)": "PASS (constant hashes)",
+        "OOD-axis enforcement (registered allowed, else blocked, ideal/full always blocked)": "PASS (full matrix)",
+        "headline = macrostate basin first-hitting via independent MC at scale (basins sum to 1)": "PASS",
+        "CDQ2 eta=0==ESP at scale": "PASS"
+      },
+      "conclusion": "the canonical episode + dynamic MC + CDQ 2.0 kernel/quorum/inclusion are near-linear in N,E with no N x N for the bounded-degree V2X regime, with a fixed protocol/service-profile/physics across scale; scaling N is the registered node_count OOD axis and the enforcement matrix (allow registered / block unregistered / always-block ideal-full) holds."
+    },
+    "G-CDQ2-EVALUATION-VERDICT": {
+      "date": "2026-06-27",
+      "status": "GREEN (with documented caveat) — user-decided Option 1 (accept the scoped P_correct win per the plan's 'mechanism effective & scoped' interpretation rule).",
+      "slice": "S15",
+      "basis": "a GENUINE, CI-separated, matched-marginal-controlled, correlation-SCOPED P_correct benefit judged by the INDEPENDENT dynamic MC (CDQ2 wins only when covariance is present; neutral in iid/exchangeable; ESP cannot distinguish the identical-marginal high/low arms, CDQ2 can = the C4 mechanism-benefit). Fair (ESP==CDQ2 eta=0, same quality); observable-only diversity (C2); MC-not-analytic judge (constraint #10); basins sum to 1.",
+      "DOCUMENTED_CAVEAT": "the benefit flows through FASTER QUORUM (F_deadline down), NOT correlation-avoidance: F_wrong is NOT reduced (slightly up). The round's 'CDQ 2.0 lowers F_wrong/F_split' framing is therefore NOT claimed. Mechanistic boundary (fundamental, not tuning): in a majority-correct regime diverse polling raises exposure to the minority correlated-wrong clusters. The sensor-only oracle Z (upper bound on any Z trained on the S13 correlation cost) does not lower F_wrong either, so the correlation surrogate is a faithful proxy for P_correct but NOT for the F_wrong reliability basin.",
+      "closes": "G-CORRELATED-ENV Mechanism Contract C4 (mechanism-benefit factorial with the matched-marginal control: CDQ 2.0's basin benefit is identifiable as covariance-driven and scoped, distinct from any marginal effect). All 5 contract items now have evidence: C1/C2 (S11), C3 (S13), C4 (S15), C5 (config hashes, S1/S8).",
+      "exit_criteria": {
+        "fair factorial (same quality, eta=0==ESP, matched-marginal control)": "PASS",
+        "independent dynamic MC judge (basins sum to 1, not analytic marginals)": "PASS",
+        "benefit SCOPED to correlation (neutral iid, CI-win in correlated)": "PASS (P_correct)",
+        "C4 matched-marginal mechanism-benefit (ESP cannot distinguish, CDQ2 can)": "PASS",
+        "CDQ 2.0 lowers F_wrong/F_split reliability basins": "NOT MET / NOT CLAIMED (documented caveat; benefit via deadline channel)",
+        "no shortcut (no truth leak, no threshold change, no faked F_wrong)": "PASS"
+      }
+    },
+    "S14-cdq2-canonical-wiring": {
+      "date": "2026-06-27",
+      "contributes_to": ["G-CDQ2-EVALUATION (prerequisite)"],
+      "covers": ["bucketed CDQ 2.0 inclusion + quorum on the degree-bucketed layout", "exact padded-slot exclusion (mask path)", "CDQ2Policy duck-typed into run_consensus_episode + run_dynamic_mc", "eta=0 == ESP episode bit-for-bit", "MC subset sampler for CDQ 2.0"],
+      "modules": [
+        "src/sampling/cdq2_wiring.py (cdq2_edge_inclusion, cdq2_bucketed_quorum, CDQ2Policy)",
+        "src/sampling/cdq2_kernel.py + cdq2_quorum.py (optional `mask` threaded for exact padded exclusion)",
+        "src/environment/canonical_episode.py + src/validation/dynamic_mc.py (additive 'cdq2' dispatch + _CDQ2SubsetSampler)"
+      ],
+      "tests": ["tests/sampling/test_cdq2_wiring.py (9 passed, -W error)"],
+      "padded_exclusion": "the bucket slot_mask is threaded as `mask` into the CDQ 2.0 kernel: a padded slot (a=0) gets an EXACTLY-zero kernel row (zero eigenvalue -> 0 contribution to e_k, inclusion 0) — better than the old CDQ's sqrt(clamp_min(eps)) ~eps approximation. NaN-safe in forward AND backward: a zero deformed quality cs feeds an infinite sqrt'(0)=0.5/sqrt(0) backward, so we sqrt a sanitized input (pos=(real & cs>0); cs zeros->1) and re-zero via the boolean factor; and when a WHOLE grid point is all-excluded (e_k=0, e.g. ideal link ell=1 -> p0=0 for all), log(e_k) is clamped (log(0)=-inf x upstream-0 = 0*inf NaN) — both value-exact for any real quorum.",
+      "evidence": {
+        "cdq2_edge_inclusion == per-source cdq2_inclusion, sum_j pi=k": "PASS (<1e-9)",
+        "EXACT padded exclusion (degree-skew bucket): real pi sum=k, match per-source, no NaN": "PASS",
+        "eta=0 bucketed inclusion == ESP edge_inclusion_probabilities": "PASS (<1e-9)",
+        "cdq2_bucketed_quorum h+/h-/h0 sum to 1, >=0": "PASS",
+        "eta=0 CDQ2 episode == ESP episode bit-for-bit (S_allcorrect/F_wrong/F_disagree/c_ir)": "PASS (<1e-9)",
+        "eta>0 CDQ2 episode runs + differentiable in quality/diversity (grad finite, nonzero)": "PASS",
+        "ideal-link (link_override=1.0) episode backprops FINITE gradients (cs=0 corner)": "PASS (regression)",
+        "quorum gradient finite when p0=0 (pp+pm=1)": "PASS (regression)",
+        "MC _CDQ2SubsetSampler law: eta=0 == ESP subset law": "PASS (<1e-10)",
+        "CDQ2Policy runs in run_dynamic_mc, basin four outcomes sum to 1": "PASS (<1e-9)"
+      },
+      "exactness_boundary": "the bucketed wiring is exact (per-source CDQ 2.0 math on the <=2E bucketed layout, no N x N) with exact padded exclusion. The MC sampler enumerates the exact CDQ 2.0 k-DPP law (dev-scale, C(deg,k)<=max_subsets; cdq2_sample covers large degree). This UNBLOCKS Phase 10 (the ESP-vs-old-CDQ-vs-CDQ2 mechanism-benefit factorial) and Phase 7 (the ESP full-physics baseline now shares one pipeline with CDQ2).",
+      "adversarial_audit": {
+        "method": "single focused independent review agent (general-purpose, 28 tool-calls, 110k tokens) over 4 concerns (padding/mask exactness, eta=0 ESP equivalence, dispatch/MC, gradient/no-NxN); compared against the trusted cdq_query.py / _CDQSubsetSampler; own numeric reproducers + 200k-draw MC.",
+        "verdict": "3 of 4 concerns CLEAN (padded exclusion exact + NaN-free for the padded case; eta=0 ESP equivalence to 5.5e-17 with no Z leak; dispatch additive + non-disruptive + MC law correct; no NxN, grads live incl eta=0).",
+        "confirmed_and_FIXED": "[medium] the cs_safe sanitiser covered only PADDED slots; a REAL candidate whose deformed quality c=a*g hits exactly 0 (p0=0 at an ideal link ell=1) still fed sqrt(0) -> NaN backward (reproduced: link_override=1.0 episode -> raw_q.grad/div.grad NaN; standalone quorum at pp+pm=1 -> NaN). The headline path (ell<1) was safe but the ideal-link ablation was not. FIXED at the ROOT: sanitize ANY cs=0 (real or padded) via pos=(mask & cs>0); AND clamp log(e_k) for the all-excluded grid corner. Regressions: test_cdq2_episode_ideal_link_backprop_finite + test_quorum_gradient_finite_when_p0_zero. (Note: the old CDQ's sqrt(clamp_min(eps)) never NaN'd here — CDQ 2.0's exact-no-eps design traded that robustness away; the pos-sanitiser restores it WITHOUT the eps inexactness.)"
+      },
+      "deferred": "the analytic episode's node-union F_wrong/S_allcorrect headline is the LEGACY metric; Phase 10's factorial uses the MACROSTATE basin outcomes from run_dynamic_mc (the headline judge), which already works for CDQ2Policy (basin sum-to-1 tested). The bucketed quorum builds [m,Q,w,w] eigvalsh x (k+1)^2 grid — fine at dev scale; the all-pairs/scale optimisation is Phase 11."
+    }
+  }
+}

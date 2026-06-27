@@ -52,3 +52,12 @@ Thumbs.db
 *.tmp
 .idea/
 .vscode/
+
+# Local session / agent state (Claude Code) and secrets — never push
+.claude/
+.env
+.env.*
+*.key
+*.pem
+secrets.*
+*.token

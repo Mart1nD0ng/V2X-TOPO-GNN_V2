@@ -73,8 +73,12 @@ def test_paired_crn_uses_shared_seed_and_is_reproducible():
     def make_policies(sc):
         return {"uniform": UniformQueryPolicy(), "distance": DistanceQueryPolicy(beta_per_m=0.03)}
 
-    a = evaluate_policies_paired(specs, make_policies, pcfg, phy, num_trials=600)
-    b = evaluate_policies_paired(specs, make_policies, pcfg, phy, num_trials=600)
+    # this test exercises the CRN/comparison mechanics, not physics -> ideal link, explicitly
+    # opted in as an ablation (the headline default is now full physics; constraint #9).
+    a = evaluate_policies_paired(specs, make_policies, pcfg, phy, num_trials=600,
+                                 link_override=1.0, allow_ideal_ablation=True)
+    b = evaluate_policies_paired(specs, make_policies, pcfg, phy, num_trials=600,
+                                 link_override=1.0, allow_ideal_ablation=True)
     assert a["uniform"].F_wrong == b["uniform"].F_wrong          # reproducible (seeded CRN)
     assert len(a["uniform"].F_wrong) == 2 and len(a["distance"].F_wrong) == 2
     # both policies scored on the SAME two scenes -> aligned, comparable vectors

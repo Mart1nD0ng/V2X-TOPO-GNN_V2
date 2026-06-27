@@ -50,24 +50,51 @@ class _LogAddExp(torch.autograd.Function):
     ``0/0 = nan`` gradient, which poisons the elementary-symmetric DP whenever an
     unreachable / masked order is combined with another ``-inf``.  Here the softmax
     backward weights are forced to ``0`` wherever the total mass is ``0``.
+
+    The backward saves the INPUTS (not the precomputed weights) and recomputes the
+    softmax weights with differentiable ops, so the first-order gradient itself carries
+    a grad_fn and the function is DOUBLE-differentiable.  This is required by any loss
+    that backpropagates through an inclusion marginal ``pi = a * grad(log e_k)`` (the
+    inclusion / pairwise-correlation training objectives): saving constant weights would
+    silently drop the second derivative (the analytic ``e_k`` Hessian, which is exactly
+    zero on the diagonal since ``e_k`` is multilinear in each ``a_j``).  The ``-inf``
+    safety is preserved: both inputs ``-inf`` -> ``s = 0`` -> weights ``0`` -> grad ``0``.
     """
 
     @staticmethod
     def forward(ctx, a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
+        ctx.save_for_backward(a, b)
         m = torch.maximum(a, b)
         m_safe = torch.where(torch.isfinite(m), m, torch.zeros_like(m))
         ea = torch.exp(a - m_safe)
         eb = torch.exp(b - m_safe)
-        s = ea + eb
-        out = m_safe + torch.log(s)
-        wa = torch.where(s > 0, ea / s, torch.zeros_like(s))
-        wb = torch.where(s > 0, eb / s, torch.zeros_like(s))
-        ctx.save_for_backward(wa, wb)
-        return out
+        return m_safe + torch.log(ea + eb)
 
     @staticmethod
     def backward(ctx, grad_out: torch.Tensor):
-        wa, wb = ctx.saved_tensors
+        # Recompute the weights from the saved inputs with differentiable ops so that,
+        # under create_graph=True, grad_out*wa / grad_out*wb retain a grad_fn (enabling
+        # the second derivative). torch runs this method with grad tracking on when a
+        # higher-order graph is requested.
+        #
+        # -inf safety for SECOND order: a literal -inf in the graph makes the value
+        # finite (exp(-inf)=0) but poisons the double backward with -inf - finite / 0*inf
+        # = NaN. We therefore replace -inf inputs with a finite, far-negative sentinel
+        # (exp(sentinel - m) underflows to exactly 0, so the first-order weights are
+        # unchanged) and force both-(-inf) weights to 0 (the s=0 case of the original).
+        a, b = ctx.saved_tensors
+        fa, fb = torch.isfinite(a), torch.isfinite(b)
+        neg = torch.full((), -1e30, dtype=a.dtype, device=a.device)
+        a_s = torch.where(fa, a, neg)
+        b_s = torch.where(fb, b, neg)
+        m = torch.maximum(a_s, b_s)
+        ea = torch.exp(a_s - m)
+        eb = torch.exp(b_s - m)
+        s = ea + eb
+        zero = torch.zeros_like(s)
+        both_ninf = (~fa) & (~fb)
+        wa = torch.where(both_ninf, zero, ea / s)
+        wb = torch.where(both_ninf, zero, eb / s)
         return grad_out * wa, grad_out * wb
 
 

@@ -74,7 +74,7 @@ def test_trained_policy_readapts_and_stays_reliable_under_drift():
 
     def f_wrong(scene, policy):
         return float(run_consensus_episode(scene, ev, policy, PROTO, PHY,
-                                           return_trajectory=False, link_override=1.0).F_wrong)
+                                           return_trajectory=False, link_override=1.0).F_wrong.detach())
 
     # the SAME memoryless model, features recomputed on each topology (train==deploy policy, #3)
     gnn_base = f_wrong(base, ESDGNNQueryPolicy(model, base))
