@@ -58,7 +58,7 @@ are HARD constraints; `macro_F_deadline`/tail-latency/energy are optimization ta
 | G-METRIC-NAMESPACE | canonical metric schema + namespaces (`macro`/`strict_audit`/`diagnostic`/`sampling`/`cdq`/`runtime`); ban ambiguous bare names in serialized headline; `metric_namespace_version="macrostate_v2"`; legacy/surrogate fields gated behind `legacy=True`; figure-guard | 🟢 GS1: `namespaces.py`+`schema.py`, 27 tests, S15 migrated+archived, 2 CRITICAL audit holes fixed |
 | G-RESULT-MANIFEST | every result JSON carries physics/profile/evidence/scene/policy/checkpoint hashes + query_family; fail-fast on train/eval physics mismatch (unless declared OOD) + missing macro outcomes + untracked seed | 🟢 GS2: `manifest.py` (build/validate/train-eval-consistent), 17 tests; reuses `experiment_spec` hashes |
 | G-ESP-PERFORMANCE-SCALE | trained ESP/ESD-GNN checkpoints, **real macrostate-basin outcomes** (not runtime) across N=100…10000; fixed-protocol vs fixed-service-profile; scale-regret + feasibility-retention; ≥5 model seeds, dynamic-MC judged, UCB for rare failure | 🟢 GS3: 5-seed shared checkpoint transfers (Pc≈0.95 N=120/336/660, reliability-safe); regret −0.007 vs expert; fixed-proto Fd→1@N=1248 **recovered** by service-profile R_d∝√N (Pc=1.0); N≥9840 documented approx; 14 tests |
-| G-ETA-RISK-LIVENESS | η∈{0,.25,.5,1,2,4,8,16} sweep over ≥4 env families (iid/mm-low/mm-high/overlapping/split) × {fixed-link, full-physics}; identify how mass moves (deadline→correct / deadline→wrong / split→correct / none); CIs | 🟡 GS4: harness `eta_curve.py` + mass-shift classifier (6 tests); **sweep executing** (5 envs × 8 η × {fixed-link, full-physics}); control (iid→none) validates |
+| G-ETA-RISK-LIVENESS | η∈{0,.25,.5,1,2,4,8,16} sweep over ≥4 env families (iid/mm-low/mm-high/overlapping/split) × {fixed-link, full-physics}; identify how mass moves (deadline→correct / deadline→wrong / split→correct / none); CIs | 🟢 GS4: trade-off governed by **deadline regime** — η moves mass **deadline→correct** in feasible-deadline window (R_d=14 mm_high: Fd 0.100→0.065@η=8) but **deadline-up** when too-tight (R_d=6); iid flat; mechanism = diversity picks distant/weak-link peers. 6 tests |
 | G-GUARDED-CDQ2 | `src/policies/guarded_cdq2.py` hard + soft differentiable guard `η=G(m_w,m_s,p_d)·η_raw`; arms ESP/fixed/learned/hard/soft/oracle; must satisfy wrong/split UCB AND improve deadline/tail in covariance-stressed scenes AND fall back to ESP in safety-critical; guard-activation stats | ☐ |
 | G-HAZARD-PROFILES | `src/config/hazard_profile.py` + `src/evaluation/hazard_utility.py`; hazard-weighted `B_CDQ` net benefit; ≥5 profiles (safety-first/balanced/deadline-critical/fail-safe/energy); policy selection changes rationally with cost ratios under the feasibility gate | ☐ |
 | G-FINAL-SYNTHESIS | unified report (ESP scale + η-curve + guarded + hazard) deciding when ESP vs CDQ2 vs Guarded-CDQ2; figures read results only (constraint #13); no ambiguous names; all reproducible via manifest hashes | ☐ |
@@ -811,3 +811,35 @@ hashing (train==eval enforcement) and the macrostate-objective rewrite (Phase 5)
 * **Next: G-ETA-RISK-LIVENESS** — the η∈{0,…,16} sweep over ≥4 env families × {fixed-link, full-physics},
   characterising how diversity moves probability mass (deadline→correct / deadline→wrong / split→correct / none)
   with CIs. Reuses the harness + the namespaced schema; CDQ2Policy(η>0) is the lever.
+
+### GM4 — Slice GS4: eta-risk-liveness curve (G-ETA-RISK-LIVENESS 🟢) (2026-06-27)
+* `src/evaluation/eta_curve.py` (6 tests) + `run_eta_risk_liveness_curve.py` (5 env families ×
+  {fixed-link, full-physics} × η∈{0..16}) + `run_eta_deadline_sensitivity.py` (R_d∈{6,14} + a
+  selected-peer-distance mechanistic probe). η=0 ≡ ESP exactly; judged by the independent dynamic-MC
+  basin first-hitting; `classify_mass_shift` always surfaces any wrong increase (constraint #12).
+* **Core finding — the validity-liveness trade-off is governed by the DEADLINE REGIME, not η alone:**
+  - **Feasible-but-stressed deadline (R_d=14, full physics, mm_high):** η>0 moves mass
+    **deadline→correct** — `macro_F_deadline` 0.100→**0.065** at η=8 (−0.035), `macro_P_correct`
+    0.685→0.700. A reproducible full-physics liveness benefit (consistent with S15's η=8 result).
+  - **Too-tight deadline (R_d=6):** η>0 moves mass **deadline-UP** (worse) — `macro_F_deadline`
+    0.525→0.590; ESP (η=0) is best. The original 5-env sweep used R_d=6, which is *why* its full-physics
+    cells showed no benefit (the deadline is so tight nothing helps).
+  - **No covariance (iid):** flat — η does nothing (no diversity lever). Control validates.
+  - Under the idealized **fixed-link** ablation a *fragile* moderate-η (0.5–1) benefit appears even at
+    R_d=6, but it is erased under full physics — see the mechanism.
+* **Mechanism (measured, not hypothesised):** CDQ2 diversity selects physically **more distant** peers
+  (inclusion-weighted mean distance **49.18 m** ESP → 49.99 @η=4 → **50.42** @η=8); distant peers have
+  **worse link quality** under full physics. With deadline slack their broader reach reaches quorum
+  faster (benefit); without slack their slower/failed polls just miss the deadline (harm). This is the
+  honest reason the fixed-link benefit does not survive a too-tight full-physics deadline.
+* **Validity preserved / honest framing:** `macro_F_wrong` / `macro_F_split` stay roughly flat across η
+  in mm_high — the η benefit is a **deadline/liveness** effect, **NOT** a reliability improvement
+  (forbidden-shortcut #1 respected). The P_correct gain comes from deadline misses converting to correct.
+* **Stop-condition #3 NOT met:** there IS a stable (conditional) liveness benefit. The gate's acceptance
+  (spec §3.7 — produce stable curves + identify the mass movement, *not* require CDQ2 to win) is met.
+  This directly motivates **Guarded-CDQ2**: enable η>0 only when there is BOTH reliability slack AND
+  deadline slack; default to ESP otherwise. Manifest slice `GS4`.
+* **Next: G-GUARDED-CDQ2** — `src/policies/guarded_cdq2.py` hard + soft guard `η = G(m_w,m_s,p_d)·η_raw`;
+  arms ESP / fixed-η / hard / soft / oracle; must satisfy wrong/split UCB AND improve deadline/tail in the
+  feasible-deadline covariance-stressed regime (R_d=14 mm_high is exactly that regime) AND fall back to ESP
+  in safety-critical / too-tight scenes; expose guard-activation stats.

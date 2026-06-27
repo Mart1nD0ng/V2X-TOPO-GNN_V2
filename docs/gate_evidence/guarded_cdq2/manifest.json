@@ -76,6 +76,26 @@
         "documented_reductions": "BOUNDED full-physics run: 5 training steps, 2 scene seeds, expert 2 seeds, N660 transfer 2 seeds; real dynamic MC to N~=1248 (+N=3036 extension); N=9840 uses a documented statistical approximation (spec §6.7) because full-physics rare-event MC at that scale is infeasible (~9s/trial, ~3800 zero-failure trials needed to certify eps_w=1e-3). All reductions recorded in the result JSON budget_note."
       },
       "acceptance": "performance (basin outcomes) evaluated not runtime (✓); dynamic-MC at N=100/300/600/1000 + 3036 (✓, N>=10000 documented approximation per acceptance #3); scale regret bounded+reported (✓); fixed-protocol failure not hidden (✓); near-linear compute (✓); dynamic-MC judged (✓)."
+    },
+    "GS4-eta-risk-liveness": {
+      "date": "2026-06-27",
+      "contributes_to": ["G-ETA-RISK-LIVENESS"],
+      "modules": [
+        "src/evaluation/eta_curve.py (eta_sweep, classify_mass_shift)",
+        "docs/gate_evidence/guarded_cdq2/run_eta_risk_liveness_curve.py (5 envs x {fixed-link, full-physics}, eta grid)",
+        "docs/gate_evidence/guarded_cdq2/run_eta_deadline_sensitivity.py (R_d in {6,14} + selected-distance mechanistic check)"
+      ],
+      "tests": ["tests/evaluation/test_eta_curve.py (6 passed under -W error::UserWarning)"],
+      "evidence": {
+        "result_json": ["eta_risk_liveness_results.json", "eta_deadline_sensitivity_results.json"],
+        "headline_judge": "independent dynamic-MC macrostate basin first-hitting (eta=0 == ESP exactly).",
+        "core_finding": "The validity-liveness trade-off is governed by the DEADLINE REGIME, not eta alone. (1) Feasible-but-stressed deadline (R_d=14, full physics, mm_high): eta>0 moves mass DEADLINE->CORRECT -- macro_F_deadline 0.100->0.065 at eta=8 (-0.035), macro_P_correct 0.685->0.700 (consistent with S15). (2) Too-tight deadline (R_d=6): eta>0 moves mass DEADLINE-UP (worse) -- macro_F_deadline 0.525->0.590, ESP best. (3) No covariance (iid): flat, no lever.",
+        "mechanism": "CDQ2 diversity selects physically MORE DISTANT peers (inclusion-weighted mean distance 49.18m ESP -> 49.99 @eta=4 -> 50.42 @eta=8); distant peers have worse link quality under full physics. With deadline slack their broader reach reaches quorum faster (benefit); without slack their slower/failed polls just miss the deadline (harm). This is why an idealized fixed-link ablation shows a fragile moderate-eta benefit that a too-tight full-physics deadline erases.",
+        "validity": "macro_F_wrong / macro_F_split stay roughly flat across eta in mm_high (base_err 0.35) -- the eta benefit here is purely a deadline/liveness effect, NOT a reliability improvement (constraint: a deadline benefit is not a reliability improvement). classify_mass_shift always surfaces any wrong increase (constraint #12).",
+        "implication": "directly motivates Guarded-CDQ2 (Phase 5): enable eta>0 only when there is BOTH reliability slack AND deadline slack (a feasible-but-stressed regime); default to ESP otherwise.",
+        "reductions": "N=120 (mechanism characterization, not a scale claim); main sweep 2 scene seeds x 80 (fixed-link)/60 (full) trials, R_d=6; sensitivity 2 seeds x 100 trials, R_d in {6,14}. Curves are directionally robust; magnitudes noisy at this trial budget (documented)."
+      },
+      "acceptance": "produces stable eta curves (✓) and explicitly identifies how mass moves -- deadline->correct (feasible deadline) / deadline-up (tight deadline) / none (iid) (✓, spec §3.7). NOT judged by whether CDQ2 always improves reliability. Stop-condition #3 (no stable liveness benefit) NOT met: a reproducible full-physics deadline->correct benefit exists in the feasible-deadline window."
     }
   }
 }
