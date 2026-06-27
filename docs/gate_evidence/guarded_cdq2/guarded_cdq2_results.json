@@ -1,0 +1,776 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment": "guarded_cdq2",
+  "smoke": false,
+  "git_commit": "681a540",
+  "eta_raw": 8.0,
+  "R_d": 14,
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "trials": 100,
+  "note": "ESP is the default; CDQ2 diversity (eta>0) enabled only with reliability slack AND deadline pressure (spec \u00a74). eps is the SERVICE TARGET (reported at two targets), never lowered to force a pass. Headline judge = independent dynamic MC, full physics.",
+  "regimes": {
+    "enable": {
+      "base_node_err": 0.2,
+      "ESP": {
+        "macro_P_correct": 0.94,
+        "macro_F_wrong": 0.023333333333333334,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.03666666666666667,
+        "macro_P_correct_ci": [
+          0.90715983751747,
+          0.9617139440845226
+        ],
+        "macro_F_wrong_ci": [
+          0.011347515598295709,
+          0.04737255433287896
+        ],
+        "macro_F_split_ci": [
+          0.0,
+          0.012643429997735661
+        ],
+        "macro_F_deadline_ci": [
+          0.020595091468180667,
+          0.06445448699638771
+        ]
+      },
+      "fixed_eta": {
+        "macro_P_correct": 0.9533333333333334,
+        "macro_F_wrong": 0.026666666666666665,
+        "macro_F_split": 0.0033333333333333335,
+        "macro_F_deadline": 0.016666666666666666,
+        "macro_P_correct_ci": [
+          0.9232019646862172,
+          0.9720013254491692
+        ],
+        "macro_F_wrong_ci": [
+          0.013572906766976818,
+          0.05172954029754628
+        ],
+        "macro_F_split_ci": [
+          0.0005886425761407378,
+          0.018637164554943353
+        ],
+        "macro_F_deadline_ci": [
+          0.007139372042772196,
+          0.038415943621705605
+        ]
+      },
+      "esp_Fw_UCB": 0.04737255433287896,
+      "cdq2_Fw_UCB": 0.05172954029754628,
+      "deadline_pressure": 0.06445448699638771,
+      "targets": {
+        "strict_eps_1e-3": {
+          "eps": 0.001,
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "65b086d9a75fba100034b163004565450d3ef062dd4a6bd6269dfa14e51a8721",
+            "evidence_hash": "74d57e6899b7ae06940c8ccff4f57fedc23b548fbfbe267670ce78473be6efaa",
+            "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+            "protocol_hash": "438bb4e95f5736a997c70b4ac7b7020372b2d36907862d064f1528adedb5ba68",
+            "policy_hash": "guarded_cdq2",
+            "checkpoint_hash": "fixed-quality+Z",
+            "experiment_config_hash": "ba1f36123a2fff8c7eb2185a2f2e9c0e7597b38b096624e12941efbc93f032ef",
+            "query_law": "cdq2",
+            "full_physics": true,
+            "git_commit": "681a540",
+            "manifest_id": "GS5-guarded",
+            "model_seeds": [
+              0,
+              1,
+              2
+            ]
+          },
+          "eta_hard": 0.0,
+          "eta_soft": 7.630274094725252e-127,
+          "eta_oracle": 0.0,
+          "hard_guard": {
+            "label": "ESP(disabled)",
+            "macro": {
+              "macro_P_correct": 0.94,
+              "macro_F_wrong": 0.023333333333333334,
+              "macro_F_split": 0.0,
+              "macro_F_deadline": 0.03666666666666667,
+              "macro_P_correct_ci": [
+                0.90715983751747,
+                0.9617139440845226
+              ],
+              "macro_F_wrong_ci": [
+                0.011347515598295709,
+                0.04737255433287896
+              ],
+              "macro_F_split_ci": [
+                0.0,
+                0.012643429997735661
+              ],
+              "macro_F_deadline_ci": [
+                0.020595091468180667,
+                0.06445448699638771
+              ]
+            },
+            "feasible_ucb": false,
+            "guard_active": false
+          },
+          "soft_guard": {
+            "label": "ESP(disabled)",
+            "macro": {
+              "macro_P_correct": 0.94,
+              "macro_F_wrong": 0.023333333333333334,
+              "macro_F_split": 0.0,
+              "macro_F_deadline": 0.03666666666666667,
+              "macro_P_correct_ci": [
+                0.90715983751747,
+                0.9617139440845226
+              ],
+              "macro_F_wrong_ci": [
+                0.011347515598295709,
+                0.04737255433287896
+              ],
+              "macro_F_split_ci": [
+                0.0,
+                0.012643429997735661
+              ],
+              "macro_F_deadline_ci": [
+                0.020595091468180667,
+                0.06445448699638771
+              ]
+            },
+            "feasible_ucb": false,
+            "guard_active": false
+          },
+          "oracle_guard": {
+            "label": "ESP(disabled)",
+            "macro": {
+              "macro_P_correct": 0.94,
+              "macro_F_wrong": 0.023333333333333334,
+              "macro_F_split": 0.0,
+              "macro_F_deadline": 0.03666666666666667,
+              "macro_P_correct_ci": [
+                0.90715983751747,
+                0.9617139440845226
+              ],
+              "macro_F_wrong_ci": [
+                0.011347515598295709,
+                0.04737255433287896
+              ],
+              "macro_F_split_ci": [
+                0.0,
+                0.012643429997735661
+              ],
+              "macro_F_deadline_ci": [
+                0.020595091468180667,
+                0.06445448699638771
+              ]
+            },
+            "feasible_ucb": false,
+            "guard_active": false
+          },
+          "esp_feasible_ucb": false,
+          "fixed_eta_feasible_ucb": false,
+          "fixed_eta_deadline_gain_vs_esp": 0.02
+        },
+        "eps_0.05": {
+          "eps": 0.05,
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "1d8063a76955ff6a8dc444ec146ce65b86954bc2a7d76331eb22ef290a5ee023",
+            "evidence_hash": "74d57e6899b7ae06940c8ccff4f57fedc23b548fbfbe267670ce78473be6efaa",
+            "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+            "protocol_hash": "438bb4e95f5736a997c70b4ac7b7020372b2d36907862d064f1528adedb5ba68",
+            "policy_hash": "guarded_cdq2",
+            "checkpoint_hash": "fixed-quality+Z",
+            "experiment_config_hash": "e6b5501bc40f695a3c37830dc22dcc5d0dce3fd05d54c2c1f3f8b581ce24f622",
+            "query_law": "cdq2",
+            "full_physics": true,
+            "git_commit": "681a540",
+            "manifest_id": "GS5-guarded",
+            "model_seeds": [
+              0,
+              1,
+              2
+            ]
+          },
+          "eta_hard": 0.0,
+          "eta_soft": 1.6366811049155139,
+          "eta_oracle": 0.0,
+          "hard_guard": {
+            "label": "ESP(disabled)",
+            "macro": {
+              "macro_P_correct": 0.94,
+              "macro_F_wrong": 0.023333333333333334,
+              "macro_F_split": 0.0,
+              "macro_F_deadline": 0.03666666666666667,
+              "macro_P_correct_ci": [
+                0.90715983751747,
+                0.9617139440845226
+              ],
+              "macro_F_wrong_ci": [
+                0.011347515598295709,
+                0.04737255433287896
+              ],
+              "macro_F_split_ci": [
+                0.0,
+                0.012643429997735661
+              ],
+              "macro_F_deadline_ci": [
+                0.020595091468180667,
+                0.06445448699638771
+              ]
+            },
+            "feasible_ucb": true,
+            "guard_active": false
+          },
+          "soft_guard": {
+            "label": "CDQ2(eta=1.64)",
+            "macro": {
+              "macro_P_correct": 0.9266666666666667,
+              "macro_F_wrong": 0.026666666666666665,
+              "macro_F_split": 0.0033333333333333335,
+              "macro_F_deadline": 0.043333333333333335,
+              "macro_P_correct_ci": [
+                0.8914679042010735,
+                0.9510763688675257
+              ],
+              "macro_F_wrong_ci": [
+                0.013572906766976818,
+                0.05172954029754628
+              ],
+              "macro_F_split_ci": [
+                0.0005886425761407378,
+                0.018637164554943353
+              ],
+              "macro_F_deadline_ci": [
+                0.02549620360320426,
+                0.07271812912806098
+              ]
+            },
+            "feasible_ucb": false,
+            "guard_active": true
+          },
+          "oracle_guard": {
+            "label": "ESP(disabled)",
+            "macro": {
+              "macro_P_correct": 0.94,
+              "macro_F_wrong": 0.023333333333333334,
+              "macro_F_split": 0.0,
+              "macro_F_deadline": 0.03666666666666667,
+              "macro_P_correct_ci": [
+                0.90715983751747,
+                0.9617139440845226
+              ],
+              "macro_F_wrong_ci": [
+                0.011347515598295709,
+                0.04737255433287896
+              ],
+              "macro_F_split_ci": [
+                0.0,
+                0.012643429997735661
+              ],
+              "macro_F_deadline_ci": [
+                0.020595091468180667,
+                0.06445448699638771
+              ]
+            },
+            "feasible_ucb": true,
+            "guard_active": false
+          },
+          "esp_feasible_ucb": true,
+          "fixed_eta_feasible_ucb": false,
+          "fixed_eta_deadline_gain_vs_esp": 0.02
+        },
+        "eps_0.10": {
+          "eps": 0.1,
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "fd42aa5fa4d7f1eabebe95b51c2d5ad16c59617c20a119868342c18c72d08742",
+            "evidence_hash": "74d57e6899b7ae06940c8ccff4f57fedc23b548fbfbe267670ce78473be6efaa",
+            "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+            "protocol_hash": "438bb4e95f5736a997c70b4ac7b7020372b2d36907862d064f1528adedb5ba68",
+            "policy_hash": "guarded_cdq2",
+            "checkpoint_hash": "fixed-quality+Z",
+            "experiment_config_hash": "32ce460ed8bf55da13bb3e31f9beded7698ba993f35cea1fa92b82a5acaa469c",
+            "query_law": "cdq2",
+            "full_physics": true,
+            "git_commit": "681a540",
+            "manifest_id": "GS5-guarded",
+            "model_seeds": [
+              0,
+              1,
+              2
+            ]
+          },
+          "eta_hard": 8.0,
+          "eta_soft": 4.3542646042368816,
+          "eta_oracle": 8.0,
+          "hard_guard": {
+            "label": "CDQ2(eta=8.0)",
+            "macro": {
+              "macro_P_correct": 0.9533333333333334,
+              "macro_F_wrong": 0.026666666666666665,
+              "macro_F_split": 0.0033333333333333335,
+              "macro_F_deadline": 0.016666666666666666,
+              "macro_P_correct_ci": [
+                0.9232019646862172,
+                0.9720013254491692
+              ],
+              "macro_F_wrong_ci": [
+                0.013572906766976818,
+                0.05172954029754628
+              ],
+              "macro_F_split_ci": [
+                0.0005886425761407378,
+                0.018637164554943353
+              ],
+              "macro_F_deadline_ci": [
+                0.007139372042772196,
+                0.038415943621705605
+              ]
+            },
+            "feasible_ucb": true,
+            "guard_active": true
+          },
+          "soft_guard": {
+            "label": "CDQ2(eta=4.35)",
+            "macro": {
+              "macro_P_correct": 0.9500000000000001,
+              "macro_F_wrong": 0.026666666666666665,
+              "macro_F_split": 0.0,
+              "macro_F_deadline": 0.023333333333333334,
+              "macro_P_correct_ci": [
+                0.9191522802928905,
+                0.9694686327091475
+              ],
+              "macro_F_wrong_ci": [
+                0.013572906766976818,
+                0.05172954029754628
+              ],
+              "macro_F_split_ci": [
+                0.0,
+                0.012643429997735661
+              ],
+              "macro_F_deadline_ci": [
+                0.011347515598295709,
+                0.04737255433287896
+              ]
+            },
+            "feasible_ucb": true,
+            "guard_active": true
+          },
+          "oracle_guard": {
+            "label": "CDQ2(eta=8.0)",
+            "macro": {
+              "macro_P_correct": 0.9533333333333334,
+              "macro_F_wrong": 0.026666666666666665,
+              "macro_F_split": 0.0033333333333333335,
+              "macro_F_deadline": 0.016666666666666666,
+              "macro_P_correct_ci": [
+                0.9232019646862172,
+                0.9720013254491692
+              ],
+              "macro_F_wrong_ci": [
+                0.013572906766976818,
+                0.05172954029754628
+              ],
+              "macro_F_split_ci": [
+                0.0005886425761407378,
+                0.018637164554943353
+              ],
+              "macro_F_deadline_ci": [
+                0.007139372042772196,
+                0.038415943621705605
+              ]
+            },
+            "feasible_ucb": true,
+            "guard_active": true
+          },
+          "esp_feasible_ucb": true,
+          "fixed_eta_feasible_ucb": true,
+          "fixed_eta_deadline_gain_vs_esp": 0.02
+        }
+      }
+    },
+    "safety_critical": {
+      "base_node_err": 0.3,
+      "ESP": {
+        "macro_P_correct": 0.79,
+        "macro_F_wrong": 0.15333333333333332,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.056666666666666664,
+        "macro_P_correct_ci": [
+          0.7403879054849664,
+          0.8322789051163471
+        ],
+        "macro_F_wrong_ci": [
+          0.11696581414513027,
+          0.1984669639866331
+        ],
+        "macro_F_split_ci": [
+          0.0,
+          0.012643429997735661
+        ],
+        "macro_F_deadline_ci": [
+          0.035677175913187774,
+          0.08886666535147117
+        ]
+      },
+      "fixed_eta": {
+        "macro_P_correct": 0.8,
+        "macro_F_wrong": 0.15666666666666668,
+        "macro_F_split": 0.006666666666666667,
+        "macro_F_deadline": 0.03666666666666667,
+        "macro_P_correct_ci": [
+          0.7510701139033205,
+          0.8413438280980382
+        ],
+        "macro_F_wrong_ci": [
+          0.11990622028482689,
+          0.20210893498028495
+        ],
+        "macro_F_split_ci": [
+          0.0018301100329710777,
+          0.02397807423146144
+        ],
+        "macro_F_deadline_ci": [
+          0.020595091468180667,
+          0.06445448699638771
+        ]
+      },
+      "esp_Fw_UCB": 0.1984669639866331,
+      "cdq2_Fw_UCB": 0.20210893498028495,
+      "deadline_pressure": 0.08886666535147117,
+      "targets": {
+        "strict_eps_1e-3": {
+          "eps": 0.001,
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "65b086d9a75fba100034b163004565450d3ef062dd4a6bd6269dfa14e51a8721",
+            "evidence_hash": "2f497d0b893f3c403d3269cb5d29cd4dc3c967a6a0d00f56e157faa1b311c840",
+            "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+            "protocol_hash": "438bb4e95f5736a997c70b4ac7b7020372b2d36907862d064f1528adedb5ba68",
+            "policy_hash": "guarded_cdq2",
+            "checkpoint_hash": "fixed-quality+Z",
+            "experiment_config_hash": "ed710b098157083acbedd11e13e8b064546da3070c910521ab66fb22f9ef0e33",
+            "query_law": "cdq2",
+            "full_physics": true,
+            "git_commit": "681a540",
+            "manifest_id": "GS5-guarded",
+            "model_seeds": [
+              0,
+              1,
+              2
+            ]
+          },
+          "eta_hard": 0.0,
+          "eta_soft": 0.0,
+          "eta_oracle": 0.0,
+          "hard_guard": {
+            "label": "ESP(disabled)",
+            "macro": {
+              "macro_P_correct": 0.79,
+              "macro_F_wrong": 0.15333333333333332,
+              "macro_F_split": 0.0,
+              "macro_F_deadline": 0.056666666666666664,
+              "macro_P_correct_ci": [
+                0.7403879054849664,
+                0.8322789051163471
+              ],
+              "macro_F_wrong_ci": [
+                0.11696581414513027,
+                0.1984669639866331
+              ],
+              "macro_F_split_ci": [
+                0.0,
+                0.012643429997735661
+              ],
+              "macro_F_deadline_ci": [
+                0.035677175913187774,
+                0.08886666535147117
+              ]
+            },
+            "feasible_ucb": false,
+            "guard_active": false
+          },
+          "soft_guard": {
+            "label": "ESP(disabled)",
+            "macro": {
+              "macro_P_correct": 0.79,
+              "macro_F_wrong": 0.15333333333333332,
+              "macro_F_split": 0.0,
+              "macro_F_deadline": 0.056666666666666664,
+              "macro_P_correct_ci": [
+                0.7403879054849664,
+                0.8322789051163471
+              ],
+              "macro_F_wrong_ci": [
+                0.11696581414513027,
+                0.1984669639866331
+              ],
+              "macro_F_split_ci": [
+                0.0,
+                0.012643429997735661
+              ],
+              "macro_F_deadline_ci": [
+                0.035677175913187774,
+                0.08886666535147117
+              ]
+            },
+            "feasible_ucb": false,
+            "guard_active": false
+          },
+          "oracle_guard": {
+            "label": "ESP(disabled)",
+            "macro": {
+              "macro_P_correct": 0.79,
+              "macro_F_wrong": 0.15333333333333332,
+              "macro_F_split": 0.0,
+              "macro_F_deadline": 0.056666666666666664,
+              "macro_P_correct_ci": [
+                0.7403879054849664,
+                0.8322789051163471
+              ],
+              "macro_F_wrong_ci": [
+                0.11696581414513027,
+                0.1984669639866331
+              ],
+              "macro_F_split_ci": [
+                0.0,
+                0.012643429997735661
+              ],
+              "macro_F_deadline_ci": [
+                0.035677175913187774,
+                0.08886666535147117
+              ]
+            },
+            "feasible_ucb": false,
+            "guard_active": false
+          },
+          "esp_feasible_ucb": false,
+          "fixed_eta_feasible_ucb": false,
+          "fixed_eta_deadline_gain_vs_esp": 0.019999999999999997
+        },
+        "eps_0.05": {
+          "eps": 0.05,
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "1d8063a76955ff6a8dc444ec146ce65b86954bc2a7d76331eb22ef290a5ee023",
+            "evidence_hash": "2f497d0b893f3c403d3269cb5d29cd4dc3c967a6a0d00f56e157faa1b311c840",
+            "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+            "protocol_hash": "438bb4e95f5736a997c70b4ac7b7020372b2d36907862d064f1528adedb5ba68",
+            "policy_hash": "guarded_cdq2",
+            "checkpoint_hash": "fixed-quality+Z",
+            "experiment_config_hash": "33ffc18b7456cf297bc3aadc6b4705ace2705d42cc463ef87d79aa13b194b7c3",
+            "query_law": "cdq2",
+            "full_physics": true,
+            "git_commit": "681a540",
+            "manifest_id": "GS5-guarded",
+            "model_seeds": [
+              0,
+              1,
+              2
+            ]
+          },
+          "eta_hard": 0.0,
+          "eta_soft": 8.620572959626919e-07,
+          "eta_oracle": 0.0,
+          "hard_guard": {
+            "label": "ESP(disabled)",
+            "macro": {
+              "macro_P_correct": 0.79,
+              "macro_F_wrong": 0.15333333333333332,
+              "macro_F_split": 0.0,
+              "macro_F_deadline": 0.056666666666666664,
+              "macro_P_correct_ci": [
+                0.7403879054849664,
+                0.8322789051163471
+              ],
+              "macro_F_wrong_ci": [
+                0.11696581414513027,
+                0.1984669639866331
+              ],
+              "macro_F_split_ci": [
+                0.0,
+                0.012643429997735661
+              ],
+              "macro_F_deadline_ci": [
+                0.035677175913187774,
+                0.08886666535147117
+              ]
+            },
+            "feasible_ucb": false,
+            "guard_active": false
+          },
+          "soft_guard": {
+            "label": "CDQ2(eta=0.00)",
+            "macro": {
+              "macro_P_correct": 0.79,
+              "macro_F_wrong": 0.15333333333333332,
+              "macro_F_split": 0.0,
+              "macro_F_deadline": 0.056666666666666664,
+              "macro_P_correct_ci": [
+                0.7403879054849664,
+                0.8322789051163471
+              ],
+              "macro_F_wrong_ci": [
+                0.11696581414513027,
+                0.1984669639866331
+              ],
+              "macro_F_split_ci": [
+                0.0,
+                0.012643429997735661
+              ],
+              "macro_F_deadline_ci": [
+                0.035677175913187774,
+                0.08886666535147117
+              ]
+            },
+            "feasible_ucb": false,
+            "guard_active": true
+          },
+          "oracle_guard": {
+            "label": "ESP(disabled)",
+            "macro": {
+              "macro_P_correct": 0.79,
+              "macro_F_wrong": 0.15333333333333332,
+              "macro_F_split": 0.0,
+              "macro_F_deadline": 0.056666666666666664,
+              "macro_P_correct_ci": [
+                0.7403879054849664,
+                0.8322789051163471
+              ],
+              "macro_F_wrong_ci": [
+                0.11696581414513027,
+                0.1984669639866331
+              ],
+              "macro_F_split_ci": [
+                0.0,
+                0.012643429997735661
+              ],
+              "macro_F_deadline_ci": [
+                0.035677175913187774,
+                0.08886666535147117
+              ]
+            },
+            "feasible_ucb": false,
+            "guard_active": false
+          },
+          "esp_feasible_ucb": false,
+          "fixed_eta_feasible_ucb": false,
+          "fixed_eta_deadline_gain_vs_esp": 0.019999999999999997
+        },
+        "eps_0.10": {
+          "eps": 0.1,
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "fd42aa5fa4d7f1eabebe95b51c2d5ad16c59617c20a119868342c18c72d08742",
+            "evidence_hash": "2f497d0b893f3c403d3269cb5d29cd4dc3c967a6a0d00f56e157faa1b311c840",
+            "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+            "protocol_hash": "438bb4e95f5736a997c70b4ac7b7020372b2d36907862d064f1528adedb5ba68",
+            "policy_hash": "guarded_cdq2",
+            "checkpoint_hash": "fixed-quality+Z",
+            "experiment_config_hash": "03356507c8fa4c3bf1bbe16bd6e01ccad0273d9e32e3daa2fa88adf7c878686b",
+            "query_law": "cdq2",
+            "full_physics": true,
+            "git_commit": "681a540",
+            "manifest_id": "GS5-guarded",
+            "model_seeds": [
+              0,
+              1,
+              2
+            ]
+          },
+          "eta_hard": 0.0,
+          "eta_soft": 0.01805528256162926,
+          "eta_oracle": 0.0,
+          "hard_guard": {
+            "label": "ESP(disabled)",
+            "macro": {
+              "macro_P_correct": 0.79,
+              "macro_F_wrong": 0.15333333333333332,
+              "macro_F_split": 0.0,
+              "macro_F_deadline": 0.056666666666666664,
+              "macro_P_correct_ci": [
+                0.7403879054849664,
+                0.8322789051163471
+              ],
+              "macro_F_wrong_ci": [
+                0.11696581414513027,
+                0.1984669639866331
+              ],
+              "macro_F_split_ci": [
+                0.0,
+                0.012643429997735661
+              ],
+              "macro_F_deadline_ci": [
+                0.035677175913187774,
+                0.08886666535147117
+              ]
+            },
+            "feasible_ucb": false,
+            "guard_active": false
+          },
+          "soft_guard": {
+            "label": "CDQ2(eta=0.02)",
+            "macro": {
+              "macro_P_correct": 0.7666666666666667,
+              "macro_F_wrong": 0.15,
+              "macro_F_split": 0.0,
+              "macro_F_deadline": 0.08333333333333333,
+              "macro_P_correct_ci": [
+                0.7156176619060444,
+                0.8109725087618301
+              ],
+              "macro_F_wrong_ci": [
+                0.11403188763470622,
+                0.19481851336370873
+              ],
+              "macro_F_split_ci": [
+                0.0,
+                0.012643429997735661
+              ],
+              "macro_F_deadline_ci": [
+                0.057080477356320006,
+                0.12012238097512637
+              ]
+            },
+            "feasible_ucb": false,
+            "guard_active": true
+          },
+          "oracle_guard": {
+            "label": "ESP(disabled)",
+            "macro": {
+              "macro_P_correct": 0.79,
+              "macro_F_wrong": 0.15333333333333332,
+              "macro_F_split": 0.0,
+              "macro_F_deadline": 0.056666666666666664,
+              "macro_P_correct_ci": [
+                0.7403879054849664,
+                0.8322789051163471
+              ],
+              "macro_F_wrong_ci": [
+                0.11696581414513027,
+                0.1984669639866331
+              ],
+              "macro_F_split_ci": [
+                0.0,
+                0.012643429997735661
+              ],
+              "macro_F_deadline_ci": [
+                0.035677175913187774,
+                0.08886666535147117
+              ]
+            },
+            "feasible_ucb": false,
+            "guard_active": false
+          },
+          "esp_feasible_ucb": false,
+          "fixed_eta_feasible_ucb": false,
+          "fixed_eta_deadline_gain_vs_esp": 0.019999999999999997
+        }
+      }
+    }
+  },
+  "runtime_total_s": 211.3
+}

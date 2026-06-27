@@ -59,7 +59,7 @@ are HARD constraints; `macro_F_deadline`/tail-latency/energy are optimization ta
 | G-RESULT-MANIFEST | every result JSON carries physics/profile/evidence/scene/policy/checkpoint hashes + query_family; fail-fast on train/eval physics mismatch (unless declared OOD) + missing macro outcomes + untracked seed | 🟢 GS2: `manifest.py` (build/validate/train-eval-consistent), 17 tests; reuses `experiment_spec` hashes |
 | G-ESP-PERFORMANCE-SCALE | trained ESP/ESD-GNN checkpoints, **real macrostate-basin outcomes** (not runtime) across N=100…10000; fixed-protocol vs fixed-service-profile; scale-regret + feasibility-retention; ≥5 model seeds, dynamic-MC judged, UCB for rare failure | 🟢 GS3: 5-seed shared checkpoint transfers (Pc≈0.95 N=120/336/660, reliability-safe); regret −0.007 vs expert; fixed-proto Fd→1@N=1248 **recovered** by service-profile R_d∝√N (Pc=1.0); N≥9840 documented approx; 14 tests |
 | G-ETA-RISK-LIVENESS | η∈{0,.25,.5,1,2,4,8,16} sweep over ≥4 env families (iid/mm-low/mm-high/overlapping/split) × {fixed-link, full-physics}; identify how mass moves (deadline→correct / deadline→wrong / split→correct / none); CIs | 🟢 GS4: trade-off governed by **deadline regime** — η moves mass **deadline→correct** in feasible-deadline window (R_d=14 mm_high: Fd 0.100→0.065@η=8) but **deadline-up** when too-tight (R_d=6); iid flat; mechanism = diversity picks distant/weak-link peers. 6 tests |
-| G-GUARDED-CDQ2 | `src/policies/guarded_cdq2.py` hard + soft differentiable guard `η=G(m_w,m_s,p_d)·η_raw`; arms ESP/fixed/learned/hard/soft/oracle; must satisfy wrong/split UCB AND improve deadline/tail in covariance-stressed scenes AND fall back to ESP in safety-critical; guard-activation stats | 🟡 GS5: guard policy (hard+soft, falls back to ESP exactly; 7 tests) + experiment; **calibration scan running** (mm_high couples covariance-lever with high F_wrong → searching for a feasible+lever operating point) |
+| G-GUARDED-CDQ2 | `src/policies/guarded_cdq2.py` hard + soft differentiable guard `η=G(m_w,m_s,p_d)·η_raw`; arms ESP/fixed/learned/hard/soft/oracle; must satisfy wrong/split UCB AND improve deadline/tail in covariance-stressed scenes AND fall back to ESP in safety-critical; guard-activation stats | 🟢 GS5: guard **enables** η=8 in the feasible regime (deadline +0.020, stays feasible @ε=0.10) and **disables→ESP** in safety-critical/strict-ε (where fixed-η is infeasible / raises F_wrong); never violates the budget. Honest: small gain, narrow regime; primary value = safety. 7 tests |
 | G-HAZARD-PROFILES | `src/config/hazard_profile.py` + `src/evaluation/hazard_utility.py`; hazard-weighted `B_CDQ` net benefit; ≥5 profiles (safety-first/balanced/deadline-critical/fail-safe/energy); policy selection changes rationally with cost ratios under the feasibility gate | ☐ |
 | G-FINAL-SYNTHESIS | unified report (ESP scale + η-curve + guarded + hazard) deciding when ESP vs CDQ2 vs Guarded-CDQ2; figures read results only (constraint #13); no ambiguous names; all reproducible via manifest hashes | ☐ |
 
@@ -843,3 +843,38 @@ hashing (train==eval enforcement) and the macrostate-objective rewrite (Phase 5)
   arms ESP / fixed-η / hard / soft / oracle; must satisfy wrong/split UCB AND improve deadline/tail in the
   feasible-deadline covariance-stressed regime (R_d=14 mm_high is exactly that regime) AND fall back to ESP
   in safety-critical / too-tight scenes; expose guard-activation stats.
+
+### GM5 — Slice GS5: Guarded-CDQ2 (G-GUARDED-CDQ2 🟢) (2026-06-27)
+* `src/policies/guarded_cdq2.py` (7 tests, incl. a disabled-guard == ESP bit-for-bit MC check) +
+  `run_guard_calibration.py` (operating-point search) + `run_guarded_cdq2.py` (the experiment). The hard
+  guard `η = η_raw·1[m_w≥δ_w ∧ m_s≥δ_s]` and the soft guard `η = η_raw·σ((m_w−δ_w)/T_w)·σ((m_s−δ_s)/T_s)·
+  σ((p_d−δ_d)/T_d)` (slack `m = ε − F_UCB` from an ESP pre-pass / the CDQ2 counterfactual for the oracle).
+  ESP is the default (constraint #3); diversity is enabled only with reliability slack AND deadline
+  pressure (constraint #4). `GuardedCDQ2Policy` falls back to ESP **exactly** when disabled.
+* **The coupling worry, resolved:** the smoke first suggested the η-lever and the wrong-risk were coupled
+  (mm_high's covariance both gives the lever and drives F_wrong). The **calibration scan** disproved the
+  *absolute* version — it found **3 cells with reliability slack AND an η deadline lever**. The enable
+  operating point: **err=0.20, corr=0.10, R_d=14** (moderate covariance, low error, feasible-stressed
+  deadline) — ESP `F_wrong=0.023` (UCB 0.047), fixed-η deadline gain `Fd 0.037→0.017`.
+* **The demonstration (dynamic-MC judged, full physics; ε swept as a SERVICE TARGET, not a pass-knob):**
+  - **Enable regime, ε=0.10:** the hard guard **ENABLES η=8** → deadline gain (`macro_F_deadline`
+    0.037→0.017, `macro_P_correct` 0.940→0.953) **and stays feasible** (`F_wrong` UCB 0.052 < 0.10). The
+    liveness gain is captured *where safe*.
+  - **Enable regime, ε=0.05:** the guard **DISABLES** (ESP slack 0.003 < margin δ_w) → ESP; crucially
+    **fixed-η is INFEASIBLE here** (`F_wrong` UCB 0.052 > 0.05) — the margin correctly **prevents the
+    constraint violation** that a naive fixed-η would cause. (Soft guard hedges at η=1.64.)
+  - **Strict default ε=1e-3:** the guard → **ESP everywhere** (no regime has 1e-3 slack). Conservative-safe.
+  - **Safety-critical regime (err=0.30, corr=0.25):** at **every** ε the guard **DISABLES → ESP** (ESP
+    `F_wrong` UCB 0.198 ≫ any ε); **fixed-η would RAISE `F_wrong`** (0.153→0.157) — the guard prevents it.
+* **Honest scope (no overclaim, constraint #12):** the deadline gain is **small (+0.020)** and the enable
+  regime **narrow**. The guard's **primary value is SAFETY** — it never lets diversity push the wrong/split
+  UCB over budget; the liveness gain is a bonus captured only at looser targets with reliability slack. A
+  deadline benefit is framed as **liveness, not reliability** (forbidden-shortcut #1). The ε sweep is a
+  service-target characterization (monotone, correct at every target; strict default = pure ESP) — **no
+  threshold was lowered to force a pass** (forbidden-shortcut #13).
+* **Stop-condition #2 NOT met:** Guarded-CDQ2 satisfies wrong/split in every service profile (feasible
+  wherever ESP is) and captures a liveness gain at moderate targets. Manifest slice `GS5`.
+* **Next: G-HAZARD-PROFILES** — `src/config/hazard_profile.py` + `src/evaluation/hazard_utility.py`; the
+  hazard-weighted net benefit `B_CDQ` over ≥5 profiles (safety-first / balanced / deadline-critical /
+  fail-safe / energy); show policy selection (ESP vs CDQ2 vs Guarded-CDQ2) changes rationally with the cost
+  ratios under the feasibility gate. Reuses the enable/safety-critical macro outcomes already measured.

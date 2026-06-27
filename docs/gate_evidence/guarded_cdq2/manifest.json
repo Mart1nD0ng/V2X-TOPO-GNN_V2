@@ -96,6 +96,25 @@
         "reductions": "N=120 (mechanism characterization, not a scale claim); main sweep 2 scene seeds x 80 (fixed-link)/60 (full) trials, R_d=6; sensitivity 2 seeds x 100 trials, R_d in {6,14}. Curves are directionally robust; magnitudes noisy at this trial budget (documented)."
       },
       "acceptance": "produces stable eta curves (✓) and explicitly identifies how mass moves -- deadline->correct (feasible deadline) / deadline-up (tight deadline) / none (iid) (✓, spec §3.7). NOT judged by whether CDQ2 always improves reliability. Stop-condition #3 (no stable liveness benefit) NOT met: a reproducible full-physics deadline->correct benefit exists in the feasible-deadline window."
+    },
+    "GS5-guarded-cdq2": {
+      "date": "2026-06-27",
+      "contributes_to": ["G-GUARDED-CDQ2"],
+      "modules": [
+        "src/policies/guarded_cdq2.py (GuardConfig, reliability_slack, hard_guard_eta, guard_factor/soft_guard_eta, GuardedCDQ2Policy)",
+        "docs/gate_evidence/guarded_cdq2/run_guard_calibration.py (operating-point search)",
+        "docs/gate_evidence/guarded_cdq2/run_guarded_cdq2.py (the guard experiment)"
+      ],
+      "tests": ["tests/policies/test_guarded_cdq2.py (7 passed under -W error::UserWarning, incl. disabled-guard == ESP bit-for-bit MC)"],
+      "evidence": {
+        "result_json": ["guard_calibration_results.json", "guarded_cdq2_results.json"],
+        "guard": "hard: eta_raw if (m_w>=delta_w and m_s>=delta_s) else 0; soft: eta_raw*sigmoid((m_w-delta_w)/T_w)*sigmoid((m_s-delta_s)/T_s)*sigmoid((p_d-delta_d)/T_d); slack m=eps-F_UCB from an ESP pre-pass (deployable) or the CDQ2 counterfactual (oracle). ESP is the default (constraint #3); CDQ2 enabled only with reliability slack AND deadline pressure (constraint #4).",
+        "coupling_resolved": "the calibration found 3 cells with reliability slack AND an eta deadline lever -- the lever/wrong-risk coupling is NOT absolute. Enable point: err=0.20, corr=0.10 (moderate covariance, low error, R_d=14): ESP F_wrong=0.023 (UCB 0.047), fixed-eta deadline gain Fd 0.037->0.017.",
+        "demonstration": "ENABLE regime: at eps=0.10 the hard guard ENABLES eta=8 -> deadline gain (Fd 0.037->0.017, Pc 0.940->0.953) AND stays feasible (F_wrong UCB 0.052 < 0.10); at eps=0.05 the guard DISABLES (slack 0.003 < margin) -> ESP, while FIXED-eta is INFEASIBLE there (UCB 0.052 > 0.05) -- the margin prevents a constraint violation; at the strict default eps=1e-3 the guard -> ESP everywhere (conservative-safe). SAFETY-CRITICAL regime (err=0.30, corr=0.25): at EVERY eps the guard DISABLES -> ESP (ESP F_wrong UCB 0.198 >> any eps); fixed-eta would RAISE F_wrong (0.153->0.157) -- the guard prevents it.",
+        "honest_scope": "the deadline gain is SMALL (+0.020) and the enable regime NARROW (moderate covariance + low error + feasible-stressed deadline). The guard's PRIMARY value is SAFETY (it never lets diversity push F_wrong/F_split UCB over the budget); the liveness gain is a bonus captured only at looser service targets with reliability slack. eps is swept as a SERVICE TARGET (1e-3/0.05/0.10), NOT lowered to force a pass (the guard's behavior is monotone + correct at every target; at the strict default it is pure ESP).",
+        "forbidden_shortcuts_respected": "did NOT enable CDQ2 when wrong/split violated (guard disables when slack<margin); did NOT lower a threshold to pass (eps is a swept service target; strict-eps default = ESP); a deadline benefit is framed as liveness, NOT reliability (constraint #1/#12)."
+      },
+      "acceptance": "Guarded-CDQ2 satisfies wrong/split UCB in every service profile (feasible wherever ESP is; never worse) (✓); improves deadline in the covariance-stressed feasible scene at a moderate target (✓, +0.020 @eps=0.10); falls back to ESP in safety-critical at every target (✓); exposes guard-activation stats (eta_hard/soft/oracle, feasibility, active flags) (✓). Stop-condition #2 (cannot satisfy wrong/split in any profile) NOT met."
     }
   }
 }
