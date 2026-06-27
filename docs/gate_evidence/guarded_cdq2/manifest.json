@@ -37,6 +37,24 @@
         "adversarial_audit": "1 general-purpose reviewer: 2 CRITICAL holes found + FIXED + regression-tested (top-level legacy smuggling via unknown key/bare scalar; NaN macro-outcome bypassing sum-to-1), 1 MODERATE (concept-blind legacy detection) broadened to node-union/all-correct/global-product spellings, 2 hardening (iter_keys Mapping/set traversal; builder rejects incomplete macro)"
       },
       "regression": "tests/metrics/ + tests/evaluation/ + tests/validation/test_macrostate_mc.py all green (additive struct methods non-regressing)"
+    },
+    "GS2-result-manifest-hashes": {
+      "date": "2026-06-27",
+      "contributes_to": ["G-RESULT-MANIFEST"],
+      "modules": [
+        "src/metrics/manifest.py (build_manifest, validate_manifest, assert_train_eval_consistent, current_git_commit)"
+      ],
+      "tests": [
+        "tests/metrics/test_result_manifest.py (17 passed under -W error)"
+      ],
+      "evidence": {
+        "required_hashes": ["physics_hash", "service_profile_hash", "evidence_hash", "scene_distribution_hash", "protocol_hash", "policy_hash", "checkpoint_hash", "experiment_config_hash"],
+        "provenance": "git_commit OR manifest_id required",
+        "seed_tracking": "model_seeds must be present + unique; min_seeds (default 1, headline >= 5) enforced -> no single-seed headline",
+        "train_eval_fail_fast": "assert_train_eval_consistent delegates to check_train_eval_compatible (physics/protocol/profile/evidence/scene/query must match unless a registered OOD axis permits; ideal/full-link always blocks, constraint #9) AND binds recorded hashes to the eval spec (a result cannot claim a spec it did not run under)",
+        "reuses": "src/config/experiment_spec.py (ExperimentSpec config hashes + check_train_eval_compatible) -- no new hashing math; manifest is the enforcement layer over the schema's hashes slot"
+      },
+      "note": "Enforcement machinery + tests landed here; each new-round experiment script (ESP scale / eta-curve / guarded / hazard) calls validate_manifest + assert_train_eval_consistent at write time so the gate bites on real evidence."
     }
   }
 }

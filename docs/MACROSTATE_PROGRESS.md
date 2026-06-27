@@ -56,7 +56,7 @@ are HARD constraints; `macro_F_deadline`/tail-latency/energy are optimization ta
 | Gate | Scope | Status |
 |------|-------|--------|
 | G-METRIC-NAMESPACE | canonical metric schema + namespaces (`macro`/`strict_audit`/`diagnostic`/`sampling`/`cdq`/`runtime`); ban ambiguous bare names in serialized headline; `metric_namespace_version="macrostate_v2"`; legacy/surrogate fields gated behind `legacy=True`; figure-guard | 🟢 GS1: `namespaces.py`+`schema.py`, 27 tests, S15 migrated+archived, 2 CRITICAL audit holes fixed |
-| G-RESULT-MANIFEST | every result JSON carries physics/profile/evidence/scene/policy/checkpoint hashes + query_family; fail-fast on train/eval physics mismatch (unless declared OOD) + missing macro outcomes + untracked seed | ☐ |
+| G-RESULT-MANIFEST | every result JSON carries physics/profile/evidence/scene/policy/checkpoint hashes + query_family; fail-fast on train/eval physics mismatch (unless declared OOD) + missing macro outcomes + untracked seed | 🟢 GS2: `manifest.py` (build/validate/train-eval-consistent), 17 tests; reuses `experiment_spec` hashes |
 | G-ESP-PERFORMANCE-SCALE | trained ESP/ESD-GNN checkpoints, **real macrostate-basin outcomes** (not runtime) across N=100…10000; fixed-protocol vs fixed-service-profile; scale-regret + feasibility-retention; ≥5 model seeds, dynamic-MC judged, UCB for rare failure | ☐ |
 | G-ETA-RISK-LIVENESS | η∈{0,.25,.5,1,2,4,8,16} sweep over ≥4 env families (iid/mm-low/mm-high/overlapping/split) × {fixed-link, full-physics}; identify how mass moves (deadline→correct / deadline→wrong / split→correct / none); CIs | ☐ |
 | G-GUARDED-CDQ2 | `src/policies/guarded_cdq2.py` hard + soft differentiable guard `η=G(m_w,m_s,p_d)·η_raw`; arms ESP/fixed/learned/hard/soft/oracle; must satisfy wrong/split UCB AND improve deadline/tail in covariance-stressed scenes AND fall back to ESP in safety-critical; guard-activation stats | ☐ |
@@ -745,3 +745,32 @@ hashing (train==eval enforcement) and the macrostate-objective rewrite (Phase 5)
   query_family) mandatory, with fail-fast on train/eval physics mismatch (unless declared OOD), missing
   macro outcomes, and untracked model seed. The schema's `hashes` slot + `build_result_record` already
   accept them; the next gate enforces presence + consistency.
+
+### GM2 — Slice GS2: result manifest + hash enforcement (G-RESULT-MANIFEST 🟢) (2026-06-27)
+* `src/metrics/manifest.py` — the enforcement layer over the schema's `hashes` slot:
+  - `build_manifest(spec, *, policy_hash, checkpoint_hash, model_seeds, git_commit/manifest_id)` assembles
+    the §7.4 manifest from an `ExperimentSpec` (reusing its deterministic config hashes — **no new hashing
+    math**) + the policy/checkpoint fingerprints + the tracked training seeds.
+  - `validate_manifest(record, *, require_seeds, min_seeds, headline)` fails fast on any missing/empty
+    required hash (`physics`/`service_profile`/`evidence`/`scene_distribution`/`protocol`/`policy`/
+    `checkpoint`/`experiment_config`), a missing provenance id (git commit **or** manifest id), a missing
+    `query_family`, or **untracked/duplicate/too-few model seeds** (the "no single-seed headline" shortcut
+    is blocked via `min_seeds`, default headline ≥ 5). Also runs `validate_result` (version + namespaces +
+    macro completeness).
+  - `assert_train_eval_consistent(record, train, eval)` delegates to `check_train_eval_compatible` (the
+    existing C5 train==eval guard: physics/protocol/profile/evidence/scene/query must match unless a
+    **registered OOD axis** permits it; the ideal/full-link distinction **always** blocks — constraint #9)
+    **and** binds the recorded hashes to the eval spec, so a result cannot be relabelled with a spec it did
+    not actually run under (tamper check).
+* **Tests:** `tests/metrics/test_result_manifest.py` (17 under `-W error`) — every required-hash drop, empty
+  value, missing provenance, untracked/duplicate/too-few seeds, the physics-mismatch fail-fast (+ OOD-axis
+  release), the unconditional ideal/full-link block, the recorded-hash tamper check, and a real-config
+  end-to-end build. Combined metrics suite 44 green.
+* **Exit met:** the machinery is in place + tested; each new-round experiment writer (ESP scale, η-curve,
+  guarded, hazard) calls `build_manifest` + `validate_manifest` + `assert_train_eval_consistent` at write
+  time, so the gate bites on real evidence as those gates land. Self-review: no new hashing (reuses
+  `experiment_spec`), no circular import (manifest → experiment_spec + schema; neither imports manifest).
+* **Next: G-ESP-PERFORMANCE-SCALE** — the heavy gate: trained ESP/ESD-GNN checkpoints (≥5 model seeds)
+  evaluated for **real macrostate-basin outcomes** (not runtime) across N=100…10000, fixed-protocol vs
+  fixed-service-profile, with scale-regret + feasibility-retention, dynamic-MC judged, UCB for rare failure.
+  Deserves its own iteration(s) — needs a trainable ESP/ESD-GNN checkpoint path at multiple scales.
