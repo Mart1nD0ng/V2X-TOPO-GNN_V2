@@ -89,6 +89,20 @@ class FactorialResult:
     def basins_sum(self) -> float:
         return self.P_correct + self.F_wrong + self.F_split + self.F_deadline
 
+    def to_macro_block(self) -> dict:
+        """Namespaced macrostate headline block (``macro_*``; macrostate_v2) with Wilson CIs."""
+        from src.metrics import schema
+        ci = {"macro_P_correct": self.ci("P_correct"), "macro_F_wrong": self.ci("F_wrong"),
+              "macro_F_split": self.ci("F_split"), "macro_F_deadline": self.ci("F_deadline")}
+        return schema.macro_block(self.P_correct, self.F_wrong, self.F_split, self.F_deadline, ci=ci)
+
+    def to_result_record(self, *, policy: str, query_family: str, hashes=None) -> dict:
+        """Full §7.4 result record (version + macro block + manifest hashes if provided)."""
+        from src.metrics import schema
+        return schema.build_result_record(policy=policy, query_family=query_family,
+                                          macro=self.to_macro_block(),
+                                          runtime={"runtime_n_pool": self.n_pool}, hashes=hashes)
+
 
 def run_factorial_cell(scene, model, policy, proto, phy, profile, omega, *,
                        trials: int, seeds, link_override) -> FactorialResult:

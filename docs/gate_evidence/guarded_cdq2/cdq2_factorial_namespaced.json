@@ -1,0 +1,395 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "source": "migrated from docs/gate_evidence/macrostate/cdq2_factorial_results.json (S15)",
+  "note": "pure key-rename of S15 numbers; no metric recomputation. Headline judge unchanged (independent dynamic-MC basin first-hitting).",
+  "config": {
+    "N": 36,
+    "k": 3,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "trials_per_seed": 3000,
+    "rmax": 14,
+    "eta": 8.0,
+    "base_node_err": 0.38,
+    "corr_strength": 0.33,
+    "quality": "distance(beta_per_m=0.05)",
+    "diversity": "observable sensor one-hot",
+    "n_pool": 18000
+  },
+  "cells": {
+    "fixed_link_0.85/iid": {
+      "ESP": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "ESP",
+        "query_family": "ESP",
+        "macro": {
+          "macro_P_correct": 0.7439444444444444,
+          "macro_F_wrong": 0.04894444444444444,
+          "macro_F_split": 0.020888888888888887,
+          "macro_F_deadline": 0.1862222222222222,
+          "macro_P_correct_ci": [
+            0.7375,
+            0.7503
+          ],
+          "macro_F_wrong_ci": [
+            0.0459,
+            0.0522
+          ]
+        }
+      },
+      "CDQ2": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "CDQ2",
+        "query_family": "CDQ2",
+        "macro": {
+          "macro_P_correct": 0.7393888888888889,
+          "macro_F_wrong": 0.0535,
+          "macro_F_split": 0.018444444444444444,
+          "macro_F_deadline": 0.18866666666666665,
+          "macro_P_correct_ci": [
+            0.7329,
+            0.7458
+          ],
+          "macro_F_wrong_ci": [
+            0.0503,
+            0.0569
+          ]
+        }
+      },
+      "delta": {
+        "macro_P_correct_delta": -0.00456,
+        "macro_F_wrong_delta": 0.00456,
+        "macro_F_split_delta": -0.00244,
+        "macro_F_deadline_delta": 0.00244
+      }
+    },
+    "fixed_link_0.85/matched_marginal_low": {
+      "ESP": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "ESP",
+        "query_family": "ESP",
+        "macro": {
+          "macro_P_correct": 0.7439444444444444,
+          "macro_F_wrong": 0.04894444444444444,
+          "macro_F_split": 0.020888888888888887,
+          "macro_F_deadline": 0.1862222222222222,
+          "macro_P_correct_ci": [
+            0.7375,
+            0.7503
+          ],
+          "macro_F_wrong_ci": [
+            0.0459,
+            0.0522
+          ]
+        }
+      },
+      "CDQ2": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "CDQ2",
+        "query_family": "CDQ2",
+        "macro": {
+          "macro_P_correct": 0.7393888888888889,
+          "macro_F_wrong": 0.0535,
+          "macro_F_split": 0.018444444444444444,
+          "macro_F_deadline": 0.18866666666666665,
+          "macro_P_correct_ci": [
+            0.7329,
+            0.7458
+          ],
+          "macro_F_wrong_ci": [
+            0.0503,
+            0.0569
+          ]
+        }
+      },
+      "delta": {
+        "macro_P_correct_delta": -0.00456,
+        "macro_F_wrong_delta": 0.00456,
+        "macro_F_split_delta": -0.00244,
+        "macro_F_deadline_delta": 0.00244
+      }
+    },
+    "fixed_link_0.85/matched_marginal_high": {
+      "ESP": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "ESP",
+        "query_family": "ESP",
+        "macro": {
+          "macro_P_correct": 0.6252777777777778,
+          "macro_F_wrong": 0.20144444444444443,
+          "macro_F_split": 0.011666666666666667,
+          "macro_F_deadline": 0.1616111111111111,
+          "macro_P_correct_ci": [
+            0.6182,
+            0.6323
+          ],
+          "macro_F_wrong_ci": [
+            0.1956,
+            0.2074
+          ]
+        }
+      },
+      "CDQ2": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "CDQ2",
+        "query_family": "CDQ2",
+        "macro": {
+          "macro_P_correct": 0.6408888888888888,
+          "macro_F_wrong": 0.21,
+          "macro_F_split": 0.012388888888888889,
+          "macro_F_deadline": 0.13672222222222222,
+          "macro_P_correct_ci": [
+            0.6339,
+            0.6479
+          ],
+          "macro_F_wrong_ci": [
+            0.2041,
+            0.216
+          ]
+        }
+      },
+      "delta": {
+        "macro_P_correct_delta": 0.01561,
+        "macro_F_wrong_delta": 0.00856,
+        "macro_F_split_delta": 0.00072,
+        "macro_F_deadline_delta": -0.02489
+      }
+    },
+    "fixed_link_0.85/overlapping_sensor_source": {
+      "ESP": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "ESP",
+        "query_family": "ESP",
+        "macro": {
+          "macro_P_correct": 0.3606111111111111,
+          "macro_F_wrong": 0.27222222222222225,
+          "macro_F_split": 0.03916666666666667,
+          "macro_F_deadline": 0.328,
+          "macro_P_correct_ci": [
+            0.3536,
+            0.3677
+          ],
+          "macro_F_wrong_ci": [
+            0.2658,
+            0.2788
+          ]
+        }
+      },
+      "CDQ2": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "CDQ2",
+        "query_family": "CDQ2",
+        "macro": {
+          "macro_P_correct": 0.36627777777777776,
+          "macro_F_wrong": 0.28088888888888885,
+          "macro_F_split": 0.033777777777777775,
+          "macro_F_deadline": 0.31905555555555554,
+          "macro_P_correct_ci": [
+            0.3593,
+            0.3733
+          ],
+          "macro_F_wrong_ci": [
+            0.2744,
+            0.2875
+          ]
+        }
+      },
+      "delta": {
+        "macro_P_correct_delta": 0.00567,
+        "macro_F_wrong_delta": 0.00867,
+        "macro_F_split_delta": -0.00539,
+        "macro_F_deadline_delta": -0.00894
+      }
+    },
+    "full_physics/iid": {
+      "ESP": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "ESP",
+        "query_family": "ESP",
+        "macro": {
+          "macro_P_correct": 0.7454444444444445,
+          "macro_F_wrong": 0.05911111111111111,
+          "macro_F_split": 0.03955555555555555,
+          "macro_F_deadline": 0.15588888888888888,
+          "macro_P_correct_ci": [
+            0.7363,
+            0.7543
+          ],
+          "macro_F_wrong_ci": [
+            0.0544,
+            0.0642
+          ]
+        }
+      },
+      "CDQ2": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "CDQ2",
+        "query_family": "CDQ2",
+        "macro": {
+          "macro_P_correct": 0.7431111111111111,
+          "macro_F_wrong": 0.06422222222222222,
+          "macro_F_split": 0.03177777777777778,
+          "macro_F_deadline": 0.1608888888888889,
+          "macro_P_correct_ci": [
+            0.734,
+            0.752
+          ],
+          "macro_F_wrong_ci": [
+            0.0593,
+            0.0695
+          ]
+        }
+      },
+      "delta": {
+        "macro_P_correct_delta": -0.00233,
+        "macro_F_wrong_delta": 0.00511,
+        "macro_F_split_delta": -0.00778,
+        "macro_F_deadline_delta": 0.005
+      }
+    },
+    "full_physics/matched_marginal_low": {
+      "ESP": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "ESP",
+        "query_family": "ESP",
+        "macro": {
+          "macro_P_correct": 0.7454444444444445,
+          "macro_F_wrong": 0.05911111111111111,
+          "macro_F_split": 0.03955555555555555,
+          "macro_F_deadline": 0.15588888888888888,
+          "macro_P_correct_ci": [
+            0.7363,
+            0.7543
+          ],
+          "macro_F_wrong_ci": [
+            0.0544,
+            0.0642
+          ]
+        }
+      },
+      "CDQ2": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "CDQ2",
+        "query_family": "CDQ2",
+        "macro": {
+          "macro_P_correct": 0.7431111111111111,
+          "macro_F_wrong": 0.06422222222222222,
+          "macro_F_split": 0.03177777777777778,
+          "macro_F_deadline": 0.1608888888888889,
+          "macro_P_correct_ci": [
+            0.734,
+            0.752
+          ],
+          "macro_F_wrong_ci": [
+            0.0593,
+            0.0695
+          ]
+        }
+      },
+      "delta": {
+        "macro_P_correct_delta": -0.00233,
+        "macro_F_wrong_delta": 0.00511,
+        "macro_F_split_delta": -0.00778,
+        "macro_F_deadline_delta": 0.005
+      }
+    },
+    "full_physics/matched_marginal_high": {
+      "ESP": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "ESP",
+        "query_family": "ESP",
+        "macro": {
+          "macro_P_correct": 0.6298888888888888,
+          "macro_F_wrong": 0.2061111111111111,
+          "macro_F_split": 0.028444444444444442,
+          "macro_F_deadline": 0.13555555555555554,
+          "macro_P_correct_ci": [
+            0.6199,
+            0.6398
+          ],
+          "macro_F_wrong_ci": [
+            0.1979,
+            0.2146
+          ]
+        }
+      },
+      "CDQ2": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "CDQ2",
+        "query_family": "CDQ2",
+        "macro": {
+          "macro_P_correct": 0.6481111111111111,
+          "macro_F_wrong": 0.22,
+          "macro_F_split": 0.024777777777777777,
+          "macro_F_deadline": 0.1071111111111111,
+          "macro_P_correct_ci": [
+            0.6382,
+            0.6579
+          ],
+          "macro_F_wrong_ci": [
+            0.2116,
+            0.2287
+          ]
+        }
+      },
+      "delta": {
+        "macro_P_correct_delta": 0.01822,
+        "macro_F_wrong_delta": 0.01389,
+        "macro_F_split_delta": -0.00367,
+        "macro_F_deadline_delta": -0.02844
+      }
+    },
+    "full_physics/overlapping_sensor_source": {
+      "ESP": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "ESP",
+        "query_family": "ESP",
+        "macro": {
+          "macro_P_correct": 0.37677777777777777,
+          "macro_F_wrong": 0.2835555555555555,
+          "macro_F_split": 0.059666666666666666,
+          "macro_F_deadline": 0.27999999999999997,
+          "macro_P_correct_ci": [
+            0.3668,
+            0.3868
+          ],
+          "macro_F_wrong_ci": [
+            0.2743,
+            0.293
+          ]
+        }
+      },
+      "CDQ2": {
+        "metric_namespace_version": "macrostate_v2",
+        "policy": "CDQ2",
+        "query_family": "CDQ2",
+        "macro": {
+          "macro_P_correct": 0.383,
+          "macro_F_wrong": 0.28966666666666663,
+          "macro_F_split": 0.04677777777777778,
+          "macro_F_deadline": 0.28055555555555556,
+          "macro_P_correct_ci": [
+            0.373,
+            0.3931
+          ],
+          "macro_F_wrong_ci": [
+            0.2804,
+            0.2991
+          ]
+        }
+      },
+      "delta": {
+        "macro_P_correct_delta": 0.00622,
+        "macro_F_wrong_delta": 0.00611,
+        "macro_F_split_delta": -0.01289,
+        "macro_F_deadline_delta": 0.00056
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "round": "Guarded-CDQ2 (liveness extension + ESP performance-scale + metric cleanup)",
+  "design_basis": [
+    "docs/GUARDED_CDQ2_TECHNICAL_SPEC.md",
+    "docs/GUARDED_CDQ2_ENGINEERING_PLAN.md",
+    "docs/MECHANISM_IDENTIFIABILITY_CONTRACT.md"
+  ],
+  "freeze_tag": "macrostate-cdq2-v2-before-guarded (commit abda600)",
+  "gates": [
+    "G-METRIC-NAMESPACE",
+    "G-RESULT-MANIFEST",
+    "G-ESP-PERFORMANCE-SCALE",
+    "G-ETA-RISK-LIVENESS",
+    "G-GUARDED-CDQ2",
+    "G-HAZARD-PROFILES",
+    "G-FINAL-SYNTHESIS"
+  ],
+  "slices": {
+    "GS1-metric-namespace-schema": {
+      "date": "2026-06-27",
+      "contributes_to": ["G-METRIC-NAMESPACE"],
+      "modules": [
+        "src/metrics/namespaces.py",
+        "src/metrics/schema.py",
+        "src/validation/dynamic_mc.py (DynamicMCResult.macro_block, additive)",
+        "src/evaluation/cdq2_factorial.py (FactorialResult.to_macro_block/to_result_record, additive)"
+      ],
+      "tests": [
+        "tests/metrics/test_namespace_schema.py (27 passed under -W error)"
+      ],
+      "evidence": {
+        "metric_namespace_version": "macrostate_v2",
+        "namespace_groups": ["macro", "strict_audit", "diagnostic", "sampling", "cdq", "runtime"],
+        "forbidden_bare_keys": ["F", "F_wrong", "F_split", "F_deadline", "F_disagree", "S_allcorrect", "failure", "reliability", "D", "delay", "P_correct"],
+        "migration": "docs/gate_evidence/guarded_cdq2/migrate_s15_to_v2.py -> cdq2_factorial_namespaced.json (16 records validated, 0 forbidden bare keys, 0 legacy keys); S15 archived non-destructively to docs/gate_evidence/macrostate/archive/cdq2_factorial_results_S15.json",
+        "old_S15_json_rejected": "the committed bare-key S15 artifact fails assert_no_forbidden_keys (cleanup bites)",
+        "adversarial_audit": "1 general-purpose reviewer: 2 CRITICAL holes found + FIXED + regression-tested (top-level legacy smuggling via unknown key/bare scalar; NaN macro-outcome bypassing sum-to-1), 1 MODERATE (concept-blind legacy detection) broadened to node-union/all-correct/global-product spellings, 2 hardening (iter_keys Mapping/set traversal; builder rejects incomplete macro)"
+      },
+      "regression": "tests/metrics/ + tests/evaluation/ + tests/validation/test_macrostate_mc.py all green (additive struct methods non-regressing)"
+    }
+  }
+}

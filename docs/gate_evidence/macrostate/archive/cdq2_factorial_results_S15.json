@@ -1,0 +1,312 @@
+{
+  "config": {
+    "N": 36,
+    "k": 3,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "trials_per_seed": 3000,
+    "rmax": 14,
+    "eta": 8.0,
+    "base_node_err": 0.38,
+    "corr_strength": 0.33,
+    "quality": "distance(beta_per_m=0.05)",
+    "diversity": "observable sensor one-hot",
+    "n_pool": 18000
+  },
+  "cells": {
+    "fixed_link_0.85/iid": {
+      "ESP": {
+        "P_correct": 0.7439444444444444,
+        "F_wrong": 0.04894444444444444,
+        "F_split": 0.020888888888888887,
+        "F_deadline": 0.1862222222222222
+      },
+      "CDQ2": {
+        "P_correct": 0.7393888888888889,
+        "F_wrong": 0.0535,
+        "F_split": 0.018444444444444444,
+        "F_deadline": 0.18866666666666665
+      },
+      "delta": {
+        "P_correct": -0.00456,
+        "F_wrong": 0.00456,
+        "F_split": -0.00244,
+        "F_deadline": 0.00244
+      },
+      "P_correct_CI_ESP": [
+        0.7375,
+        0.7503
+      ],
+      "P_correct_CI_CDQ2": [
+        0.7329,
+        0.7458
+      ],
+      "F_wrong_CI_ESP": [
+        0.0459,
+        0.0522
+      ],
+      "F_wrong_CI_CDQ2": [
+        0.0503,
+        0.0569
+      ]
+    },
+    "fixed_link_0.85/matched_marginal_low": {
+      "ESP": {
+        "P_correct": 0.7439444444444444,
+        "F_wrong": 0.04894444444444444,
+        "F_split": 0.020888888888888887,
+        "F_deadline": 0.1862222222222222
+      },
+      "CDQ2": {
+        "P_correct": 0.7393888888888889,
+        "F_wrong": 0.0535,
+        "F_split": 0.018444444444444444,
+        "F_deadline": 0.18866666666666665
+      },
+      "delta": {
+        "P_correct": -0.00456,
+        "F_wrong": 0.00456,
+        "F_split": -0.00244,
+        "F_deadline": 0.00244
+      },
+      "P_correct_CI_ESP": [
+        0.7375,
+        0.7503
+      ],
+      "P_correct_CI_CDQ2": [
+        0.7329,
+        0.7458
+      ],
+      "F_wrong_CI_ESP": [
+        0.0459,
+        0.0522
+      ],
+      "F_wrong_CI_CDQ2": [
+        0.0503,
+        0.0569
+      ]
+    },
+    "fixed_link_0.85/matched_marginal_high": {
+      "ESP": {
+        "P_correct": 0.6252777777777778,
+        "F_wrong": 0.20144444444444443,
+        "F_split": 0.011666666666666667,
+        "F_deadline": 0.1616111111111111
+      },
+      "CDQ2": {
+        "P_correct": 0.6408888888888888,
+        "F_wrong": 0.21,
+        "F_split": 0.012388888888888889,
+        "F_deadline": 0.13672222222222222
+      },
+      "delta": {
+        "P_correct": 0.01561,
+        "F_wrong": 0.00856,
+        "F_split": 0.00072,
+        "F_deadline": -0.02489
+      },
+      "P_correct_CI_ESP": [
+        0.6182,
+        0.6323
+      ],
+      "P_correct_CI_CDQ2": [
+        0.6339,
+        0.6479
+      ],
+      "F_wrong_CI_ESP": [
+        0.1956,
+        0.2074
+      ],
+      "F_wrong_CI_CDQ2": [
+        0.2041,
+        0.216
+      ]
+    },
+    "fixed_link_0.85/overlapping_sensor_source": {
+      "ESP": {
+        "P_correct": 0.3606111111111111,
+        "F_wrong": 0.27222222222222225,
+        "F_split": 0.03916666666666667,
+        "F_deadline": 0.328
+      },
+      "CDQ2": {
+        "P_correct": 0.36627777777777776,
+        "F_wrong": 0.28088888888888885,
+        "F_split": 0.033777777777777775,
+        "F_deadline": 0.31905555555555554
+      },
+      "delta": {
+        "P_correct": 0.00567,
+        "F_wrong": 0.00867,
+        "F_split": -0.00539,
+        "F_deadline": -0.00894
+      },
+      "P_correct_CI_ESP": [
+        0.3536,
+        0.3677
+      ],
+      "P_correct_CI_CDQ2": [
+        0.3593,
+        0.3733
+      ],
+      "F_wrong_CI_ESP": [
+        0.2658,
+        0.2788
+      ],
+      "F_wrong_CI_CDQ2": [
+        0.2744,
+        0.2875
+      ]
+    },
+    "full_physics/iid": {
+      "ESP": {
+        "P_correct": 0.7454444444444445,
+        "F_wrong": 0.05911111111111111,
+        "F_split": 0.03955555555555555,
+        "F_deadline": 0.15588888888888888
+      },
+      "CDQ2": {
+        "P_correct": 0.7431111111111111,
+        "F_wrong": 0.06422222222222222,
+        "F_split": 0.03177777777777778,
+        "F_deadline": 0.1608888888888889
+      },
+      "delta": {
+        "P_correct": -0.00233,
+        "F_wrong": 0.00511,
+        "F_split": -0.00778,
+        "F_deadline": 0.005
+      },
+      "P_correct_CI_ESP": [
+        0.7363,
+        0.7543
+      ],
+      "P_correct_CI_CDQ2": [
+        0.734,
+        0.752
+      ],
+      "F_wrong_CI_ESP": [
+        0.0544,
+        0.0642
+      ],
+      "F_wrong_CI_CDQ2": [
+        0.0593,
+        0.0695
+      ]
+    },
+    "full_physics/matched_marginal_low": {
+      "ESP": {
+        "P_correct": 0.7454444444444445,
+        "F_wrong": 0.05911111111111111,
+        "F_split": 0.03955555555555555,
+        "F_deadline": 0.15588888888888888
+      },
+      "CDQ2": {
+        "P_correct": 0.7431111111111111,
+        "F_wrong": 0.06422222222222222,
+        "F_split": 0.03177777777777778,
+        "F_deadline": 0.1608888888888889
+      },
+      "delta": {
+        "P_correct": -0.00233,
+        "F_wrong": 0.00511,
+        "F_split": -0.00778,
+        "F_deadline": 0.005
+      },
+      "P_correct_CI_ESP": [
+        0.7363,
+        0.7543
+      ],
+      "P_correct_CI_CDQ2": [
+        0.734,
+        0.752
+      ],
+      "F_wrong_CI_ESP": [
+        0.0544,
+        0.0642
+      ],
+      "F_wrong_CI_CDQ2": [
+        0.0593,
+        0.0695
+      ]
+    },
+    "full_physics/matched_marginal_high": {
+      "ESP": {
+        "P_correct": 0.6298888888888888,
+        "F_wrong": 0.2061111111111111,
+        "F_split": 0.028444444444444442,
+        "F_deadline": 0.13555555555555554
+      },
+      "CDQ2": {
+        "P_correct": 0.6481111111111111,
+        "F_wrong": 0.22,
+        "F_split": 0.024777777777777777,
+        "F_deadline": 0.1071111111111111
+      },
+      "delta": {
+        "P_correct": 0.01822,
+        "F_wrong": 0.01389,
+        "F_split": -0.00367,
+        "F_deadline": -0.02844
+      },
+      "P_correct_CI_ESP": [
+        0.6199,
+        0.6398
+      ],
+      "P_correct_CI_CDQ2": [
+        0.6382,
+        0.6579
+      ],
+      "F_wrong_CI_ESP": [
+        0.1979,
+        0.2146
+      ],
+      "F_wrong_CI_CDQ2": [
+        0.2116,
+        0.2287
+      ]
+    },
+    "full_physics/overlapping_sensor_source": {
+      "ESP": {
+        "P_correct": 0.37677777777777777,
+        "F_wrong": 0.2835555555555555,
+        "F_split": 0.059666666666666666,
+        "F_deadline": 0.27999999999999997
+      },
+      "CDQ2": {
+        "P_correct": 0.383,
+        "F_wrong": 0.28966666666666663,
+        "F_split": 0.04677777777777778,
+        "F_deadline": 0.28055555555555556
+      },
+      "delta": {
+        "P_correct": 0.00622,
+        "F_wrong": 0.00611,
+        "F_split": -0.01289,
+        "F_deadline": 0.00056
+      },
+      "P_correct_CI_ESP": [
+        0.3668,
+        0.3868
+      ],
+      "P_correct_CI_CDQ2": [
+        0.373,
+        0.3931
+      ],
+      "F_wrong_CI_ESP": [
+        0.2743,
+        0.293
+      ],
+      "F_wrong_CI_CDQ2": [
+        0.2804,
+        0.2991
+      ]
+    }
+  }
+}

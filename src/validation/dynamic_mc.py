@@ -85,6 +85,26 @@ class DynamicMCResult:
     basin_F_deadline_ci: tuple[float, float] = (float("nan"), float("nan"))
     basin_tau_correct_mean: float = float("nan")   # mean correct first-hit epoch (T_confirm/Δ_poll)
 
+    def macro_block(self) -> dict:
+        """The namespaced macrostate headline block (``macro_P_correct`` ... ; macrostate_v2).
+
+        Built from the participation-weighted basin first-hitting fields -- NOT the legacy node-union
+        ``F_wrong``/``F_disagree``/``S_allcorrect`` (those are surrogate-only). Raises if the basins
+        were not populated (no ``service_profile`` passed to ``run_dynamic_mc``).
+        """
+        import math
+
+        from src.metrics import schema
+        if math.isnan(self.basin_P_correct):
+            raise ValueError("basin outcomes unpopulated -- pass a service_profile to run_dynamic_mc")
+        ci = {"macro_F_wrong": self.basin_F_wrong_ci, "macro_F_split": self.basin_F_split_ci,
+              "macro_F_deadline": self.basin_F_deadline_ci}
+        return schema.macro_block(
+            self.basin_P_correct, self.basin_F_wrong, self.basin_F_split, self.basin_F_deadline,
+            T_confirm=(self.basin_tau_correct_mean if not math.isnan(self.basin_tau_correct_mean)
+                       else None),
+            ci=ci, sum_tol=1e-6)
+
 
 def _cvar_upper(x: torch.Tensor, level: float) -> float:
     """Upper-tail CVaR: mean of the worst ``(1-level)`` fraction (higher values = worse).

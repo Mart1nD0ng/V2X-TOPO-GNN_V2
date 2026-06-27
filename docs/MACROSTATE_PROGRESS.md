@@ -39,10 +39,40 @@ no benefit in the prior round:
 
 Legend: ☐ not started · 🟡 in progress · 🟢 green.
 
+---
+
+## Guarded-CDQ2 round (2026-06-27 →) — gate status
+
+New round on branch `macrostate-cdq2-redesign`. **Live specs:** `docs/GUARDED_CDQ2_TECHNICAL_SPEC.md`,
+`docs/GUARDED_CDQ2_ENGINEERING_PLAN.md`, `docs/MECHANISM_IDENTIFIABILITY_CONTRACT.md`. Prior 11 macrostate
+gates remain green and frozen at git tag **`macrostate-cdq2-v2-before-guarded`** (commit `abda600`).
+
+**Round thesis (from the spec §0/§8):** CDQ2 is the general query family; ESP is its `η=0` reliability-first
+specialization. `η>0` is a **liveness/deadline** extension that can raise `macro_F_wrong` in majority-correct
+regimes, so it must be **guarded** by reliability slack. The contribution is the *characterization and control
+of the validity–liveness trade-off*, not "CDQ always improves reliability". `macro_F_wrong`/`macro_F_split`
+are HARD constraints; `macro_F_deadline`/tail-latency/energy are optimization targets within the feasible set.
+
+| Gate | Scope | Status |
+|------|-------|--------|
+| G-METRIC-NAMESPACE | canonical metric schema + namespaces (`macro`/`strict_audit`/`diagnostic`/`sampling`/`cdq`/`runtime`); ban ambiguous bare names in serialized headline; `metric_namespace_version="macrostate_v2"`; legacy/surrogate fields gated behind `legacy=True`; figure-guard | 🟢 GS1: `namespaces.py`+`schema.py`, 27 tests, S15 migrated+archived, 2 CRITICAL audit holes fixed |
+| G-RESULT-MANIFEST | every result JSON carries physics/profile/evidence/scene/policy/checkpoint hashes + query_family; fail-fast on train/eval physics mismatch (unless declared OOD) + missing macro outcomes + untracked seed | ☐ |
+| G-ESP-PERFORMANCE-SCALE | trained ESP/ESD-GNN checkpoints, **real macrostate-basin outcomes** (not runtime) across N=100…10000; fixed-protocol vs fixed-service-profile; scale-regret + feasibility-retention; ≥5 model seeds, dynamic-MC judged, UCB for rare failure | ☐ |
+| G-ETA-RISK-LIVENESS | η∈{0,.25,.5,1,2,4,8,16} sweep over ≥4 env families (iid/mm-low/mm-high/overlapping/split) × {fixed-link, full-physics}; identify how mass moves (deadline→correct / deadline→wrong / split→correct / none); CIs | ☐ |
+| G-GUARDED-CDQ2 | `src/policies/guarded_cdq2.py` hard + soft differentiable guard `η=G(m_w,m_s,p_d)·η_raw`; arms ESP/fixed/learned/hard/soft/oracle; must satisfy wrong/split UCB AND improve deadline/tail in covariance-stressed scenes AND fall back to ESP in safety-critical; guard-activation stats | ☐ |
+| G-HAZARD-PROFILES | `src/config/hazard_profile.py` + `src/evaluation/hazard_utility.py`; hazard-weighted `B_CDQ` net benefit; ≥5 profiles (safety-first/balanced/deadline-critical/fail-safe/energy); policy selection changes rationally with cost ratios under the feasibility gate | ☐ |
+| G-FINAL-SYNTHESIS | unified report (ESP scale + η-curve + guarded + hazard) deciding when ESP vs CDQ2 vs Guarded-CDQ2; figures read results only (constraint #13); no ambiguous names; all reproducible via manifest hashes | ☐ |
+
+**Adopted defaults (Guarded-CDQ2 round; override-flagged per stop-condition #4/#5):** guard margins
+`δ_w=δ_s=2e-4` (= 0.2·ε on the 1e-3 budgets), soft-guard temperatures `T_w=T_s=1e-4`, deadline-pressure
+margin `δ_d` / temperature `T_d` from the profile's `ε_d`/`R_d`. These are config fields, not hard-coded math.
+
 ## Repository / commit note
-The working directory is **not a git repository** (no `.git`). Atomic "commits" in the plan's
-LOOP are recorded here as dated decision-log entries + a per-slice evidence manifest under
-`docs/gate_evidence/macrostate/`. If the user initialises git, retro-tag `pre-macrostate-cdq2`.
+The working directory **is now a git repository** (initialised 2026-06-27; remote
+`github.com/Mart1nD0ng/V2X-TOPO-GNN_V2`, branch `macrostate-cdq2-redesign`). The prior macrostate/CDQ2
+round is commit `abda600`, frozen at tag `macrostate-cdq2-v2-before-guarded`. LOOP "commits" continue to
+be recorded as dated decision-log entries + a per-slice evidence manifest (macrostate round under
+`docs/gate_evidence/macrostate/`; Guarded-CDQ2 round under `docs/gate_evidence/guarded_cdq2/`).
 
 ## Adopted defaults (overridable — flagged per stop-condition #1)
 The spec gives constraints, not exact constants; these defaults satisfy every spec constraint and
@@ -668,3 +698,50 @@ condition hit. **Next:** P0-E unified poll-window `ℓ(Δ_poll)` with an explici
 completion/timeout factor (needs a service-time distribution: HARQ retx count + M/M/1 queue delay →
 `P(T_req+T_resp ≤ Δ_poll)`), then P0-F analytic/MC alignment, then G-CANONICAL-CLOSURE ExperimentSpec
 hashing (train==eval enforcement) and the macrostate-objective rewrite (Phase 5).
+
+---
+
+## Guarded-CDQ2 round — decision log
+
+### GM0 — round bootstrap + Phase 0 freeze (2026-06-27)
+* Read the two new live specs (`GUARDED_CDQ2_TECHNICAL_SPEC.md`, `GUARDED_CDQ2_ENGINEERING_PLAN.md`) +
+  the contract + the prior progress + S15 factorial JSON. Confirmed the 7 new gates and the round thesis
+  (CDQ2 = liveness extension, ESP = reliability-first default, validity–liveness trade-off **guarded**).
+* **Phase 0 freeze:** git is now initialised, so the plan's "tag current state" is real — created annotated
+  tag **`macrostate-cdq2-v2-before-guarded`** at `abda600` (the completed 11-gate macrostate round).
+* Recorded the new gate table + adopted guard defaults (δ_w=δ_s=2e-4, T_w=T_s=1e-4) at the top of this doc.
+
+### GM1 — Slice GS1: metric namespace + result schema (G-METRIC-NAMESPACE 🟢) (2026-06-27)
+* `src/metrics/namespaces.py` — the single source of truth for the spec §7 namespaces
+  (`macro`/`strict_audit`/`diagnostic`/`sampling`/`cdq`/`runtime` + legacy `surrogate_*`), the canonical
+  per-namespace key vocabularies, the **exact-match** forbidden-bare ban-list (`F`, `F_wrong`, `F_disagree`,
+  `S_allcorrect`, `failure`, `reliability`, `D`, `delay`, `P_correct` — `macro_F_wrong` is fine, bare
+  `F_wrong` is not), and recursive `iter_keys` + concept-based `is_legacy_key` (node-union/all-correct/
+  global-product spellings, not just the `surrogate_` prefix).
+* `src/metrics/schema.py` — `macro_block` (four outcomes, **finite + sum-to-1** enforced), `macro_delta_block`
+  (`_delta`-suffixed so deltas aren't mistaken for outcomes), `build_result_record` (§7.4: version + policy +
+  query_family + namespaced blocks; legacy gated behind `allow_legacy=True`), `validate_result`
+  (version + **top-level whitelist** + per-block namespace + **whole-record legacy scan**, headline mode
+  forbids any surrogate), `assert_no_legacy_metrics` (the figure-script guard, constraint #13),
+  `migrate_legacy_factorial_cell` (pure key-rename shim, no recomputation).
+* **Migrated** the S15 factorial → namespaced `cdq2_factorial_namespaced.json` (16 records validated, 0
+  forbidden/legacy keys) via `migrate_s15_to_v2.py`; **S15 preserved** (archived to
+  `…/macrostate/archive/`, original untouched — Phase 0 "do not overwrite S15"). Added namespaced
+  converters to `DynamicMCResult` (basins→`macro_block`) and `FactorialResult` (additive, non-breaking).
+* **Adversarial audit (1 general-purpose reviewer):** raised **2 CRITICAL** (both real, both FIXED +
+  regression-tested): (#1) `validate_result(headline)` let a `surrogate_*` metric sit at top level or under
+  a foreign key — fixed with a top-level whitelist + a whole-record legacy scan; (#2) a NaN macro outcome
+  bypassed sum-to-1 (`abs(nan−1)>tol` is False) — fixed with a finiteness check. Plus 1 MODERATE (concept-
+  blind legacy detection → broadened) + 2 hardening (`iter_keys` traverses Mapping/set; builder rejects
+  incomplete macro). All six exploit paths now have regression tests.
+* **Tests:** `tests/metrics/test_namespace_schema.py` (27 under `-W error`) — ban-list exactness, sum-to-1,
+  version, legacy gating, figure-guard, migration, the old-S15-JSON-is-rejected check, both converters, and
+  the six audit regressions. Regression: `tests/metrics/` + `tests/evaluation/` + macrostate-MC = green.
+  Manifest `docs/gate_evidence/guarded_cdq2/manifest.json` slice `GS1`.
+* **Exit met:** all NEW-round experiment scripts will emit only namespace-clean `macrostate_v2` records;
+  ambiguous/legacy keys cannot reach a headline JSON; figures fail on legacy input. The frozen prior-round
+  `run_cdq2_factorial.py` is left byte-identical (it reproduces S15); the migration shim is the bridge.
+* **Next: G-RESULT-MANIFEST** — make the §7.4 hashes (physics/profile/evidence/scene/policy/checkpoint +
+  query_family) mandatory, with fail-fast on train/eval physics mismatch (unless declared OOD), missing
+  macro outcomes, and untracked model seed. The schema's `hashes` slot + `build_result_record` already
+  accept them; the next gate enforces presence + consistency.
