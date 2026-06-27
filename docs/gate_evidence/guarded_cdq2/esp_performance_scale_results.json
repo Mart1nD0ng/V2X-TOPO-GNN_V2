@@ -1,0 +1,784 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment": "esp_performance_scale",
+  "smoke": false,
+  "git_commit": "5c1cc83",
+  "scenario": "iid",
+  "base_node_err": 0.2,
+  "model_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "budget_note": "BOUNDED RUN: training is full-physics analytic-backprop (~18s/step@N=120); MC is full-physics (~0.4s/trial@N=120, ~linear in N). Reductions (trials, expert seeds, max real-MC scale) are recorded per cell; N>=3000 uses a documented statistical approximation (spec \u00a76.7), not full rare-event MC.",
+  "tiers": {
+    "N120": {
+      "esd_gnn_shared": {
+        "record": {
+          "metric_namespace_version": "macrostate_v2",
+          "policy": "esd_gnn_shared",
+          "query_family": "ESP",
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+            "evidence_hash": "82c4bc4d6446d533964e50b79d8208d904cfa0c75e3ed82d38f1e30cca413a65",
+            "scene_distribution_hash": "78116caf8fea8d66d9c68f9a170a2e0a45fff3216206b85c54449673a7be5e18",
+            "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+            "policy_hash": "esd_gnn_shared",
+            "checkpoint_hash": "4b4e9ba25cad1513b2bc6abee552cdbe153f41e97a1b746270a11c0b1c041439",
+            "experiment_config_hash": "e626d402dc16516b6f46c6e888695b9276a6aa5d83e078f480cde308550e448f",
+            "query_law": "esp",
+            "full_physics": true,
+            "git_commit": "5c1cc83",
+            "manifest_id": "GS3-esp-scale",
+            "model_seeds": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "macro": {
+            "macro_P_correct": 0.95,
+            "macro_F_wrong": 0.0,
+            "macro_F_split": 0.0,
+            "macro_F_deadline": 0.05,
+            "macro_P_correct_ci": [
+              0.8912955111799957,
+              0.9846505107327846
+            ],
+            "macro_F_wrong_ci": [
+              0.0,
+              0.02670715564899167
+            ],
+            "macro_F_split_ci": [
+              0.0,
+              0.02670715564899167
+            ],
+            "macro_F_deadline_ci": [
+              0.01534948926721527,
+              0.10870448882000434
+            ]
+          },
+          "runtime": {
+            "runtime_n_pool": 700,
+            "runtime_seeds_evaluated": 5
+          }
+        },
+        "feasible_point": true,
+        "feasible_ucb": false,
+        "cost_J": 0.050000000000000044,
+        "macro_P_correct": 0.95,
+        "macro_F_wrong": 0.0,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.05
+      },
+      "uniform_esp": {
+        "record": {
+          "metric_namespace_version": "macrostate_v2",
+          "policy": "uniform_esp",
+          "query_family": "ESP",
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+            "evidence_hash": "82c4bc4d6446d533964e50b79d8208d904cfa0c75e3ed82d38f1e30cca413a65",
+            "scene_distribution_hash": "78116caf8fea8d66d9c68f9a170a2e0a45fff3216206b85c54449673a7be5e18",
+            "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+            "policy_hash": "uniform_esp",
+            "checkpoint_hash": "uniform_esp",
+            "experiment_config_hash": "e626d402dc16516b6f46c6e888695b9276a6aa5d83e078f480cde308550e448f",
+            "query_law": "esp",
+            "full_physics": true,
+            "git_commit": "5c1cc83",
+            "manifest_id": "GS3-esp-scale",
+            "model_seeds": [
+              0
+            ]
+          },
+          "macro": {
+            "macro_P_correct": 0.9571428571428571,
+            "macro_F_wrong": 0.0,
+            "macro_F_split": 0.0,
+            "macro_F_deadline": 0.04285714285714286,
+            "macro_P_correct_ci": [
+              0.909655014705615,
+              0.9802127287010209
+            ],
+            "macro_F_wrong_ci": [
+              0.0,
+              0.02670715564899167
+            ],
+            "macro_F_split_ci": [
+              0.0,
+              0.02670715564899167
+            ],
+            "macro_F_deadline_ci": [
+              0.019787271298978993,
+              0.09034498529438482
+            ]
+          },
+          "runtime": {
+            "runtime_n_pool": 140
+          }
+        },
+        "feasible_point": true,
+        "feasible_ucb": false,
+        "cost_J": 0.04285714285714293,
+        "macro_P_correct": 0.9571428571428571,
+        "macro_F_wrong": 0.0,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.04285714285714286
+      },
+      "distance": {
+        "record": {
+          "metric_namespace_version": "macrostate_v2",
+          "policy": "distance",
+          "query_family": "ESP",
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+            "evidence_hash": "82c4bc4d6446d533964e50b79d8208d904cfa0c75e3ed82d38f1e30cca413a65",
+            "scene_distribution_hash": "78116caf8fea8d66d9c68f9a170a2e0a45fff3216206b85c54449673a7be5e18",
+            "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+            "policy_hash": "distance",
+            "checkpoint_hash": "distance",
+            "experiment_config_hash": "e626d402dc16516b6f46c6e888695b9276a6aa5d83e078f480cde308550e448f",
+            "query_law": "esp",
+            "full_physics": true,
+            "git_commit": "5c1cc83",
+            "manifest_id": "GS3-esp-scale",
+            "model_seeds": [
+              0
+            ]
+          },
+          "macro": {
+            "macro_P_correct": 0.9857142857142858,
+            "macro_F_wrong": 0.0,
+            "macro_F_split": 0.0,
+            "macro_F_deadline": 0.014285714285714285,
+            "macro_P_correct_ci": [
+              0.9494108358295452,
+              0.9960736415400061
+            ],
+            "macro_F_wrong_ci": [
+              0.0,
+              0.02670715564899167
+            ],
+            "macro_F_split_ci": [
+              0.0,
+              0.02670715564899167
+            ],
+            "macro_F_deadline_ci": [
+              0.003926358459994088,
+              0.05058916417045497
+            ]
+          },
+          "runtime": {
+            "runtime_n_pool": 140
+          }
+        },
+        "feasible_point": true,
+        "feasible_ucb": false,
+        "cost_J": 0.014285714285714235,
+        "macro_P_correct": 0.9857142857142858,
+        "macro_F_wrong": 0.0,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.014285714285714285
+      }
+    },
+    "N336": {
+      "esd_gnn_shared": {
+        "record": {
+          "metric_namespace_version": "macrostate_v2",
+          "policy": "esd_gnn_shared",
+          "query_family": "ESP",
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+            "evidence_hash": "82c4bc4d6446d533964e50b79d8208d904cfa0c75e3ed82d38f1e30cca413a65",
+            "scene_distribution_hash": "cc059ec82681f1d0b6666f8ee32ceffecfcc8b892306aedb27e1d7a0dca13a11",
+            "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+            "policy_hash": "esd_gnn_shared",
+            "checkpoint_hash": "4b4e9ba25cad1513b2bc6abee552cdbe153f41e97a1b746270a11c0b1c041439",
+            "experiment_config_hash": "4cacad04ec9e0191efeeaedd4d66dba6e2c4183539366ae7538b8282d90c7729",
+            "query_law": "esp",
+            "full_physics": true,
+            "git_commit": "5c1cc83",
+            "manifest_id": "GS3-esp-scale",
+            "model_seeds": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "macro": {
+            "macro_P_correct": 0.952,
+            "macro_F_wrong": 0.0,
+            "macro_F_split": 0.0,
+            "macro_F_deadline": 0.048,
+            "macro_P_correct_ci": [
+              0.8625032899347024,
+              0.9897456617765852
+            ],
+            "macro_F_wrong_ci": [
+              0.0,
+              0.03699480747600191
+            ],
+            "macro_F_split_ci": [
+              0.0,
+              0.03699480747600191
+            ],
+            "macro_F_deadline_ci": [
+              0.010254338223414811,
+              0.13749671006529754
+            ]
+          },
+          "runtime": {
+            "runtime_n_pool": 500,
+            "runtime_seeds_evaluated": 5
+          }
+        },
+        "feasible_point": true,
+        "feasible_ucb": false,
+        "cost_J": 0.04800000000000004,
+        "macro_P_correct": 0.952,
+        "macro_F_wrong": 0.0,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.048
+      },
+      "esd_gnn_expert": {
+        "record": {
+          "metric_namespace_version": "macrostate_v2",
+          "policy": "esd_gnn_expert",
+          "query_family": "ESP",
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+            "evidence_hash": "82c4bc4d6446d533964e50b79d8208d904cfa0c75e3ed82d38f1e30cca413a65",
+            "scene_distribution_hash": "cc059ec82681f1d0b6666f8ee32ceffecfcc8b892306aedb27e1d7a0dca13a11",
+            "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+            "policy_hash": "esd_gnn_expert",
+            "checkpoint_hash": "dddcf75c4a2922204ccf4df56a4e9abcb1f2f72e0ed0b8f19848961ec6670ed6",
+            "experiment_config_hash": "4cacad04ec9e0191efeeaedd4d66dba6e2c4183539366ae7538b8282d90c7729",
+            "query_law": "esp",
+            "full_physics": true,
+            "git_commit": "5c1cc83",
+            "manifest_id": "GS3-esp-scale",
+            "model_seeds": [
+              0,
+              1
+            ]
+          },
+          "macro": {
+            "macro_P_correct": 0.9450000000000001,
+            "macro_F_wrong": 0.0,
+            "macro_F_split": 0.0,
+            "macro_F_deadline": 0.055,
+            "macro_P_correct_ci": [
+              0.875230314687775,
+              0.9784566385436865
+            ],
+            "macro_F_wrong_ci": [
+              0.0,
+              0.03699480747600191
+            ],
+            "macro_F_split_ci": [
+              0.0,
+              0.03699480747600191
+            ],
+            "macro_F_deadline_ci": [
+              0.021543361456313564,
+              0.12476968531222504
+            ]
+          },
+          "runtime": {
+            "runtime_n_pool": 200,
+            "runtime_seeds_evaluated": 2
+          }
+        },
+        "feasible_point": true,
+        "feasible_ucb": false,
+        "cost_J": 0.05499999999999994,
+        "macro_P_correct": 0.9450000000000001,
+        "macro_F_wrong": 0.0,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.055
+      },
+      "uniform_esp": {
+        "record": {
+          "metric_namespace_version": "macrostate_v2",
+          "policy": "uniform_esp",
+          "query_family": "ESP",
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+            "evidence_hash": "82c4bc4d6446d533964e50b79d8208d904cfa0c75e3ed82d38f1e30cca413a65",
+            "scene_distribution_hash": "cc059ec82681f1d0b6666f8ee32ceffecfcc8b892306aedb27e1d7a0dca13a11",
+            "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+            "policy_hash": "uniform_esp",
+            "checkpoint_hash": "uniform_esp",
+            "experiment_config_hash": "4cacad04ec9e0191efeeaedd4d66dba6e2c4183539366ae7538b8282d90c7729",
+            "query_law": "esp",
+            "full_physics": true,
+            "git_commit": "5c1cc83",
+            "manifest_id": "GS3-esp-scale",
+            "model_seeds": [
+              0
+            ]
+          },
+          "macro": {
+            "macro_P_correct": 0.9400000000000001,
+            "macro_F_wrong": 0.0,
+            "macro_F_split": 0.0,
+            "macro_F_deadline": 0.06,
+            "macro_P_correct_ci": [
+              0.875230314687775,
+              0.9722142547333434
+            ],
+            "macro_F_wrong_ci": [
+              0.0,
+              0.03699480747600191
+            ],
+            "macro_F_split_ci": [
+              0.0,
+              0.03699480747600191
+            ],
+            "macro_F_deadline_ci": [
+              0.027785745266656618,
+              0.12476968531222504
+            ]
+          },
+          "runtime": {
+            "runtime_n_pool": 100
+          }
+        },
+        "feasible_point": true,
+        "feasible_ucb": false,
+        "cost_J": 0.05999999999999994,
+        "macro_P_correct": 0.9400000000000001,
+        "macro_F_wrong": 0.0,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.06
+      },
+      "distance": {
+        "record": {
+          "metric_namespace_version": "macrostate_v2",
+          "policy": "distance",
+          "query_family": "ESP",
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+            "evidence_hash": "82c4bc4d6446d533964e50b79d8208d904cfa0c75e3ed82d38f1e30cca413a65",
+            "scene_distribution_hash": "cc059ec82681f1d0b6666f8ee32ceffecfcc8b892306aedb27e1d7a0dca13a11",
+            "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+            "policy_hash": "distance",
+            "checkpoint_hash": "distance",
+            "experiment_config_hash": "4cacad04ec9e0191efeeaedd4d66dba6e2c4183539366ae7538b8282d90c7729",
+            "query_law": "esp",
+            "full_physics": true,
+            "git_commit": "5c1cc83",
+            "manifest_id": "GS3-esp-scale",
+            "model_seeds": [
+              0
+            ]
+          },
+          "macro": {
+            "macro_P_correct": 1.0,
+            "macro_F_wrong": 0.0,
+            "macro_F_split": 0.0,
+            "macro_F_deadline": 0.0,
+            "macro_P_correct_ci": [
+              0.963005192523998,
+              0.9999999999999998
+            ],
+            "macro_F_wrong_ci": [
+              0.0,
+              0.03699480747600191
+            ],
+            "macro_F_split_ci": [
+              0.0,
+              0.03699480747600191
+            ],
+            "macro_F_deadline_ci": [
+              0.0,
+              0.03699480747600191
+            ]
+          },
+          "runtime": {
+            "runtime_n_pool": 100
+          }
+        },
+        "feasible_point": true,
+        "feasible_ucb": false,
+        "cost_J": 0.0,
+        "macro_P_correct": 1.0,
+        "macro_F_wrong": 0.0,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.0
+      }
+    },
+    "N660": {
+      "esd_gnn_shared": {
+        "record": {
+          "metric_namespace_version": "macrostate_v2",
+          "policy": "esd_gnn_shared",
+          "query_family": "ESP",
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+            "evidence_hash": "82c4bc4d6446d533964e50b79d8208d904cfa0c75e3ed82d38f1e30cca413a65",
+            "scene_distribution_hash": "2a74ca0d955adf32257868ba86e266092fb3d1fe447274dad22ddb6affce009a",
+            "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+            "policy_hash": "esd_gnn_shared",
+            "checkpoint_hash": "4b4e9ba25cad1513b2bc6abee552cdbe153f41e97a1b746270a11c0b1c041439",
+            "experiment_config_hash": "5ae848b7d0b3d9e24f7efd89009734781ddeb4632d78aa36e37511fe8ca5d68f",
+            "query_law": "esp",
+            "full_physics": true,
+            "git_commit": "5c1cc83",
+            "manifest_id": "GS3-esp-scale",
+            "model_seeds": [
+              0,
+              1
+            ]
+          },
+          "macro": {
+            "macro_P_correct": 0.9428571428571428,
+            "macro_F_wrong": 0.0,
+            "macro_F_split": 0.0,
+            "macro_F_deadline": 0.05714285714285714,
+            "macro_P_correct_ci": [
+              0.8620785266792448,
+              0.9775565841525897
+            ],
+            "macro_F_wrong_ci": [
+              0.0,
+              0.05202487486728348
+            ],
+            "macro_F_split_ci": [
+              0.0,
+              0.05202487486728348
+            ],
+            "macro_F_deadline_ci": [
+              0.022443415847410175,
+              0.1379214733207552
+            ]
+          },
+          "runtime": {
+            "runtime_n_pool": 140,
+            "runtime_seeds_evaluated": 2
+          }
+        },
+        "feasible_point": true,
+        "feasible_ucb": false,
+        "cost_J": 0.05714285714285716,
+        "macro_P_correct": 0.9428571428571428,
+        "macro_F_wrong": 0.0,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.05714285714285714
+      },
+      "uniform_esp": {
+        "record": {
+          "metric_namespace_version": "macrostate_v2",
+          "policy": "uniform_esp",
+          "query_family": "ESP",
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+            "evidence_hash": "82c4bc4d6446d533964e50b79d8208d904cfa0c75e3ed82d38f1e30cca413a65",
+            "scene_distribution_hash": "2a74ca0d955adf32257868ba86e266092fb3d1fe447274dad22ddb6affce009a",
+            "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+            "policy_hash": "uniform_esp",
+            "checkpoint_hash": "uniform_esp",
+            "experiment_config_hash": "5ae848b7d0b3d9e24f7efd89009734781ddeb4632d78aa36e37511fe8ca5d68f",
+            "query_law": "esp",
+            "full_physics": true,
+            "git_commit": "5c1cc83",
+            "manifest_id": "GS3-esp-scale",
+            "model_seeds": [
+              0
+            ]
+          },
+          "macro": {
+            "macro_P_correct": 0.9285714285714286,
+            "macro_F_wrong": 0.0,
+            "macro_F_split": 0.0,
+            "macro_F_deadline": 0.07142857142857142,
+            "macro_P_correct_ci": [
+              0.8434438687669077,
+              0.9691062384897063
+            ],
+            "macro_F_wrong_ci": [
+              0.0,
+              0.05202487486728348
+            ],
+            "macro_F_split_ci": [
+              0.0,
+              0.05202487486728348
+            ],
+            "macro_F_deadline_ci": [
+              0.03089376151029351,
+              0.15655613123309228
+            ]
+          },
+          "runtime": {
+            "runtime_n_pool": 70
+          }
+        },
+        "feasible_point": true,
+        "feasible_ucb": false,
+        "cost_J": 0.0714285714285714,
+        "macro_P_correct": 0.9285714285714286,
+        "macro_F_wrong": 0.0,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.07142857142857142
+      },
+      "distance": {
+        "record": {
+          "metric_namespace_version": "macrostate_v2",
+          "policy": "distance",
+          "query_family": "ESP",
+          "hashes": {
+            "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+            "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+            "evidence_hash": "82c4bc4d6446d533964e50b79d8208d904cfa0c75e3ed82d38f1e30cca413a65",
+            "scene_distribution_hash": "2a74ca0d955adf32257868ba86e266092fb3d1fe447274dad22ddb6affce009a",
+            "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+            "policy_hash": "distance",
+            "checkpoint_hash": "distance",
+            "experiment_config_hash": "5ae848b7d0b3d9e24f7efd89009734781ddeb4632d78aa36e37511fe8ca5d68f",
+            "query_law": "esp",
+            "full_physics": true,
+            "git_commit": "5c1cc83",
+            "manifest_id": "GS3-esp-scale",
+            "model_seeds": [
+              0
+            ]
+          },
+          "macro": {
+            "macro_P_correct": 1.0,
+            "macro_F_wrong": 0.0,
+            "macro_F_split": 0.0,
+            "macro_F_deadline": 0.0,
+            "macro_P_correct_ci": [
+              0.9479751251327164,
+              0.9999999999999998
+            ],
+            "macro_F_wrong_ci": [
+              0.0,
+              0.05202487486728348
+            ],
+            "macro_F_split_ci": [
+              0.0,
+              0.05202487486728348
+            ],
+            "macro_F_deadline_ci": [
+              0.0,
+              0.05202487486728348
+            ]
+          },
+          "runtime": {
+            "runtime_n_pool": 70
+          }
+        },
+        "feasible_point": true,
+        "feasible_ucb": false,
+        "cost_J": 0.0,
+        "macro_P_correct": 1.0,
+        "macro_F_wrong": 0.0,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.0
+      }
+    }
+  },
+  "contrast": {
+    "N660": {
+      "fixed_protocol": {
+        "R_d": 6,
+        "macro": {
+          "macro_P_correct": 0.9750000000000001,
+          "macro_F_wrong": 0.0,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 0.025,
+          "macro_P_correct_ci": [
+            0.8711834051199223,
+            0.9955732825922052
+          ],
+          "macro_F_wrong_ci": [
+            -6.330876522670002e-18,
+            0.08762453925039232
+          ],
+          "macro_F_split_ci": [
+            -6.330876522670002e-18,
+            0.08762453925039232
+          ],
+          "macro_F_deadline_ci": [
+            0.004426717407794919,
+            0.1288165948800778
+          ]
+        },
+        "n_pool": 40
+      },
+      "fixed_service_profile": {
+        "R_d": 14,
+        "macro": {
+          "macro_P_correct": 1.0,
+          "macro_F_wrong": 0.0,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 0.0,
+          "macro_P_correct_ci": [
+            0.9123754607496077,
+            1.0
+          ],
+          "macro_F_wrong_ci": [
+            -6.330876522670002e-18,
+            0.08762453925039232
+          ],
+          "macro_F_split_ci": [
+            -6.330876522670002e-18,
+            0.08762453925039232
+          ],
+          "macro_F_deadline_ci": [
+            -6.330876522670002e-18,
+            0.08762453925039232
+          ]
+        },
+        "n_pool": 40
+      }
+    },
+    "N1248": {
+      "fixed_protocol": {
+        "R_d": 6,
+        "macro": {
+          "macro_P_correct": 0.0,
+          "macro_F_wrong": 0.0,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 1.0,
+          "macro_P_correct_ci": [
+            -6.330876522670002e-18,
+            0.08762453925039232
+          ],
+          "macro_F_wrong_ci": [
+            -6.330876522670002e-18,
+            0.08762453925039232
+          ],
+          "macro_F_split_ci": [
+            -6.330876522670002e-18,
+            0.08762453925039232
+          ],
+          "macro_F_deadline_ci": [
+            0.9123754607496077,
+            1.0
+          ]
+        },
+        "n_pool": 40
+      },
+      "fixed_service_profile": {
+        "R_d": 19,
+        "macro": {
+          "macro_P_correct": 1.0,
+          "macro_F_wrong": 0.0,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 0.0,
+          "macro_P_correct_ci": [
+            0.9123754607496077,
+            1.0
+          ],
+          "macro_F_wrong_ci": [
+            -6.330876522670002e-18,
+            0.08762453925039232
+          ],
+          "macro_F_split_ci": [
+            -6.330876522670002e-18,
+            0.08762453925039232
+          ],
+          "macro_F_deadline_ci": [
+            -6.330876522670002e-18,
+            0.08762453925039232
+          ]
+        },
+        "n_pool": 40
+      }
+    },
+    "N3036": {
+      "fixed_protocol": {
+        "R_d": 6,
+        "macro": {
+          "macro_P_correct": 0.75,
+          "macro_F_wrong": 0.0,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 0.25,
+          "macro_P_correct_ci": [
+            0.5312949900419365,
+            0.888139947210597
+          ],
+          "macro_F_wrong_ci": [
+            -1.1641658116749259e-17,
+            0.1611301254949332
+          ],
+          "macro_F_split_ci": [
+            -1.1641658116749259e-17,
+            0.1611301254949332
+          ],
+          "macro_F_deadline_ci": [
+            0.11186005278940306,
+            0.4687050099580635
+          ]
+        },
+        "n_pool": 20,
+        "feasible_point": true
+      },
+      "fixed_service_profile": {
+        "R_d": 30,
+        "macro": {
+          "macro_P_correct": 1.0,
+          "macro_F_wrong": 0.0,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 0.0,
+          "macro_P_correct_ci": [
+            0.8388698745050667,
+            0.9999999999999998
+          ],
+          "macro_F_wrong_ci": [
+            -1.1641658116749259e-17,
+            0.1611301254949332
+          ],
+          "macro_F_split_ci": [
+            -1.1641658116749259e-17,
+            0.1611301254949332
+          ],
+          "macro_F_deadline_ci": [
+            -1.1641658116749259e-17,
+            0.1611301254949332
+          ]
+        },
+        "n_pool": 20,
+        "feasible_point": true
+      }
+    }
+  },
+  "scale_regret": {
+    "N336": {
+      "regret": -0.006999999999999895,
+      "normalized_regret": 0.12727272958677513,
+      "cost_shared": 0.04800000000000004,
+      "cost_expert": 0.05499999999999994,
+      "cost_heuristic": 0.0
+    }
+  },
+  "approximation": {
+    "method": "structural + small-tier extrapolation",
+    "rationale": "full-physics rare-event MC at N>=3000 is computationally infeasible here (~2.8s/trial@N=3036, ~9s/trial@N=9840; certifying eps_w=1e-3 needs ~3800 zero-failure trials per spec \u00a76.7). Per S16 the canonical path is near-linear in N with NO N x N (max out-degree constant, padded cells <= 2E), so per-trial compute scales ~linearly and the scale-agnostic ESD-GNN transfers structurally; the fixed-protocol deadline degradation grows with the consensus diameter (~sqrt(N)) and is calibrated away by the fixed-service-profile R_d(N) rule.",
+    "feasibility_at_scale": "under the fixed service profile (R_d scaled with sqrt(N)), the wrong/split basins stay at the small-N levels (iid majority-correct regime: F_wrong=F_split=0 observed); deadline is held by R_d(N).",
+    "N_targets": [
+      3036,
+      9840
+    ]
+  },
+  "runtime_total_s": 1173.0,
+  "largeN_note": "N=3036 real full-physics dynamic MC (20 trials, shared seed 0): fixed protocol vs fixed-service-profile R_d(N). N>=9840 remains a documented approximation (full rare-event MC infeasible)."
+}
