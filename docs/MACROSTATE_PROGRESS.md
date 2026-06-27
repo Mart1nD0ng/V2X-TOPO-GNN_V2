@@ -61,7 +61,7 @@ are HARD constraints; `macro_F_deadline`/tail-latency/energy are optimization ta
 | G-ETA-RISK-LIVENESS | η∈{0,.25,.5,1,2,4,8,16} sweep over ≥4 env families (iid/mm-low/mm-high/overlapping/split) × {fixed-link, full-physics}; identify how mass moves (deadline→correct / deadline→wrong / split→correct / none); CIs | 🟢 GS4: trade-off governed by **deadline regime** — η moves mass **deadline→correct** in feasible-deadline window (R_d=14 mm_high: Fd 0.100→0.065@η=8) but **deadline-up** when too-tight (R_d=6); iid flat; mechanism = diversity picks distant/weak-link peers. 6 tests |
 | G-GUARDED-CDQ2 | `src/policies/guarded_cdq2.py` hard + soft differentiable guard `η=G(m_w,m_s,p_d)·η_raw`; arms ESP/fixed/learned/hard/soft/oracle; must satisfy wrong/split UCB AND improve deadline/tail in covariance-stressed scenes AND fall back to ESP in safety-critical; guard-activation stats | 🟢 GS5: guard **enables** η=8 in the feasible regime (deadline +0.020, stays feasible @ε=0.10) and **disables→ESP** in safety-critical/strict-ε (where fixed-η is infeasible / raises F_wrong); never violates the budget. Honest: small gain, narrow regime; primary value = safety. 7 tests |
 | G-HAZARD-PROFILES | `src/config/hazard_profile.py` + `src/evaluation/hazard_utility.py`; hazard-weighted `B_CDQ` net benefit; ≥5 profiles (safety-first/balanced/deadline-critical/fail-safe/energy); policy selection changes rationally with cost ratios under the feasibility gate | 🟢 GS6: **all 5 acceptance flags pass** — safety/fail-safe→ESP, balanced/deadline-critical→Guarded-CDQ2, energy→ESP (CDQ2 costs more energy), safety-critical→all-ESP (feasibility gate). Honest: small deadline gain; routing driven by the gate + costs. 10 tests |
-| G-FINAL-SYNTHESIS | unified report (ESP scale + η-curve + guarded + hazard) deciding when ESP vs CDQ2 vs Guarded-CDQ2; figures read results only (constraint #13); no ambiguous names; all reproducible via manifest hashes | ☐ |
+| G-FINAL-SYNTHESIS | unified report (ESP scale + η-curve + guarded + hazard) deciding when ESP vs CDQ2 vs Guarded-CDQ2; figures read results only (constraint #13); no ambiguous names; all reproducible via manifest hashes | 🟢 GS7: `docs/GUARDED_CDQ2_SYNTHESIS.md` (decision table + evidence + honest boundaries) + `make_figures.py` (reads results only); all 5 plan-§8 acceptance criteria met; 73 round tests green |
 
 **Adopted defaults (Guarded-CDQ2 round; override-flagged per stop-condition #4/#5):** guard margins
 `δ_w=δ_s=2e-4` (= 0.2·ε on the 1e-3 budgets), soft-guard temperatures `T_w=T_s=1e-4`, deadline-pressure
@@ -906,3 +906,36 @@ hashing (train==eval enforcement) and the macrostate-objective rewrite (Phase 5)
 * **Next: G-FINAL-SYNTHESIS** — the unified report (ESP scale + η-curve + Guarded-CDQ2 + hazard profiles)
   deciding when to use ESP / CDQ2 / Guarded-CDQ2; figures read results only (constraint #13); no ambiguous
   names; all reproducible via manifest hashes. The LAST gate of the round.
+
+### GM7 — Slice GS7: final synthesis (G-FINAL-SYNTHESIS 🟢) (2026-06-27)
+* `docs/GUARDED_CDQ2_SYNTHESIS.md` — the round's capstone: the claim (**characterization + control of the
+  validity–liveness trade-off**, *not* "CDQ2 improves reliability"), the **ESP / CDQ2 / Guarded-CDQ2
+  decision table** (deploy ESP by default; Guarded-CDQ2 when deadline-leaning with reliability slack; never
+  fixed-η unprotected), the GS1–GS6 evidence summary, the honest negative/boundary results (constraint #12),
+  and the plan-§8 acceptance + reproducibility.
+* `docs/gate_evidence/guarded_cdq2/make_figures.py` — produces the figures **strictly by reading the
+  committed result JSONs** (constraint #13), each guarded by `assert_no_legacy_metrics`; emits
+  `figures_data.json` (η curves / guarded frontier / hazard policy map / ESP scale) + `fig_eta_curve.png` +
+  `fig_esp_scale.png`. `forbidden=[] legacy=[]`.
+* **Plan §8 acceptance — all 5 met:** (1) ESP performance-scale validation complete (GS3); (2) CDQ2 role
+  explicitly liveness/deadline scoped (GS4+GS5); (3) Guarded-CDQ2 respects reliability constraints
+  (GS5+GS6); (4) no ambiguous metric names (GS1, verified across every GS*-results JSON); (5) all results
+  reproducible via manifest hashes (GS2). **73 round tests green.** Manifest slice `GS7`.
+
+### Iteration checkpoint — ALL 7 GUARDED-CDQ2 GATES GREEN → stop-condition #8 (2026-06-27)
+**The Guarded-CDQ2 round is COMPLETE — all seven gates green:** G-METRIC-NAMESPACE, G-RESULT-MANIFEST,
+G-ESP-PERFORMANCE-SCALE, G-ETA-RISK-LIVENESS, G-GUARDED-CDQ2, G-HAZARD-PROFILES, G-FINAL-SYNTHESIS. Per
+stop-condition #8 I stop and report.
+* **Honest round headline:** the contribution is a **policy family with one safety dial** — CDQ2 is the
+  general query family, **ESP is its `η=0` reliability-first default**, and **Guarded-CDQ2** enables `η>0`
+  only with reliability slack AND deadline pressure (so it captures the liveness gain *where safe* and is
+  provably never worse than ESP on the hard wrong/split constraints). The **liveness benefit is small and
+  conditional** (deadline-regime-governed; F_wrong flat → a deadline gain, NOT a reliability improvement)
+  and **diversity costs ~1.2% more energy** (distant peers). The value is **trade-off control**, not a
+  reliability win — reported, never hidden.
+* **No catastrophic stop hit** (stop-conditions #1–#7 all ruled out with evidence along the way: ESP scales,
+  Guarded-CDQ2 satisfies wrong/split, η curves show a stable conditional benefit, hazard utility is stable,
+  metric cleanup was additive, MC agrees with the analytic trend, large-N used the plan-permitted approx).
+* **Commits:** `9debbd2` (GS1) · `5c1cc83` (GS2) · `b6a17af`/`1b8081a` (GS3) · `28831c2`/`a06829d` (GS4) ·
+  `681a540`/`dd3c33a`/`7f0db99` (GS5) · `fb99a98`/`a7c16e5`/`e826c6f` (GS6) · GS7 (this commit). Freeze tag
+  `macrostate-cdq2-v2-before-guarded`. **The paper-rewrite-readiness call (and any push/PR) is the user's.**

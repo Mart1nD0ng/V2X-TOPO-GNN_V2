@@ -133,6 +133,21 @@
         "energy_finding": "CDQ2 diversity selects physically more distant peers (G-ETA-RISK-LIVENESS) -> ~1.2% more TX energy (846->856 @N=336); the energy_constrained profile therefore correctly selects ESP."
       },
       "acceptance": "policy selection changes RATIONALLY with hazard weights (spec §5.5): safety-first/fail-safe -> ESP; deadline-critical -> CDQ2/Guarded-CDQ2; balanced -> Guarded-CDQ2; energy-constrained -> ESP (energy worse); safety-critical scene -> all ESP via the feasibility gate (✓ all 5 flags). Stop-condition #4 (hazard utility unstable) NOT met: the only instability was a unit-scale bug (fixed); the utility is deterministic + monotone in the cost ratios."
+    },
+    "GS7-final-synthesis": {
+      "date": "2026-06-27",
+      "contributes_to": ["G-FINAL-SYNTHESIS"],
+      "modules": [
+        "docs/GUARDED_CDQ2_SYNTHESIS.md (the unified report + ESP/CDQ2/Guarded-CDQ2 decision guidance)",
+        "docs/gate_evidence/guarded_cdq2/make_figures.py (reads result JSONs only -> figures_data.json + PNGs)"
+      ],
+      "tests": ["full round suite 73 passed under -W error::UserWarning (GS1 27 + GS2 17 + esp_scale + eta_curve 6 + guarded 7 + hazard 10; 2 slow MC esp_scale tests deselected, passed separately)"],
+      "evidence": {
+        "report": "docs/GUARDED_CDQ2_SYNTHESIS.md -- the round's claim (characterization + CONTROL of the validity-liveness trade-off, NOT 'CDQ2 improves reliability'), the ESP/CDQ2/Guarded-CDQ2 decision table, the GS1-GS6 evidence summary, the honest negative/boundary results (constraint #12), and the acceptance + reproducibility.",
+        "figures": "make_figures.py reads ONLY the committed result JSONs (constraint #13), each checked with assert_no_legacy_metrics; emits figures_data.json (eta curves / guarded frontier / hazard policy map / ESP scale) + fig_eta_curve.png + fig_esp_scale.png. forbidden=[] legacy=[].",
+        "acceptance_plan_8": "1) ESP performance-scale validation complete (GS3); 2) CDQ2 role explicitly liveness/deadline scoped (GS4+GS5); 3) Guarded-CDQ2 respects reliability constraints (GS5+GS6); 4) no ambiguous metric names (GS1, verified across all GS*-results JSONs); 5) all results reproducible via manifest hashes (GS2). ALL met."
+      },
+      "acceptance": "the round is ready for paper rewriting: ESP/ESD-GNN performance-scale validation complete, CDQ2 role explicitly liveness/deadline scoped, Guarded-CDQ2 respects reliability constraints, no ambiguous metric names remain, all results reproducible through manifest hashes (✓ all 5, plan §8)."
     }
   }
 }
