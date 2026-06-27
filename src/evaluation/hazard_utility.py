@@ -43,11 +43,17 @@ class PolicyOutcome:
                    D_q=D_q, energy=energy)
 
 
-def hazard_benefit(esp: PolicyOutcome, policy: PolicyOutcome, profile: HazardProfile) -> float:
-    """Net benefit ``B`` of ``policy`` relative to ``esp`` under ``profile`` (spec §5.2). ESP vs ESP = 0."""
-    d_deadline = esp.F_deadline - policy.F_deadline          # >0 => fewer deadline misses (benefit)
-    d_tail = esp.D_q - policy.D_q                            # >0 => lower tail latency (benefit)
-    d_energy = esp.energy - policy.energy                    # >0 => less energy (benefit)
+def hazard_benefit(esp: PolicyOutcome, policy: PolicyOutcome, profile: HazardProfile,
+                   *, eps: float = 1e-9) -> float:
+    """Net benefit ``B`` of ``policy`` relative to ``esp`` under ``profile`` (spec §5.2). ESP vs ESP = 0.
+
+    The deadline term is on the basin probability scale [0,1]; tail latency and energy are NORMALISED to
+    FRACTIONAL changes relative to ESP (``ΔD_q/D_q^ESP``, ``ΔE/E^ESP``) so all four optimisation terms live
+    on a comparable 0..1 scale and the cost weights are unit-free relative hazards (otherwise an absolute
+    energy in joules would swamp a probability)."""
+    d_deadline = esp.F_deadline - policy.F_deadline                       # >0 => fewer deadline misses
+    d_tail = (esp.D_q - policy.D_q) / max(abs(esp.D_q), eps)              # fractional tail-latency reduction
+    d_energy = (esp.energy - policy.energy) / max(abs(esp.energy), eps)   # fractional energy saving
     inc_wrong = max(0.0, policy.F_wrong - esp.F_wrong)       # validity hazard (penalised only on increase)
     inc_split = max(0.0, policy.F_split - esp.F_split)
     return (profile.c_d * d_deadline + profile.c_T * d_tail + profile.c_E * d_energy

@@ -41,9 +41,12 @@ SMOKE = "--smoke" in sys.argv
 HERE = os.path.dirname(__file__)
 OUT = os.path.join(HERE, "hazard_profiles_results.json")
 PHY = RoundPhysicsConfig(subchannels=10, slots_per_window=40)
-GRID, R_D, ETA = (5, 5, 3), 14, 8.0
+# N=336 (8x8x3): a larger scene gives more deadline PRESSURE (longer consensus diameter) at the SAME low
+# error (F_wrong stays low = reliability slack), so the eta deadline lever is clearer + more robust than
+# at N=120 (where the deadline is comfortably met and the gain is small/noisy).
+GRID, R_D, ETA = (8, 8, 3), 14, 8.0
 SEEDS = [0] if SMOKE else [0, 1, 2]
-TRIALS = 40 if SMOKE else 80
+TRIALS = 40 if SMOKE else 100
 PROFILE = ConsensusServiceProfile.urban_default().replace(k=3, alpha=2, beta=3, max_poll_epochs=R_D)
 PROTO = ProtocolConfig(k=3, alpha=2, beta=3, r_max=R_D)
 REGIMES = [("enable", 0.20, 0.10), ("safety_critical", 0.30, 0.25)]
@@ -115,8 +118,9 @@ def main():
                    "tail_latency": {"ESP": esp.D_q, "CDQ2": cdq2.D_q}, "profiles": {}}
         spec = build_experiment_spec(protocol_cfg=PROTO, service_profile=PROFILE, phy_cfg=PHY,
                                      evidence_descriptor=f"mm_high:p={base_err}",
-                                     scene_descriptor={"gx": 5, "gy": 5, "v": 3}, query_law="cdq2",
-                                     full_physics=True, allowed_ood_axes=("evidence_covariance",))
+                                     scene_descriptor={"gx": GRID[0], "gy": GRID[1], "v": GRID[2]},
+                                     query_law="cdq2", full_physics=True,
+                                     allowed_ood_axes=("evidence_covariance",))
         man = mf.build_manifest(spec, policy_hash="hazard_selection", checkpoint_hash="fixed-quality+Z",
                                 model_seeds=SEEDS, git_commit=git, manifest_id="GS6-hazard")
         reg_out["hashes"] = man
