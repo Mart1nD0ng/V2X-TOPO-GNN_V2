@@ -28,14 +28,15 @@ from src.models import ESDGNN
 from src.optimization.mc_reinforce import train_esp_reinforce
 
 SMOKE = "--smoke" in sys.argv
+CONFIRM = "--confirm" in sys.argv          # longer, multi-seed confirmation (CI-separate + reach distance?)
 HERE = os.path.dirname(__file__)
-OUT = os.path.join(HERE, "reinforce_poc_results.json")
+OUT = os.path.join(HERE, "reinforce_confirm_results.json" if CONFIRM else "reinforce_poc_results.json")
 PHY = RoundPhysicsConfig(subchannels=10, slots_per_window=40)
 PROTO = ProtocolConfig(k=3, alpha=2, beta=3, r_max=6)
 PROFILE = ConsensusServiceProfile.urban_default().replace(k=3, alpha=2, beta=3, max_poll_epochs=6)
 GRID, SCEN, BE, CORR = (5, 5, 3), "matched_marginal_high", 0.35, 0.25
-SEEDS_MODEL = [0] if SMOKE else [0]        # 1-seed POC (compute-limited): show the gap CAN close
-STEPS = 3 if SMOKE else 40
+SEEDS_MODEL = [0] if SMOKE else ([0, 1] if CONFIRM else [0])    # confirm: 2 model seeds
+STEPS = 3 if SMOKE else (80 if CONFIRM else 40)                 # confirm: longer training (reach distance?)
 TRAIN_TRIALS = 20 if SMOKE else 100
 LR = 1e-2                                   # per-node credit is low-variance -> a larger step is safe
 EVAL_TRIALS = 20 if SMOKE else 200         # tighter held-out CIs to resolve the delta
