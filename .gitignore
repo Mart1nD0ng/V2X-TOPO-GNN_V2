@@ -61,3 +61,6 @@ Thumbs.db
 *.pem
 secrets.*
 *.token
+
+# MC-faithful campaign checkpoints (large binaries; provenance = checkpoint_hash in summary JSON)
+docs/gate_evidence/esp_scale_v2/checkpoints/*.pt

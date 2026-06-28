@@ -139,19 +139,21 @@ class ScaleEval:
 
 
 def evaluate_macro(grid, scene_seeds, policy_fn, profile, proto, phy, *, trials: int,
-                   scenario: str = "iid", base_node_err: float = 0.2,
+                   scenario: str = "iid", base_node_err: float = 0.2, corr_strength: float = 0.3,
                    link_override: float | None = None) -> ScaleEval:
     """Dynamic-MC basin outcomes for ``policy_fn`` at ``grid``, pooled over ``scene_seeds`` (CRN).
 
     Each scene seed builds an independent scene+evidence; the MC samples evidence + the k-DPP subset +
     Bernoulli(ell) responses and reads peers' ACTUAL colours (it does NOT sample analytic terminal
     marginals -- constraint #10). Returns pooled basin outcomes with a Wilson CI on every outcome (the
-    upper CI is the rare-failure UCB, spec §6.7).
+    upper CI is the rare-failure UCB, spec §6.7). ``corr_strength`` is threaded to the evidence family so
+    the eval scenes match the training distribution exactly (full-physics train==eval).
     """
     rows = []
     Ns = []
     for s in scene_seeds:
-        scene, ev = build_scale_instance(grid, s, scenario=scenario, base_node_err=base_node_err)
+        scene, ev = build_scale_instance(grid, s, scenario=scenario, base_node_err=base_node_err,
+                                         corr_strength=corr_strength)
         Ns.append(scene.num_nodes)
         omega = uniform_participation(scene.num_nodes)
         pol = policy_fn(scene)
