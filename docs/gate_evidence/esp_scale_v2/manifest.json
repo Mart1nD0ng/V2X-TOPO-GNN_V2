@@ -1,0 +1,35 @@
+{
+  "round": "ESP/ESD-GNN Performance-Scale Validation v2 (publication-grade)",
+  "experiment_family": "esp_performance_scale_v2",
+  "branch": "esp-performance-scale-v2 (off main; Guarded-CDQ2 round merged)",
+  "design_basis": ["docs/ESP_ESD_GNN_PERFORMANCE_SCALE_WORKFLOW.md"],
+  "headline_judge": "independent dynamic-MC macrostate basin first-hitting, full physics (workflow §1.3)",
+  "mainline_policy": "ESP/ESD-GNN = ESDGNN(use_cdq=False); Guarded-CDQ2 is an optional extension arm only",
+  "compute_note": "Full-physics training ~18-22s/step@N=120 (~linear in N); MC ~0.4s/trial@N=120 (~linear). The publication-grade ideal is hundreds of GPU-hours; every run is BOUNDED + explicitly labeled compute-limited (workflow §9.1); the harness is built to the full design.",
+  "gates": [
+    "G-ESP-TRAINING-BUDGET",
+    "G-ESP-BASELINE-ORACLE",
+    "G-ESP-FIXED-PROTOCOL-SCALE",
+    "G-ESP-FIXED-SERVICE-SCALE",
+    "G-ESP-OOD-GENERALIZATION",
+    "G-ESP-RARE-EVENT-CERTIFICATION",
+    "G-ESP-SCALE-SYNTHESIS"
+  ],
+  "slices": {
+    "EV1-training-budget": {
+      "date": "2026-06-28",
+      "contributes_to": ["G-ESP-TRAINING-BUDGET"],
+      "modules": [
+        "src/evaluation/esp_training.py (train_with_curve, validate_macro_analytic, budget_improvement, select_best_budget)",
+        "docs/gate_evidence/esp_scale_v2/run_training_budget.py"
+      ],
+      "tests": ["tests/evaluation/test_esp_training.py (4: 3 pure + 1 tiny full-physics integration)"],
+      "evidence": {
+        "result_json": "docs/gate_evidence/esp_scale_v2/training_budget_results.json (run in progress)",
+        "canonical_path": "train_with_curve uses the SAME run_consensus_episode + macrostate_metrics + macrostate_lagrangian + MacrostateDuals as train_macrostate, full physics (train==eval), with a persistent optimizer + held-out analytic validation hook (screening only; dynamic MC is the final judge).",
+        "regime": "iid @N=120 is near-ceiling (analytic Pc~1.0 both GNN+distance, no headroom -- workflow §5.3); switched to mm_high(0.35,0.25) R_d=6 where distance analytic Pc=0.42, F_deadline=0.56, F_wrong=0.016 (room, deadline-dominated, reliability-safe).",
+        "bounded": "3 model seeds (headline target >=5), single training scale N=120, 50 steps, budgets {5,15,30,50} -- compute-limited; mixed-scale + >=5 seeds + structured-regime sweeps are follow-up passes."
+      }
+    }
+  }
+}
