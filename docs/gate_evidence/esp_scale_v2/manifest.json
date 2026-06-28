@@ -104,6 +104,18 @@
         "finding": "Budget gate CLOSED under the MC-faithful trainer. Held-out dynamic-MC budget curve (N=120, 5 seeds, 2 scenes x 250 trials, seed-level bootstrap) RISES monotonically: init 0.383 [0.378,0.387] -> 40: 0.394 [0.386,0.402] -> 80: 0.401 [0.390,0.411] -> 150: 0.412 [0.397,0.425] (+0.029). DIRECT CONTRAST to the EV1 analytic-surrogate budget curve which was FLAT at 0.422 for every budget (the mean-field surrogate had no gradient toward what the MC judge rewards). Best checkpoint = step 150.",
         "verdict": "Resolves the EV1 STOP (the round's original blocker): under MC-faithful REINFORCE, longer training DOES improve the held-out MC macrostate. EV1 0.422 cited as contrast only (analytic, not an MC headline)."
       }
+    },
+    "EV8-a3-scale-sweep": {
+      "date": "2026-06-28",
+      "contributes_to": ["G-ESP-FIXED-PROTOCOL-SCALE", "G-ESP-FIXED-SERVICE-SCALE", "G-ESP-BASELINE-ORACLE"],
+      "campaign_phase": "A3a (experts) + A3b (scale sweep)",
+      "modules": ["docs/gate_evidence/esp_scale_v2/run_phase_a3a_experts.py", "docs/gate_evidence/esp_scale_v2/run_phase_a3b_scale.py"],
+      "evidence": {
+        "result_json": "docs/gate_evidence/esp_scale_v2/phase_a3b_scale_results.json",
+        "finding": "section-13.2 PARITY holds across a 25x scale-up. shared-ESP (trained only at N=120) under fixed_protocol R_d=6: N=120 0.461 vs distance 0.463, N=336 0.429 vs 0.447, N=660 0.420 vs 0.420, N=3036 0.438 vs 0.4375 (uniform 0.415/0.380/0.370/0.3125). Across 6 non-degenerate cells (both modes): shared above distance 2 / parity 2 / below 2 (noise around equal), beats uniform 6/6. Scale-regret shared-vs-expert small (N=336: 0.008).",
+        "anomalies_surfaced": "N=1248 (lone v=4 grid, deg 13.2) collapses to P_correct=0 (F_deadline->1) for ALL policies even at fixed_service R_d=19 -- a density/MAC-saturation outlier (fully connected, not a bug), EXCLUDED from the parity verdict. fixed_service ~= fixed_protocol at these N (MC first-hits before R_d). N=9840 = approximation bound (8 trials), never a validated N=10000 claim.",
+        "verdict": "section-13.2: stable learned ESP constructor that CI-separately beats uniform and MATCHES distance, parity TRANSFERS across scale + both calibration modes. NOT 13.1 superiority (shared does not CI-separately pull ahead). Compute-limited: seeds 5/5/3/-/2; N>=660 reduced."
+      }
     }
   }
 }

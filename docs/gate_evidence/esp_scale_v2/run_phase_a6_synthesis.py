@@ -85,18 +85,30 @@ def main():
                 sh = p["shared_esp"]
                 dist_pc = p.get("distance", {}).get("macro_P_correct")
                 uni_pc = p.get("uniform_esp", {}).get("macro_P_correct")
+                # a cell is DEGENERATE if ALL policies collapse to ~0 (total deadline) -> no differentiation;
+                # in this ladder only N=1248 grid(13,13,4), the lone v=4 (high-density) grid, where the MAC
+                # saturates and F_deadline->1 for shared, distance AND uniform alike (even at fixed_service
+                # R_d=19) -- a density/MAC property, NOT a GNN failure. Excluded from the parity verdict.
+                degenerate = (sh["seed_mean_P_correct"] < 0.05 and (dist_pc is None or dist_pc < 0.05)
+                              and (uni_pc is None or uni_pc < 0.05))
                 row = {"N": int(N), "mode": mode, "R_d": cell["R_d"],
                        "shared": sh["seed_mean_P_correct"], "shared_ci": sh["seed_bootstrap_ci"],
                        "n_seeds": sh.get("n_seeds"), "distance": dist_pc, "uniform": uni_pc,
                        "expert": p.get("expert", {}).get("macro_P_correct"),
                        "scale_regret_shared_vs_expert": cell.get("scale_regret_shared_vs_expert"),
                        "compute_limited": blk["compute_limited"], "approximation_bound": blk["approximation_bound"],
-                       "vs_distance": _classify(sh["seed_bootstrap_ci"], dist_pc) if dist_pc is not None else None,
-                       "shared_beats_uniform": (uni_pc is not None and sh["seed_bootstrap_ci"][0] > uni_pc)}
+                       "degenerate_all_deadline": degenerate,
+                       "vs_distance": None if degenerate else (_classify(sh["seed_bootstrap_ci"], dist_pc) if dist_pc is not None else None),
+                       "shared_beats_uniform": (not degenerate and uni_pc is not None and sh["seed_bootstrap_ci"][0] > uni_pc)}
                 scale_rows.append(row)
         out["scale_rows"] = scale_rows
-        # aggregate over the NON-approximation cells (exclude N=9840 bound)
-        solid = [r for r in scale_rows if not r["approximation_bound"] and r["vs_distance"]]
+        out["degenerate_cells"] = sorted({r["N"] for r in scale_rows if r["degenerate_all_deadline"]})
+        out["degenerate_note"] = ("N=1248 is the lone v=4 (high-density) grid; ALL policies F_deadline->1 "
+                                  "(MAC saturation), so it is excluded from the parity verdict -- the "
+                                  "controlled-density scale story is the v=3 ladder 120/336/660/3036(/9840 bound).")
+        # aggregate over the NON-approximation, NON-degenerate cells (exclude N=9840 bound + N=1248 collapse)
+        solid = [r for r in scale_rows if not r["approximation_bound"] and not r["degenerate_all_deadline"]
+                 and r["vs_distance"]]
         above = sum(r["vs_distance"] == "shared_above" for r in solid)
         parity = sum(r["vs_distance"] == "parity" for r in solid)
         below = sum(r["vs_distance"] == "shared_below" for r in solid)
@@ -156,7 +168,7 @@ def main():
     if scale_rows:
         fig, ax = plt.subplots(figsize=(7, 4.5))
         for mode, mk in [("fixed_protocol", "o-"), ("fixed_service_profile", "s--")]:
-            rows = [r for r in scale_rows if r["mode"] == mode]
+            rows = [r for r in scale_rows if r["mode"] == mode and not r["degenerate_all_deadline"]]
             if not rows:
                 continue
             Ns = [r["N"] for r in rows]
