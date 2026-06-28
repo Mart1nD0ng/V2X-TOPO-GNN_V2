@@ -16,7 +16,8 @@ the harness is built to the full design and the runs are the feasible subset.
 | Gate | Scope | Status |
 |------|-------|--------|
 | G-ESP-TRAINING-BUDGET | full-physics budget curves (pilot/medium/full), ≥5 seeds, mixed N{100,300,1000}; does longer training improve macro + beat the distance heuristic? select best checkpoint | ⛔ **STOP+REPORT** (EV1+EV2): flat training curve + a confirmed **training-signal gap** — the MC judge rewards peer selection (spread 0.075–0.085, CI-separated) but the analytic *training* surrogate is blind to it (spread ≤0.002). The GNN can't be trained to beat heuristics on this surrogate. Round premise (model superiority) challenged — user decision needed. |
-| G-ESP-BASELINE-ORACLE | 8 baselines (uniform/distance/link-quality/load-balanced/region-bridge/edge-logit-oracle/expert/shared) through the canonical full-physics path; oracle headroom | ☐ |
+| G-ESP-MC-FAITHFUL-TRAINING | **(user-chosen direction, 2026-06-28)** close the EV2 training-signal gap: train the GNN on the MC basin via the score-function (REINFORCE) gradient `∇E[R]=E[(R−b)·Σ∇log π(Sₜ)]` so it learns the peer-selection the judge rewards; then retry the budget gate | 🟡 EV3: differentiable `batched_subset_log_prob` (REINFORCE core) + 3 tests; full rollout (judge MC extended with gated log-π) + budget retry next |
+| G-ESP-BASELINE-ORACLE | 8 baselines (uniform/distance/link-quality/load-balanced/region-bridge/edge-logit-oracle/expert/shared) through the canonical full-physics path; oracle headroom | 🟡 EV2 prep: 3 heuristics + edge-logit oracle + MC-spread evidence done (5 tests); deployable baselines ready |
 | G-ESP-FIXED-PROTOCOL-SCALE | fixed protocol across N{100,300,1000,3000}+10000; macro+UCB+D99/CVaR+energy+strict+diagnostics+runtime/mem | ☐ |
 | G-ESP-FIXED-SERVICE-SCALE | pre-registered R_d(N)∝√N calibration; scale-regret + normalized + feasibility-retention + expert/heuristic comparison | ☐ |
 | G-ESP-OOD-GENERALIZATION | one-axis-at-a-time (node count/density/geometry/covariance/PHY-load/sensor-group/profile/mobility) | ☐ |
@@ -91,3 +92,23 @@ Legend: ☐ not started · 🟡 in progress · 🟢 green.
   Manifest slice `EV2`. **The direction is the user's call** (see the report).
 * **Evidence (reproducible):** `run_training_budget.py` (flat curve), the spread/headroom diagnostics, and
   `run_headroom_mc.py` (the MC-judge spread). Tests green: esp_training (4), heuristics (3), esp_baselines (2).
+
+### EV3 — Slice: close the training-signal gap via MC-faithful REINFORCE (user-chosen direction) (2026-06-28)
+* **User decision (2026-06-28):** *close the training-signal gap* — make the trainer MC-faithful so the GNN
+  learns the peer-selection the dynamic-MC judge rewards. The headroom exists (EV2); the bottleneck is purely
+  the mean-field training signal. This adds the gate **G-ESP-MC-FAITHFUL-TRAINING** (unblocks G-ESP-TRAINING-BUDGET).
+* **Approach (score-function / REINFORCE on the MC basin).** The ESP k-subset sampler is a differentiable law
+  `log π(Sᵢ) = Σ_{j∈Sᵢ} s_ij − log e_k(exp(sᵢ))` (Eq. 16). For a per-trial reward `R` (e.g. correct-basin
+  first-hit), `∇E[R] = E[(R−b)·Σ_{i,t} ∇log π(S_{i,t})]` trains the GNN edge logits directly on the MC basin
+  objective — **no mean-field washout**. Implementation plan: **extend the canonical dynamic-MC rollout** (the
+  judge) with a *gated* `Σ log π` accumulation (reusing the exact snowball code, no duplication → no
+  divergence bug) returning per-trial `Σ log π` + per-trial basin outcome codes; the REINFORCE loss is formed
+  outside. Variance reduction: a per-batch mean baseline `b` (and optionally per-node).
+* **EV3 foundation (this slice):** `src/optimization/mc_reinforce.py::batched_subset_log_prob` — the
+  vectorised, differentiable ESP subset log-π (over all node/epoch/trial), validated vs the unbatched
+  `subset_log_probability` reference, mask-correct, sums-to-1 over all k-subsets, gradient flows
+  (`tests/optimization/test_mc_reinforce.py`, 3 green).
+* **Next:** extend `run_dynamic_mc` with the gated log-π + per-trial outcome codes; write `train_esp_reinforce`;
+  **proof-of-concept test that REINFORCE IMPROVES the MC `macro_P_correct`** on a small scene where analytic
+  training was flat (the gap-closing demonstration); then retry the budget gate (pilot/medium/full) under the
+  MC-faithful trainer and compare to the distance heuristic.
