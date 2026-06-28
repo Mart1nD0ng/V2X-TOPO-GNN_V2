@@ -45,7 +45,7 @@ retro-tuned:
 | Gate | Scope | Status |
 |------|-------|--------|
 | G-ESP-TRAINING-BUDGET | full-physics budget curves (pilot/medium/full), ≥5 seeds, mixed N{100,300,1000}; does longer training improve macro + beat the distance heuristic? select best checkpoint | ⛔ **STOP+REPORT** (EV1+EV2): flat training curve + a confirmed **training-signal gap** — the MC judge rewards peer selection (spread 0.075–0.085, CI-separated) but the analytic *training* surrogate is blind to it (spread ≤0.002). The GNN can't be trained to beat heuristics on this surrogate. Round premise (model superiority) challenged — user decision needed. |
-| G-ESP-MC-FAITHFUL-TRAINING | **(user-chosen direction, 2026-06-28)** close the EV2 training-signal gap: train the GNN on the MC basin via the score-function (REINFORCE) gradient `∇E[R]=E[(R−b)·Σ∇log π(Sₜ)]` so it learns the peer-selection the judge rewards | 🟢 (core goal met; CI-separation pending) EV4/EV5: **gap closed reproducibly** — per-node-credit REINFORCE trains the GNN from uniform-level 0.370 → **0.41** (2 seeds: 0.415/0.405, mean +0.040, **monotone**: 40→80 steps = 0.392→0.41), reaching **~96% of distance (0.427)**, where the analytic surrogate AND network-level REINFORCE were flat. Per-seed CIs overlap at 400 eval trials (not yet CI-separated). 10 tests; judge-invariant; 82-test regression clean. |
+| G-ESP-MC-FAITHFUL-TRAINING | **(user-chosen direction, 2026-06-28)** close the EV2 training-signal gap: train the GNN on the MC basin via the score-function (REINFORCE) gradient `∇E[R]=E[(R−b)·Σ∇log π(Sₜ)]` so it learns the peer-selection the judge rewards | ✅ **CLOSED (EV6, CI-separated)** — Campaign-A 5-seed headline (N=120, pre-registered seed-level bootstrap + un-gated J): trained **0.410** [0.399,0.420], **paired-vs-uniform +0.040 CI [0.029,0.050]** (CI-separated, gap statistically closed), **matches distance** 0.422 (overlapping CIs, 77% of the uniform→distance gap closed). EV4/EV5 built it (per-node credit, monotone in steps); EV6 confirms at 5 seeds. 13 tests; judge-invariant. |
 | G-ESP-BASELINE-ORACLE | 8 baselines (uniform/distance/link-quality/load-balanced/region-bridge/edge-logit-oracle/expert/shared) through the canonical full-physics path; oracle headroom | 🟡 EV2 prep: 3 heuristics + edge-logit oracle + MC-spread evidence done (5 tests); deployable baselines ready |
 | G-ESP-FIXED-PROTOCOL-SCALE | fixed protocol across N{100,300,1000,3000}+10000; macro+UCB+D99/CVaR+energy+strict+diagnostics+runtime/mem | ☐ |
 | G-ESP-FIXED-SERVICE-SCALE | pre-registered R_d(N)∝√N calibration; scale-regret + normalized + feasibility-retention + expert/heuristic comparison | ☐ |
@@ -191,3 +191,29 @@ Legend: ☐ not started · 🟡 in progress · 🟢 green.
   the gap); promoting it to a CI-separated, ≥5-seed, reaches/beats-distance headline — and then re-running
   the budget + scale gates with MC-faithful-trained checkpoints — is **substantial additional compute** and a
   user investment decision (workflow §9.1, the "rises-but-not-yet-CI-separated → user decision" branch).
+  **User chose (A): the full publication-grade campaign** → see "Campaign A — pre-registration (A0)" + EV6.
+
+### EV6 — Campaign A / Phase A1 headline: the gap is CI-separately closed at N=120 (5 seeds, 2026-06-28)
+* **Setup.** 5 MC-faithful checkpoints (seeds 0–4 × 150 steps, per-node-credit REINFORCE) on
+  mm_high(0.35,0.25) R_d=6 N=120, evaluated under the dynamic-MC judge (full physics) over 3 held-out scenes
+  (trained 300 trials/scene, refs distance/uniform 1000 trials/scene, CRN-shared), with the **A0
+  pre-registered statistics**: un-gated J, seed-level bootstrap headline, reliability reported separately.
+  Result `phase_a1_eval_results.json` (hash-bound, namespace-clean).
+* **Headline.** Trained **macro_P_correct = 0.410**, seed-level bootstrap CI **[0.399, 0.420]**, across-seed
+  SD 0.014, per-seed [0.421, 0.421, 0.418, 0.396, 0.392].
+  - vs **uniform 0.370** [0.353, 0.387]: **paired-across-seed Δ = +0.040, bootstrap CI [0.029, 0.050]** →
+    **CI-separated** (excludes 0). The EV2 training-signal gap is now **statistically closed**, not just a
+    reproducible direction.
+  - vs **distance 0.422** [0.404, 0.439]: gap +0.012, CIs overlap → **statistically matches** the strongest
+    simple heuristic (77% of the uniform→distance gap closed).
+* **Reliability (separate column, A0).** Every policy is infeasible at the strict eps_w=1e-3 (trained F_wrong
+  0.023, UCB 0.035; distance F_wrong 0.018, UCB 0.023; uniform F_wrong 0.035) — which is exactly why the
+  performance comparison is un-gated. F_split ≡ 0. (Rare-event certification is A5.)
+* **Methodology note.** Seed 3's *training* curve ended at 0.30 (alarming) but its **held-out** Pc is 0.396 —
+  the held-out MC judge + seed-level bootstrap correctly absorbed the noisy trajectory; training curves are
+  not the metric.
+* **Verdict (§13.2).** MC-faithful REINFORCE makes the ESP/ESD-GNN a **stable learned constructor that
+  CI-separately beats uniform and matches distance at N=120**. Whether this becomes §13.1 *superiority* (or
+  stays §13.2 *parity*) is decided by the **scale sweep (A3)** — does the learned policy degrade more
+  gracefully than distance as N grows / the deadline tightens? Next: A2 budget curve (does held-out Pc rise
+  0→40→80→150 vs the EV1 flat analytic 0.422), then A3 scale experts + sweep.

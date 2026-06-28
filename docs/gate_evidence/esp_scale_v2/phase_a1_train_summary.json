@@ -1,0 +1,137 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "phase": "A1_train",
+  "query_family": "ESP",
+  "smoke": false,
+  "git_commit": "cf163ea",
+  "regime": {
+    "grid": [
+      5,
+      5,
+      3
+    ],
+    "node_count": 120,
+    "scenario": "matched_marginal_high",
+    "base_node_err": 0.35,
+    "corr_strength": 0.25
+  },
+  "steps": 150,
+  "train_trials": 100,
+  "hidden_dim": 16,
+  "model_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "checkpoints": {
+    "0": {
+      "path": "checkpoints\\mcf_seed0_steps150.pt",
+      "checkpoint_hash": "78fd71c2c75938810f1bc717e515286c64fc9b3f0222ce7e56dd946263bc89c5",
+      "final_train_mc_P_correct": 0.43,
+      "train_mc_P_correct_first": 0.39,
+      "budget_checkpoints": {
+        "150": {
+          "path": "checkpoints\\mcf_seed0_steps150.pt",
+          "checkpoint_hash": "78fd71c2c75938810f1bc717e515286c64fc9b3f0222ce7e56dd946263bc89c5"
+        },
+        "40": {
+          "path": "checkpoints\\mcf_seed0_steps40.pt",
+          "checkpoint_hash": "085b6ff484e346756852ff576124ea1b18b325dc93b18c39f9085358d01da4b2"
+        },
+        "80": {
+          "path": "checkpoints\\mcf_seed0_steps80.pt",
+          "checkpoint_hash": "4502c4ee6e0c9f0541d2cbc6bdbce4253167eb9e2fd841758cff4cc1234d024e"
+        }
+      },
+      "resumed": false
+    },
+    "1": {
+      "path": "checkpoints\\mcf_seed1_steps150.pt",
+      "checkpoint_hash": "cc0d0d24a061bd6d119ad59d92274d34315f3cc660b2c50a3062ebe6f9e16fd1",
+      "final_train_mc_P_correct": 0.44,
+      "train_mc_P_correct_first": 0.39,
+      "budget_checkpoints": {
+        "150": {
+          "path": "checkpoints\\mcf_seed1_steps150.pt",
+          "checkpoint_hash": "cc0d0d24a061bd6d119ad59d92274d34315f3cc660b2c50a3062ebe6f9e16fd1"
+        },
+        "40": {
+          "path": "checkpoints\\mcf_seed1_steps40.pt",
+          "checkpoint_hash": "1f659c632af301601460bbf7871b7f964de5599b5fd870bf776678b648ff66e4"
+        },
+        "80": {
+          "path": "checkpoints\\mcf_seed1_steps80.pt",
+          "checkpoint_hash": "ab56ef0067a06a2f94b018c68b6e4b2c5fd4db9dfee0c5f4cef3e5a9dc7f73cd"
+        }
+      },
+      "resumed": false
+    },
+    "2": {
+      "path": "checkpoints\\mcf_seed2_steps150.pt",
+      "checkpoint_hash": "cbe6abb132e87cd651a57b2a332ccd9c2c3f077c492d60db97e39dcff8fa1040",
+      "final_train_mc_P_correct": 0.45,
+      "train_mc_P_correct_first": 0.36,
+      "budget_checkpoints": {
+        "150": {
+          "path": "checkpoints\\mcf_seed2_steps150.pt",
+          "checkpoint_hash": "cbe6abb132e87cd651a57b2a332ccd9c2c3f077c492d60db97e39dcff8fa1040"
+        },
+        "40": {
+          "path": "checkpoints\\mcf_seed2_steps40.pt",
+          "checkpoint_hash": "d0fa6ec2b4b3ae2eb0332a65d7d2cef85650ec1cb5f8740ef7a21747cda98577"
+        },
+        "80": {
+          "path": "checkpoints\\mcf_seed2_steps80.pt",
+          "checkpoint_hash": "67d74ba414ad3629278b14ab2ddc0b42ae49ba2095b95804469b54f84fd0ee4a"
+        }
+      },
+      "resumed": false
+    },
+    "3": {
+      "path": "checkpoints\\mcf_seed3_steps150.pt",
+      "checkpoint_hash": "77ea05ecb557f6739eecb42b01213cbc25e6faa43a9fbf930a26d35239c2b201",
+      "final_train_mc_P_correct": 0.3,
+      "train_mc_P_correct_first": 0.43,
+      "budget_checkpoints": {
+        "150": {
+          "path": "checkpoints\\mcf_seed3_steps150.pt",
+          "checkpoint_hash": "77ea05ecb557f6739eecb42b01213cbc25e6faa43a9fbf930a26d35239c2b201"
+        },
+        "40": {
+          "path": "checkpoints\\mcf_seed3_steps40.pt",
+          "checkpoint_hash": "47ae3d4a93f3c7435264fa4bd41b4660d24a0b87b4e16bb975daed704a6ae514"
+        },
+        "80": {
+          "path": "checkpoints\\mcf_seed3_steps80.pt",
+          "checkpoint_hash": "42edcd2a31e0479d647a17c9e9a0e3c5eb4396b2ba2d592164439612b7e50e09"
+        }
+      },
+      "resumed": false
+    },
+    "4": {
+      "path": "checkpoints\\mcf_seed4_steps150.pt",
+      "checkpoint_hash": "efd0bf9dd0d19fdcb9f2763acb1d0ab4fd628b5adf2c797025414e466628810f",
+      "final_train_mc_P_correct": 0.4,
+      "train_mc_P_correct_first": 0.42,
+      "budget_checkpoints": {
+        "150": {
+          "path": "checkpoints\\mcf_seed4_steps150.pt",
+          "checkpoint_hash": "efd0bf9dd0d19fdcb9f2763acb1d0ab4fd628b5adf2c797025414e466628810f"
+        },
+        "40": {
+          "path": "checkpoints\\mcf_seed4_steps40.pt",
+          "checkpoint_hash": "914b11f48e221a7cb2ae57d2113769295522c48abd5fbfc929c73a4c4d1a4053"
+        },
+        "80": {
+          "path": "checkpoints\\mcf_seed4_steps80.pt",
+          "checkpoint_hash": "c1a2a03d0d35309aa69e0f11062086772458edc2298ad30e2c265611fa415b20"
+        }
+      },
+      "resumed": false
+    }
+  },
+  "runtime_total_s": 4624.2
+}

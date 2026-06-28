@@ -74,6 +74,25 @@
         "honest_caveat": "NOT yet CI-separated: per-seed Wilson CIs overlap at 400 eval trials (init [0.324,0.418] vs trained [0.368,0.464]); +0.040 < eval CI +/-0.048. Evidence for closing rests on reproducibility (2 seeds) + monotonicity (in steps), not a single CI-separated comparison. 2 model seeds (headline target >=5): compute-limited.",
         "verdict": "G-ESP-MC-FAITHFUL-TRAINING core goal MET (a working MC-faithful trainer that closes the gap). Promoting to a CI-separated >=5-seed reaches/beats-distance headline + re-running budget/scale gates with MC-faithful checkpoints is substantial additional compute -> user investment decision (workflow 9.1)."
       }
+    },
+    "EV6-a1-headline": {
+      "date": "2026-06-28",
+      "contributes_to": ["G-ESP-MC-FAITHFUL-TRAINING", "G-ESP-TRAINING-BUDGET", "G-ESP-BASELINE-ORACLE"],
+      "campaign_phase": "A1 (Campaign A, publication-grade; user chose A)",
+      "modules": [
+        "src/evaluation/mc_faithful_campaign.py (train_mc_faithful + snapshots + ungated_cost + reliability_status + seed_level_bootstrap_ci + paired_seed_separation)",
+        "docs/gate_evidence/esp_scale_v2/run_phase_a1_train.py (5 seeds x 150 steps, snapshots 40/80)",
+        "docs/gate_evidence/esp_scale_v2/run_phase_a1_eval.py (pre-registered headline statistics)"
+      ],
+      "tests": ["tests/evaluation/test_mc_faithful_campaign.py (5: checkpoint round-trip+hash, snapshot==standalone-step-S, ungated-vs-reliability separation, seed-level separation, multi-seed aggregation)"],
+      "pre_registration": "A0 (committed cf163ea before any eval): un-gated J=1-P_correct; seed-level bootstrap headline (pooled-binomial demoted to diagnostic); reliability F_wrong/F_split UCB reported separately; >=5-seed headline; R_d(N)=round(6*sqrt(N/120)) calibration.",
+      "evidence": {
+        "result_json": "docs/gate_evidence/esp_scale_v2/phase_a1_eval_results.json",
+        "finding": "GAP CI-SEPARATELY CLOSED at N=120. 5 MC-faithful seeds, held-out dynamic-MC (3 scenes; trained 300/scene, refs 1000/scene): trained macro_P_correct=0.410 seed-level-bootstrap CI [0.399,0.420], per-seed [0.421,0.421,0.418,0.396,0.392]. Paired-across-seed vs uniform 0.370: Delta=+0.040 CI [0.029,0.050] (CI-SEPARATED). vs distance 0.422 [0.404,0.439]: gap +0.012, CIs overlap -> MATCHES distance (77% of uniform->distance gap closed).",
+        "reliability_separate": "all policies infeasible at eps_w=1e-3 (trained F_wrong 0.023 ucb 0.035; distance 0.018 ucb 0.023; uniform 0.035) -> J un-gated per A0. F_split=0.",
+        "verdict": "section 13.2: MC-faithful REINFORCE -> stable learned ESP constructor that CI-separately beats uniform and matches distance at N=120. Superiority-vs-parity decided by the A3 scale sweep.",
+        "namespace_clean": "phase_a1_eval_results.json: forbidden=[]; manifest hash-bound (A1-headline). Note: bare 'reliability' is a FORBIDDEN_BARE token -> key is reliability_status."
+      }
     }
   }
 }
