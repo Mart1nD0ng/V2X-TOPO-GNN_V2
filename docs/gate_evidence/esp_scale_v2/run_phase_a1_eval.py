@@ -73,7 +73,7 @@ def main():
     for kind in ("distance", "uniform_esp"):
         m = _eval(policy_factory(kind), REF_TRIALS)
         out["reference"][kind] = {"macro": m, "ungated_cost": ungated_cost(m),
-                                  "reliability": reliability_status(m, PROFILE)}
+                                  "reliability_status": reliability_status(m, PROFILE)}
         log(f"ref {kind}: Pc={m['macro_P_correct']:.3f} ci={m['macro_P_correct_ci']}")
 
     seeds = sorted(int(s) for s in tsum["checkpoints"])
@@ -85,7 +85,8 @@ def main():
         trained_macros.append(m)
         trained_pc.append(m["macro_P_correct"])
         out["per_seed"][str(s)] = {"checkpoint_hash": ckpt.checkpoint_hash, "macro": m,
-                                   "ungated_cost": ungated_cost(m), "reliability": reliability_status(m, PROFILE)}
+                                   "ungated_cost": ungated_cost(m),
+                                   "reliability_status": reliability_status(m, PROFILE)}
         log(f"seed {s}: trained Pc={m['macro_P_correct']:.3f} ({ckpt.checkpoint_hash[:12]})")
 
     # ---- A0 headline statistics ----
@@ -109,9 +110,10 @@ def main():
     man = mf.build_manifest(spec, policy_hash="esd_gnn_mc_faithful", checkpoint_hash="a1-5seed",
                             model_seeds=seeds, git_commit=git, manifest_id="A1-headline")
     out["manifest"] = man
-    assert not schema.forbidden_keys_in(out), schema.forbidden_keys_in(out)
     out["runtime_total_s"] = round(time.perf_counter() - t0, 1)
-    json.dump(out, open(OUT, "w"), indent=2)
+    json.dump(out, open(OUT, "w"), indent=2)               # SAVE first -> never lose MC compute to a guard
+    forbidden = schema.forbidden_keys_in(out)
+    assert not forbidden, f"namespace guard: forbidden keys {forbidden} (result saved to {OUT})"
     h = out["headline"]
     log(f"DONE {out['runtime_total_s']}s; trained {h['trained_seed_mean_P_correct']:.3f} "
         f"ci={[round(x,3) for x in h['trained_seed_bootstrap_ci']]} vs uniform {h['uniform_P_correct']:.3f} "
