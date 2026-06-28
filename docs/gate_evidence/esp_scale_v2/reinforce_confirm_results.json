@@ -1,0 +1,351 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "experiment": "reinforce_poc",
+  "query_family": "ESP",
+  "smoke": false,
+  "git_commit": "ed6a5e9",
+  "scale_protocol": "fixed_protocol",
+  "node_count": 120,
+  "scenario": "matched_marginal_high",
+  "base_node_err": 0.35,
+  "steps": 80,
+  "train_trials": 100,
+  "eval_trials": 200,
+  "model_seeds": [
+    0,
+    1
+  ],
+  "eval_scene_seeds": [
+    0,
+    1
+  ],
+  "note": "MC-faithful REINFORCE on the basin reward. The analytic-surrogate budget curve was FLAT here (=distance); this tests whether REINFORCE lifts the held-out MC macro_P_correct above the GNN's init toward/past distance (gap closing).",
+  "reference": {
+    "distance": {
+      "macro_P_correct": 0.4275,
+      "macro_F_wrong": 0.0525,
+      "macro_F_split": 0.0,
+      "macro_F_deadline": 0.52,
+      "macro_P_correct_ci": [
+        0.3799337344498726,
+        0.47644559843708106
+      ],
+      "macro_F_wrong_ci": [
+        0.03459126500804264,
+        0.07892254832867157
+      ],
+      "macro_F_split_ci": [
+        0.0,
+        0.009512640599680667
+      ],
+      "macro_F_deadline_ci": [
+        0.4710820210989227,
+        0.56853747327709
+      ]
+    },
+    "uniform_esp": {
+      "macro_P_correct": 0.36750000000000005,
+      "macro_F_wrong": 0.035,
+      "macro_F_split": 0.0,
+      "macro_F_deadline": 0.5974999999999999,
+      "macro_P_correct_ci": [
+        0.32172062764064324,
+        0.4158002221182722
+      ],
+      "macro_F_wrong_ci": [
+        0.0209610999014911,
+        0.05788565585621193
+      ],
+      "macro_F_split_ci": [
+        0.0,
+        0.009512640599680667
+      ],
+      "macro_F_deadline_ci": [
+        0.5487332989658664,
+        0.6444117361171957
+      ]
+    }
+  },
+  "per_seed": {
+    "0": {
+      "init": {
+        "macro_P_correct": 0.37,
+        "macro_F_wrong": 0.0325,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.5974999999999999,
+        "macro_P_correct_ci": [
+          0.32413116790213314,
+          0.4183421186537838
+        ],
+        "macro_F_wrong_ci": [
+          0.019089659086961887,
+          0.054804659873739545
+        ],
+        "macro_F_split_ci": [
+          0.0,
+          0.009512640599680667
+        ],
+        "macro_F_deadline_ci": [
+          0.5487332989658664,
+          0.6444117361171957
+        ]
+      },
+      "trained": {
+        "macro_P_correct": 0.41500000000000004,
+        "macro_F_wrong": 0.052500000000000005,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.5325,
+        "macro_P_correct_ci": [
+          0.3677452296419582,
+          0.46387191925998755
+        ],
+        "macro_F_wrong_ci": [
+          0.03459126500804264,
+          0.07892254832867159
+        ],
+        "macro_F_split_ci": [
+          0.0,
+          0.009512640599680667
+        ],
+        "macro_F_deadline_ci": [
+          0.48352660176021306,
+          0.5808550766008076
+        ]
+      },
+      "train_mc_P_correct_curve": [
+        0.39,
+        0.41,
+        0.32,
+        0.43,
+        0.41,
+        0.39,
+        0.29,
+        0.45,
+        0.35,
+        0.43,
+        0.38,
+        0.39,
+        0.47,
+        0.36,
+        0.39,
+        0.3,
+        0.39,
+        0.4,
+        0.38,
+        0.48,
+        0.37,
+        0.33,
+        0.46,
+        0.43,
+        0.39,
+        0.47,
+        0.43,
+        0.48,
+        0.41,
+        0.3,
+        0.34,
+        0.42,
+        0.43,
+        0.38,
+        0.35,
+        0.37,
+        0.32,
+        0.38,
+        0.37,
+        0.36,
+        0.4,
+        0.46,
+        0.38,
+        0.42,
+        0.37,
+        0.38,
+        0.4,
+        0.5,
+        0.33,
+        0.41,
+        0.48,
+        0.47,
+        0.46,
+        0.44,
+        0.4,
+        0.35,
+        0.4,
+        0.34,
+        0.37,
+        0.31,
+        0.45,
+        0.31,
+        0.38,
+        0.34,
+        0.32,
+        0.43,
+        0.31,
+        0.4,
+        0.4,
+        0.45,
+        0.44,
+        0.46,
+        0.43,
+        0.32,
+        0.33,
+        0.44,
+        0.38,
+        0.4,
+        0.42,
+        0.51
+      ],
+      "delta_held_out_P_correct": 0.04500000000000004
+    },
+    "1": {
+      "init": {
+        "macro_P_correct": 0.37,
+        "macro_F_wrong": 0.0325,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.5974999999999999,
+        "macro_P_correct_ci": [
+          0.32413116790213314,
+          0.4183421186537838
+        ],
+        "macro_F_wrong_ci": [
+          0.019089659086961887,
+          0.054804659873739545
+        ],
+        "macro_F_split_ci": [
+          0.0,
+          0.009512640599680667
+        ],
+        "macro_F_deadline_ci": [
+          0.5487332989658664,
+          0.6444117361171957
+        ]
+      },
+      "trained": {
+        "macro_P_correct": 0.405,
+        "macro_F_wrong": 0.0525,
+        "macro_F_split": 0.0,
+        "macro_F_deadline": 0.5425,
+        "macro_P_correct_ci": [
+          0.35801711355168203,
+          0.45379028816225736
+        ],
+        "macro_F_wrong_ci": [
+          0.03459126500804264,
+          0.07892254832867157
+        ],
+        "macro_F_split_ci": [
+          0.0,
+          0.009512640599680667
+        ],
+        "macro_F_deadline_ci": [
+          0.4935041354076727,
+          0.5906872901413545
+        ]
+      },
+      "train_mc_P_correct_curve": [
+        0.39,
+        0.28,
+        0.38,
+        0.42,
+        0.44,
+        0.43,
+        0.41,
+        0.39,
+        0.4,
+        0.43,
+        0.36,
+        0.31,
+        0.33,
+        0.26,
+        0.42,
+        0.42,
+        0.37,
+        0.36,
+        0.39,
+        0.37,
+        0.39,
+        0.46,
+        0.45,
+        0.3,
+        0.43,
+        0.41,
+        0.42,
+        0.33,
+        0.35,
+        0.48,
+        0.31,
+        0.29,
+        0.45,
+        0.39,
+        0.42,
+        0.44,
+        0.39,
+        0.46,
+        0.39,
+        0.41,
+        0.34,
+        0.42,
+        0.33,
+        0.42,
+        0.37,
+        0.46,
+        0.4,
+        0.51,
+        0.4,
+        0.38,
+        0.36,
+        0.37,
+        0.42,
+        0.38,
+        0.44,
+        0.35,
+        0.39,
+        0.32,
+        0.46,
+        0.47,
+        0.31,
+        0.35,
+        0.39,
+        0.33,
+        0.44,
+        0.34,
+        0.44,
+        0.36,
+        0.34,
+        0.43,
+        0.39,
+        0.45,
+        0.4,
+        0.37,
+        0.4,
+        0.31,
+        0.44,
+        0.46,
+        0.38,
+        0.43
+      ],
+      "delta_held_out_P_correct": 0.03500000000000003
+    }
+  },
+  "mean_delta_P_correct": 0.040000000000000036,
+  "gap_closing": true,
+  "manifest": {
+    "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+    "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+    "evidence_hash": "efd159916cb59fc423aafb5d7a4b563b107fc69c5b8f53d69c8f7cb54481c76a",
+    "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+    "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+    "policy_hash": "esd_gnn_reinforce",
+    "checkpoint_hash": "reinforce-poc",
+    "experiment_config_hash": "43f27a419ea07c82b15cc7c446c0ceb89b062e3dc5013936301e08cbfff62691",
+    "query_law": "esp",
+    "full_physics": true,
+    "git_commit": "ed6a5e9",
+    "manifest_id": "EV4-reinforce-poc",
+    "model_seeds": [
+      0,
+      1
+    ]
+  },
+  "runtime_total_s": 939.2
+}
