@@ -28,7 +28,24 @@
         "result_json": "docs/gate_evidence/esp_scale_v2/training_budget_results.json (run in progress)",
         "canonical_path": "train_with_curve uses the SAME run_consensus_episode + macrostate_metrics + macrostate_lagrangian + MacrostateDuals as train_macrostate, full physics (train==eval), with a persistent optimizer + held-out analytic validation hook (screening only; dynamic MC is the final judge).",
         "regime": "iid @N=120 is near-ceiling (analytic Pc~1.0 both GNN+distance, no headroom -- workflow §5.3); switched to mm_high(0.35,0.25) R_d=6 where distance analytic Pc=0.42, F_deadline=0.56, F_wrong=0.016 (room, deadline-dominated, reliability-safe).",
-        "bounded": "3 model seeds (headline target >=5), single training scale N=120, 50 steps, budgets {5,15,30,50} -- compute-limited; mixed-scale + >=5 seeds + structured-regime sweeps are follow-up passes."
+        "bounded": "3 model seeds (headline target >=5), single training scale N=120, 50 steps, budgets {5,15,30,50} -- compute-limited; mixed-scale + >=5 seeds + structured-regime sweeps are follow-up passes.",
+        "result": "FLAT budget curve: GNN macro_P_correct=0.422 at every budget = distance heuristic 0.423. Loss rises only via dual mu_d ascent (F_deadline=0.56 >> eps_d); primal does not move. Analytic peer-insensitivity: 5 structurally-different heuristics give identical analytic Pc across regimes (ceiling/floor/invariant, spread <=0.002)."
+      }
+    },
+    "EV2-mc-headroom": {
+      "date": "2026-06-28",
+      "contributes_to": ["G-ESP-TRAINING-BUDGET", "G-ESP-BASELINE-ORACLE"],
+      "modules": [
+        "src/policies/heuristics.py (LinkQuality/LoadBalanced/RegionBridge)",
+        "src/evaluation/esp_baselines.py (make_baseline + direct_edge_logit_oracle)",
+        "docs/gate_evidence/esp_scale_v2/run_headroom_mc.py"
+      ],
+      "tests": ["tests/policies/test_heuristics.py (3)", "tests/evaluation/test_esp_baselines.py (2)"],
+      "evidence": {
+        "result_json": "docs/gate_evidence/esp_scale_v2/headroom_mc_results.json",
+        "finding": "TRAINING-SIGNAL GAP (workflow §13.3), confirmed by the dynamic-MC judge. Under MC (full physics, 100x2 scenes, N=120) peer selection clearly matters: iid_easy distance 0.995 [0.972,0.999] vs load_balanced 0.920 [0.874,0.950] -> spread 0.075, CI-SEPARATED; mm_high_R6 distance 0.445 vs region_bridge 0.360 -> spread 0.085. But the analytic TRAINING surrogate gave all heuristics identical Pc (spread <=0.002). The mean-field analytic episode washes out the polling-pattern effect the subset-sampling MC resolves -> the GNN trained on the surrogate has no gradient toward what the judge rewards -> the EV1 flat curve. Distance is the best simple heuristic under MC; beating it via a learned policy cannot be reached through this surrogate.",
+        "verdict": "STOP+REPORT (stop-condition #1/#2): trained ESP/ESD-GNN performance SUPERIORITY cannot be established with the current training signal. Honest contribution available now: the evaluator/diagnostic + the training-signal-gap finding + the §13.2 'stable learned constructor that matches strong heuristics' framing. Direction is the user's call.",
+        "namespace_clean": "headroom_mc_results.json: forbidden=[] legacy=[]; macro blocks validated; manifest hash-bound (EV2-headroom-mc)."
       }
     }
   }

@@ -1,0 +1,288 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "experiment": "headroom_mc",
+  "query_family": "ESP",
+  "smoke": false,
+  "git_commit": "b7e932b",
+  "scene_seeds": [
+    0,
+    1
+  ],
+  "dynamic_mc_trials": 100,
+  "node_count": 120,
+  "note": "dynamic-MC (the judge) spread of 5 observable ESP heuristics. ~0 spread => macro basin is peer-invariant (env-dominated, \u00a713.2); meaningful spread => the judge sees headroom the analytic TRAINING surrogate is blind to (training-signal gap, \u00a713.3).",
+  "regimes": {
+    "iid_easy": {
+      "policies": {
+        "uniform_esp": {
+          "macro_P_correct": 0.9450000000000001,
+          "macro_F_wrong": 0.0,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 0.05500000000000001,
+          "macro_P_correct_ci": [
+            0.9042120755340647,
+            0.96901497919863
+          ],
+          "macro_F_wrong_ci": [
+            0.0,
+            0.018846005918320894
+          ],
+          "macro_F_split_ci": [
+            0.0,
+            0.018846005918320894
+          ],
+          "macro_F_deadline_ci": [
+            0.030985020801370115,
+            0.0957879244659355
+          ]
+        },
+        "distance": {
+          "macro_P_correct": 0.995,
+          "macro_F_wrong": 0.0,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 0.005,
+          "macro_P_correct_ci": [
+            0.9722256001302287,
+            0.9991168540106339
+          ],
+          "macro_F_wrong_ci": [
+            0.0,
+            0.018846005918320894
+          ],
+          "macro_F_split_ci": [
+            0.0,
+            0.018846005918320894
+          ],
+          "macro_F_deadline_ci": [
+            0.0008831459893662051,
+            0.02777439986977148
+          ]
+        },
+        "link_quality": {
+          "macro_P_correct": 0.99,
+          "macro_F_wrong": 0.0,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 0.01,
+          "macro_P_correct_ci": [
+            0.9642775148038205,
+            0.9972533993962251
+          ],
+          "macro_F_wrong_ci": [
+            0.0,
+            0.018846005918320894
+          ],
+          "macro_F_split_ci": [
+            0.0,
+            0.018846005918320894
+          ],
+          "macro_F_deadline_ci": [
+            0.0027466006037749346,
+            0.03572248519617954
+          ]
+        },
+        "load_balanced": {
+          "macro_P_correct": 0.92,
+          "macro_F_wrong": 0.0,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 0.08,
+          "macro_P_correct_ci": [
+            0.8740095102048769,
+            0.9501598448237336
+          ],
+          "macro_F_wrong_ci": [
+            0.0,
+            0.018846005918320894
+          ],
+          "macro_F_split_ci": [
+            0.0,
+            0.018846005918320894
+          ],
+          "macro_F_deadline_ci": [
+            0.049840155176266415,
+            0.12599048979512315
+          ]
+        },
+        "region_bridge": {
+          "macro_P_correct": 0.9400000000000001,
+          "macro_F_wrong": 0.0,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 0.060000000000000005,
+          "macro_P_correct_ci": [
+            0.8980673646931492,
+            0.9653481500987285
+          ],
+          "macro_F_wrong_ci": [
+            0.0,
+            0.018846005918320894
+          ],
+          "macro_F_split_ci": [
+            0.0,
+            0.018846005918320894
+          ],
+          "macro_F_deadline_ci": [
+            0.03465184990127151,
+            0.10193263530685089
+          ]
+        }
+      },
+      "mc_spread_P_correct": 0.07499999999999996,
+      "best": "distance",
+      "worst": "load_balanced",
+      "manifest": {
+        "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+        "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+        "evidence_hash": "82c4bc4d6446d533964e50b79d8208d904cfa0c75e3ed82d38f1e30cca413a65",
+        "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+        "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+        "policy_hash": "esp_heuristics",
+        "checkpoint_hash": "none",
+        "experiment_config_hash": "9d03c0458f19d2df16f2bfdb47e510030090508fe90d07d94eb1bda0110d2088",
+        "query_law": "esp",
+        "full_physics": true,
+        "git_commit": "b7e932b",
+        "manifest_id": "EV2-headroom-mc",
+        "model_seeds": [
+          0,
+          1
+        ]
+      }
+    },
+    "mm_high_R6": {
+      "policies": {
+        "uniform_esp": {
+          "macro_P_correct": 0.375,
+          "macro_F_wrong": 0.025,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 0.6000000000000001,
+          "macro_P_correct_ci": [
+            0.3108532530524515,
+            0.4438582484271288
+          ],
+          "macro_F_wrong_ci": [
+            0.010724561470787711,
+            0.057179144151617144
+          ],
+          "macro_F_split_ci": [
+            0.0,
+            0.018846005918320894
+          ],
+          "macro_F_deadline_ci": [
+            0.5308354385001253,
+            0.6653953603162107
+          ]
+        },
+        "distance": {
+          "macro_P_correct": 0.445,
+          "macro_F_wrong": 0.03,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 0.525,
+          "macro_P_correct_ci": [
+            0.3778048169746545,
+            0.5142682436763608
+          ],
+          "macro_F_wrong_ci": [
+            0.013820125830748323,
+            0.06389511973247333
+          ],
+          "macro_F_split_ci": [
+            0.0,
+            0.018846005918320894
+          ],
+          "macro_F_deadline_ci": [
+            0.45597270710507004,
+            0.593084992599014
+          ]
+        },
+        "link_quality": {
+          "macro_P_correct": 0.43000000000000005,
+          "macro_F_wrong": 0.025,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 0.5449999999999999,
+          "macro_P_correct_ci": [
+            0.363342044883948,
+            0.4992963959446171
+          ],
+          "macro_F_wrong_ci": [
+            0.010724561470787711,
+            0.057179144151617144
+          ],
+          "macro_F_split_ci": [
+            0.0,
+            0.018846005918320894
+          ],
+          "macro_F_deadline_ci": [
+            0.4757848503696114,
+            0.6125190090977396
+          ]
+        },
+        "load_balanced": {
+          "macro_P_correct": 0.37,
+          "macro_F_wrong": 0.025,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 0.605,
+          "macro_P_correct_ci": [
+            0.30612497503752417,
+            0.43877498650123936
+          ],
+          "macro_F_wrong_ci": [
+            0.010724561470787711,
+            0.057179144151617144
+          ],
+          "macro_F_split_ci": [
+            0.0,
+            0.018846005918320894
+          ],
+          "macro_F_deadline_ci": [
+            0.5358822087449842,
+            0.6701601300121683
+          ]
+        },
+        "region_bridge": {
+          "macro_P_correct": 0.36,
+          "macro_F_wrong": 0.025,
+          "macro_F_split": 0.0,
+          "macro_F_deadline": 0.615,
+          "macro_P_correct_ci": [
+            0.29669087731339805,
+            0.4285860043437319
+          ],
+          "macro_F_wrong_ci": [
+            0.010724561470787711,
+            0.057179144151617144
+          ],
+          "macro_F_split_ci": [
+            0.0,
+            0.018846005918320894
+          ],
+          "macro_F_deadline_ci": [
+            0.5459973878179245,
+            0.6796680308208617
+          ]
+        }
+      },
+      "mc_spread_P_correct": 0.08500000000000002,
+      "best": "distance",
+      "worst": "region_bridge",
+      "manifest": {
+        "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+        "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+        "evidence_hash": "efd159916cb59fc423aafb5d7a4b563b107fc69c5b8f53d69c8f7cb54481c76a",
+        "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+        "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+        "policy_hash": "esp_heuristics",
+        "checkpoint_hash": "none",
+        "experiment_config_hash": "43f27a419ea07c82b15cc7c446c0ceb89b062e3dc5013936301e08cbfff62691",
+        "query_law": "esp",
+        "full_physics": true,
+        "git_commit": "b7e932b",
+        "manifest_id": "EV2-headroom-mc",
+        "model_seeds": [
+          0,
+          1
+        ]
+      }
+    }
+  },
+  "runtime_total_s": 94.8
+}
