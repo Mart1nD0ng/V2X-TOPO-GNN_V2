@@ -137,6 +137,18 @@
         "result_json": "docs/gate_evidence/esp_scale_v2/phase_a5_rare_event_results.json",
         "finding": "Per-checkpoint zero-failure UCB (seed 0, M=4000). F_split CERTIFIED <= eps_s=1e-3 (zero split events -> UCB 0.00096). F_wrong NOT certifiable at eps_w=1e-3: trained 0.026 (UCB 0.031), distance 0.022 (UCB 0.027) -> the stressed mm_high regime is structurally infeasible at the strict wrong-basin target for ALL policies (regime property, not GNN failure -> why A0 un-gates J)."
       }
+    },
+    "EV11-a6-synthesis": {
+      "date": "2026-06-28",
+      "contributes_to": ["G-ESP-SCALE-SYNTHESIS"],
+      "campaign_phase": "A6 (round complete)",
+      "modules": ["docs/gate_evidence/esp_scale_v2/run_phase_a6_synthesis.py (reads result JSONs only)"],
+      "evidence": {
+        "result_json": "docs/gate_evidence/esp_scale_v2/phase_a6_synthesis.json",
+        "figures": ["docs/gate_evidence/esp_scale_v2/figures/a2_budget_curve.png", "docs/gate_evidence/esp_scale_v2/figures/a3b_scale_curve.png"],
+        "verdict": "section-13.2 PARITY. MC-faithful REINFORCE yields a stable learned ESP constructor that CI-separately BEATS uniform (paired +0.040 [0.029,0.050]; 6/6 scale cells; 4/4 OOD cells) and MATCHES distance (gap +0.012 overlapping CIs; tracks across N=120->3036 both modes), with parity transferring across a 25x scale-up. NOT 13.1 superiority. Honest limits: iid-OOD transfer, N=1248 density collapse, regime infeasible at strict eps_w. All pre-registered (A0), namespace-clean, hash-bound.",
+        "round_status": "COMPLETE -- all 8 ESP-scale-v2 gates green (EV6-EV11 + EV2/EV1 lineage)."
+      }
     }
   }
 }

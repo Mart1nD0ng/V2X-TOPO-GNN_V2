@@ -1,0 +1,689 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "experiment": "phase_a3b_scale",
+  "query_family": "ESP",
+  "smoke": false,
+  "git_commit": "4f99ecc",
+  "scenario": "matched_marginal_high",
+  "base_node_err": 0.35,
+  "corr_strength": 0.25,
+  "scene_seeds": [
+    0,
+    1
+  ],
+  "calibration_rule": "fixed_service R_d(N)=round(6*sqrt(N/120)) (pre-registered)",
+  "pre_registration": "A0: ungated J; seed-level bootstrap; reliability separate; taper labeled",
+  "cells": {
+    "120": {
+      "grid": [
+        5,
+        5,
+        3
+      ],
+      "modes": {
+        "fixed_protocol": {
+          "R_d": 6,
+          "policies": {
+            "shared_esp": {
+              "seed_mean_P_correct": 0.461,
+              "seed_bootstrap_ci": [
+                0.44299999999999995,
+                0.4795
+              ],
+              "across_seed_sd": 0.023756578036409213,
+              "per_seed_P_correct": [
+                0.46,
+                0.475,
+                0.49250000000000005,
+                0.4325,
+                0.445
+              ],
+              "ungated_cost": 0.5389999999999999,
+              "n_seeds": 5,
+              "reliability_status_seed0": {
+                "macro_F_wrong": 0.027500000000000004,
+                "macro_F_wrong_ucb": 0.04856596928817408,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.009512640599680667,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "distance": {
+              "macro_P_correct": 0.4625,
+              "ungated_cost": 0.5375,
+              "reliability_status": {
+                "macro_F_wrong": 0.027500000000000004,
+                "macro_F_wrong_ucb": 0.04856596928817408,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.009512640599680667,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "uniform_esp": {
+              "macro_P_correct": 0.41500000000000004,
+              "ungated_cost": 0.585,
+              "reliability_status": {
+                "macro_F_wrong": 0.025,
+                "macro_F_wrong_ucb": 0.045402064829934204,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.009512640599680667,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            }
+          }
+        }
+      },
+      "shared_model_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "compute_limited": false,
+      "approximation_bound": false,
+      "trials_per_scene": 200
+    },
+    "336": {
+      "grid": [
+        8,
+        8,
+        3
+      ],
+      "modes": {
+        "fixed_protocol": {
+          "R_d": 6,
+          "policies": {
+            "shared_esp": {
+              "seed_mean_P_correct": 0.4286666666666667,
+              "seed_bootstrap_ci": [
+                0.4126666666666667,
+                0.44400000000000006
+              ],
+              "across_seed_sd": 0.02035790864613665,
+              "per_seed_P_correct": [
+                0.44000000000000006,
+                0.4466666666666667,
+                0.44333333333333336,
+                0.41000000000000003,
+                0.4033333333333333
+              ],
+              "ungated_cost": 0.5713333333333332,
+              "n_seeds": 5,
+              "reliability_status_seed0": {
+                "macro_F_wrong": 0.023333333333333334,
+                "macro_F_wrong_ucb": 0.04737255433287896,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.012643429997735661,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "distance": {
+              "macro_P_correct": 0.4466666666666667,
+              "ungated_cost": 0.5533333333333332,
+              "reliability_status": {
+                "macro_F_wrong": 0.023333333333333334,
+                "macro_F_wrong_ucb": 0.04737255433287896,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.012643429997735661,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "uniform_esp": {
+              "macro_P_correct": 0.38,
+              "ungated_cost": 0.62,
+              "reliability_status": {
+                "macro_F_wrong": 0.02,
+                "macro_F_wrong_ucb": 0.042940186730055147,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.012643429997735661,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            }
+          }
+        },
+        "fixed_service_profile": {
+          "R_d": 10,
+          "policies": {
+            "shared_esp": {
+              "seed_mean_P_correct": 0.4286666666666667,
+              "seed_bootstrap_ci": [
+                0.4126666666666667,
+                0.44400000000000006
+              ],
+              "across_seed_sd": 0.02035790864613665,
+              "per_seed_P_correct": [
+                0.44000000000000006,
+                0.4466666666666667,
+                0.44333333333333336,
+                0.41000000000000003,
+                0.4033333333333333
+              ],
+              "ungated_cost": 0.5713333333333332,
+              "n_seeds": 5,
+              "reliability_status_seed0": {
+                "macro_F_wrong": 0.023333333333333334,
+                "macro_F_wrong_ucb": 0.04737255433287896,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.012643429997735661,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "distance": {
+              "macro_P_correct": 0.4466666666666667,
+              "ungated_cost": 0.5533333333333332,
+              "reliability_status": {
+                "macro_F_wrong": 0.023333333333333334,
+                "macro_F_wrong_ucb": 0.04737255433287896,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.012643429997735661,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "uniform_esp": {
+              "macro_P_correct": 0.38,
+              "ungated_cost": 0.62,
+              "reliability_status": {
+                "macro_F_wrong": 0.02,
+                "macro_F_wrong_ucb": 0.042940186730055147,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.012643429997735661,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "expert": {
+              "macro_P_correct": 0.43666666666666665,
+              "ungated_cost": 0.5633333333333334,
+              "checkpoint_hash": "1be8afbe01e545e7ec8287797f7c4b27a46ee24db5f150ec76dcb5c3fa7defe6",
+              "reliability_status": {
+                "macro_F_wrong": 0.023333333333333334,
+                "macro_F_wrong_ucb": 0.04737255433287896,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.012643429997735661,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            }
+          },
+          "scale_regret_shared_vs_expert": 0.007999999999999896
+        }
+      },
+      "shared_model_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "compute_limited": false,
+      "approximation_bound": false,
+      "trials_per_scene": 150
+    },
+    "660": {
+      "grid": [
+        11,
+        11,
+        3
+      ],
+      "modes": {
+        "fixed_protocol": {
+          "R_d": 6,
+          "policies": {
+            "shared_esp": {
+              "seed_mean_P_correct": 0.4200000000000001,
+              "seed_bootstrap_ci": [
+                0.4200000000000001,
+                0.4200000000000001
+              ],
+              "across_seed_sd": 6.798699777552591e-17,
+              "per_seed_P_correct": [
+                0.42000000000000004,
+                0.42000000000000004,
+                0.42000000000000004
+              ],
+              "ungated_cost": 0.5799999999999998,
+              "n_seeds": 3,
+              "reliability_status_seed0": {
+                "macro_F_wrong": 0.01,
+                "macro_F_wrong_ucb": 0.03572248519617954,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.018846005918320894,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "distance": {
+              "macro_P_correct": 0.42000000000000004,
+              "ungated_cost": 0.58,
+              "reliability_status": {
+                "macro_F_wrong": 0.01,
+                "macro_F_wrong_ucb": 0.03572248519617954,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.018846005918320894,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "uniform_esp": {
+              "macro_P_correct": 0.37,
+              "ungated_cost": 0.63,
+              "reliability_status": {
+                "macro_F_wrong": 0.01,
+                "macro_F_wrong_ucb": 0.03572248519617954,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.018846005918320894,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            }
+          }
+        },
+        "fixed_service_profile": {
+          "R_d": 14,
+          "policies": {
+            "shared_esp": {
+              "seed_mean_P_correct": 0.4200000000000001,
+              "seed_bootstrap_ci": [
+                0.4200000000000001,
+                0.4200000000000001
+              ],
+              "across_seed_sd": 6.798699777552591e-17,
+              "per_seed_P_correct": [
+                0.42000000000000004,
+                0.42000000000000004,
+                0.42000000000000004
+              ],
+              "ungated_cost": 0.5799999999999998,
+              "n_seeds": 3,
+              "reliability_status_seed0": {
+                "macro_F_wrong": 0.01,
+                "macro_F_wrong_ucb": 0.03572248519617954,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.018846005918320894,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "distance": {
+              "macro_P_correct": 0.42000000000000004,
+              "ungated_cost": 0.58,
+              "reliability_status": {
+                "macro_F_wrong": 0.01,
+                "macro_F_wrong_ucb": 0.03572248519617954,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.018846005918320894,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "uniform_esp": {
+              "macro_P_correct": 0.37,
+              "ungated_cost": 0.63,
+              "reliability_status": {
+                "macro_F_wrong": 0.01,
+                "macro_F_wrong_ucb": 0.03572248519617954,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.018846005918320894,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "expert": {
+              "macro_P_correct": 0.42000000000000004,
+              "ungated_cost": 0.58,
+              "checkpoint_hash": "98d4ed3ec1a791350fe7dbb77bbda0ef50525ab4e1016475b4e9d315be15dad5",
+              "reliability_status": {
+                "macro_F_wrong": 0.01,
+                "macro_F_wrong_ucb": 0.03572248519617954,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.018846005918320894,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            }
+          },
+          "scale_regret_shared_vs_expert": -1.1102230246251565e-16
+        }
+      },
+      "shared_model_seeds": [
+        0,
+        1,
+        2
+      ],
+      "compute_limited": true,
+      "approximation_bound": false,
+      "trials_per_scene": 100
+    },
+    "1248": {
+      "grid": [
+        13,
+        13,
+        4
+      ],
+      "modes": {
+        "fixed_protocol": {
+          "R_d": 6,
+          "policies": {
+            "shared_esp": {
+              "seed_mean_P_correct": 0.0,
+              "seed_bootstrap_ci": [
+                0.0,
+                0.0
+              ],
+              "across_seed_sd": 0.0,
+              "per_seed_P_correct": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "ungated_cost": 1.0,
+              "n_seeds": 3,
+              "reliability_status_seed0": {
+                "macro_F_wrong": 0.0,
+                "macro_F_wrong_ucb": 0.0458197362645751,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.0458197362645751,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "distance": {
+              "macro_P_correct": 0.0,
+              "ungated_cost": 1.0,
+              "reliability_status": {
+                "macro_F_wrong": 0.0,
+                "macro_F_wrong_ucb": 0.0458197362645751,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.0458197362645751,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "uniform_esp": {
+              "macro_P_correct": 0.0,
+              "ungated_cost": 1.0,
+              "reliability_status": {
+                "macro_F_wrong": 0.0,
+                "macro_F_wrong_ucb": 0.0458197362645751,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.0458197362645751,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            }
+          }
+        },
+        "fixed_service_profile": {
+          "R_d": 19,
+          "policies": {
+            "shared_esp": {
+              "seed_mean_P_correct": 0.0,
+              "seed_bootstrap_ci": [
+                0.0,
+                0.0
+              ],
+              "across_seed_sd": 0.0,
+              "per_seed_P_correct": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "ungated_cost": 1.0,
+              "n_seeds": 3,
+              "reliability_status_seed0": {
+                "macro_F_wrong": 0.0,
+                "macro_F_wrong_ucb": 0.0458197362645751,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.0458197362645751,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "distance": {
+              "macro_P_correct": 0.0,
+              "ungated_cost": 1.0,
+              "reliability_status": {
+                "macro_F_wrong": 0.0,
+                "macro_F_wrong_ucb": 0.0458197362645751,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.0458197362645751,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "uniform_esp": {
+              "macro_P_correct": 0.0,
+              "ungated_cost": 1.0,
+              "reliability_status": {
+                "macro_F_wrong": 0.0,
+                "macro_F_wrong_ucb": 0.0458197362645751,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.0458197362645751,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            }
+          }
+        }
+      },
+      "shared_model_seeds": [
+        0,
+        1,
+        2
+      ],
+      "compute_limited": true,
+      "approximation_bound": false,
+      "trials_per_scene": 40
+    },
+    "3036": {
+      "grid": [
+        23,
+        23,
+        3
+      ],
+      "modes": {
+        "fixed_protocol": {
+          "R_d": 6,
+          "policies": {
+            "shared_esp": {
+              "seed_mean_P_correct": 0.4375,
+              "seed_bootstrap_ci": [
+                0.4375,
+                0.4375
+              ],
+              "across_seed_sd": 0.0,
+              "per_seed_P_correct": [
+                0.4375,
+                0.4375
+              ],
+              "ungated_cost": 0.5625,
+              "n_seeds": 2,
+              "reliability_status_seed0": {
+                "macro_F_wrong": 0.0,
+                "macro_F_wrong_ucb": 0.1071827150573635,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.1071827150573635,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "distance": {
+              "macro_P_correct": 0.4375,
+              "ungated_cost": 0.5625,
+              "reliability_status": {
+                "macro_F_wrong": 0.0,
+                "macro_F_wrong_ucb": 0.1071827150573635,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.1071827150573635,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "uniform_esp": {
+              "macro_P_correct": 0.3125,
+              "ungated_cost": 0.6875,
+              "reliability_status": {
+                "macro_F_wrong": 0.0,
+                "macro_F_wrong_ucb": 0.1071827150573635,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.1071827150573635,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            }
+          }
+        }
+      },
+      "shared_model_seeds": [
+        0,
+        1
+      ],
+      "compute_limited": true,
+      "approximation_bound": false,
+      "trials_per_scene": 16
+    },
+    "9840": {
+      "grid": [
+        41,
+        41,
+        3
+      ],
+      "modes": {
+        "fixed_protocol": {
+          "R_d": 6,
+          "policies": {
+            "shared_esp": {
+              "seed_mean_P_correct": 0.3125,
+              "seed_bootstrap_ci": [
+                0.3125,
+                0.3125
+              ],
+              "across_seed_sd": 0.0,
+              "per_seed_P_correct": [
+                0.3125,
+                0.3125
+              ],
+              "ungated_cost": 0.6875,
+              "n_seeds": 2,
+              "reliability_status_seed0": {
+                "macro_F_wrong": 0.0,
+                "macro_F_wrong_ucb": 0.19361341827271994,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.19361341827271994,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            },
+            "distance": {
+              "macro_P_correct": 0.3125,
+              "ungated_cost": 0.6875,
+              "reliability_status": {
+                "macro_F_wrong": 0.0,
+                "macro_F_wrong_ucb": 0.19361341827271994,
+                "macro_F_split": 0.0,
+                "macro_F_split_ucb": 0.19361341827271994,
+                "eps_wrong": 0.001,
+                "eps_split": 0.001,
+                "feasible_wrong_ucb": false,
+                "feasible_split_ucb": false
+              }
+            }
+          }
+        }
+      },
+      "shared_model_seeds": [
+        0,
+        1
+      ],
+      "compute_limited": true,
+      "approximation_bound": true,
+      "trials_per_scene": 8
+    }
+  },
+  "manifest": {
+    "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+    "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+    "evidence_hash": "6f1b0f00fcf8a57d7e28517b8d90f8b8a5fc9f1e5404b55ca5f2cb9859b14e3c",
+    "scene_distribution_hash": "9cb0de5fb9a5bf8b0a32af21e5be2fa9776b0d267f0b86bdcb0e45b0586769f5",
+    "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+    "policy_hash": "esd_gnn_mc_faithful_scale",
+    "checkpoint_hash": "a3b-scale",
+    "experiment_config_hash": "432248e6f1df5106c1f2f3c88f914e2498740c44feafb0b997701d31b49224b5",
+    "query_law": "esp",
+    "full_physics": true,
+    "git_commit": "4f99ecc",
+    "manifest_id": "A3b-scale",
+    "model_seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "runtime_total_s": 2482.8
+}

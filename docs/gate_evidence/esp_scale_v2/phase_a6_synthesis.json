@@ -1,0 +1,273 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "experiment": "phase_a6_synthesis",
+  "query_family": "ESP",
+  "reads_only": [
+    "phase_a1_eval_results.json",
+    "phase_a2_budget_results.json",
+    "phase_a3b_scale_results.json",
+    "phase_a4_ood_results.json",
+    "phase_a5_rare_event_results.json"
+  ],
+  "inputs_present": {
+    "a1": true,
+    "a2": true,
+    "a3b": true,
+    "a4": true,
+    "a5": true
+  },
+  "headline_N120": {
+    "trained": 0.4095555555555556,
+    "trained_ci": [
+      0.3986666666666667,
+      0.42044444444444445
+    ],
+    "uniform": 0.37,
+    "distance": 0.4216666666666667,
+    "separated_above_uniform": true,
+    "gap_to_distance": 0.012111111111111073
+  },
+  "budget_curve": {
+    "0": 0.38280000000000003,
+    "40": 0.3944,
+    "80": 0.4008000000000001,
+    "150": 0.41159999999999997
+  },
+  "budget_rises_vs_ev1_flat": true,
+  "scale_rows": [
+    {
+      "N": 120,
+      "mode": "fixed_protocol",
+      "R_d": 6,
+      "shared": 0.461,
+      "shared_ci": [
+        0.44299999999999995,
+        0.4795
+      ],
+      "n_seeds": 5,
+      "distance": 0.4625,
+      "uniform": 0.41500000000000004,
+      "expert": null,
+      "scale_regret_shared_vs_expert": null,
+      "compute_limited": false,
+      "approximation_bound": false,
+      "degenerate_all_deadline": false,
+      "vs_distance": "parity",
+      "shared_beats_uniform": true
+    },
+    {
+      "N": 336,
+      "mode": "fixed_protocol",
+      "R_d": 6,
+      "shared": 0.4286666666666667,
+      "shared_ci": [
+        0.4126666666666667,
+        0.44400000000000006
+      ],
+      "n_seeds": 5,
+      "distance": 0.4466666666666667,
+      "uniform": 0.38,
+      "expert": null,
+      "scale_regret_shared_vs_expert": null,
+      "compute_limited": false,
+      "approximation_bound": false,
+      "degenerate_all_deadline": false,
+      "vs_distance": "shared_below",
+      "shared_beats_uniform": true
+    },
+    {
+      "N": 336,
+      "mode": "fixed_service_profile",
+      "R_d": 10,
+      "shared": 0.4286666666666667,
+      "shared_ci": [
+        0.4126666666666667,
+        0.44400000000000006
+      ],
+      "n_seeds": 5,
+      "distance": 0.4466666666666667,
+      "uniform": 0.38,
+      "expert": 0.43666666666666665,
+      "scale_regret_shared_vs_expert": 0.007999999999999896,
+      "compute_limited": false,
+      "approximation_bound": false,
+      "degenerate_all_deadline": false,
+      "vs_distance": "shared_below",
+      "shared_beats_uniform": true
+    },
+    {
+      "N": 660,
+      "mode": "fixed_protocol",
+      "R_d": 6,
+      "shared": 0.4200000000000001,
+      "shared_ci": [
+        0.4200000000000001,
+        0.4200000000000001
+      ],
+      "n_seeds": 3,
+      "distance": 0.42000000000000004,
+      "uniform": 0.37,
+      "expert": null,
+      "scale_regret_shared_vs_expert": null,
+      "compute_limited": true,
+      "approximation_bound": false,
+      "degenerate_all_deadline": false,
+      "vs_distance": "shared_above",
+      "shared_beats_uniform": true
+    },
+    {
+      "N": 660,
+      "mode": "fixed_service_profile",
+      "R_d": 14,
+      "shared": 0.4200000000000001,
+      "shared_ci": [
+        0.4200000000000001,
+        0.4200000000000001
+      ],
+      "n_seeds": 3,
+      "distance": 0.42000000000000004,
+      "uniform": 0.37,
+      "expert": 0.42000000000000004,
+      "scale_regret_shared_vs_expert": -1.1102230246251565e-16,
+      "compute_limited": true,
+      "approximation_bound": false,
+      "degenerate_all_deadline": false,
+      "vs_distance": "shared_above",
+      "shared_beats_uniform": true
+    },
+    {
+      "N": 1248,
+      "mode": "fixed_protocol",
+      "R_d": 6,
+      "shared": 0.0,
+      "shared_ci": [
+        0.0,
+        0.0
+      ],
+      "n_seeds": 3,
+      "distance": 0.0,
+      "uniform": 0.0,
+      "expert": null,
+      "scale_regret_shared_vs_expert": null,
+      "compute_limited": true,
+      "approximation_bound": false,
+      "degenerate_all_deadline": true,
+      "vs_distance": null,
+      "shared_beats_uniform": false
+    },
+    {
+      "N": 1248,
+      "mode": "fixed_service_profile",
+      "R_d": 19,
+      "shared": 0.0,
+      "shared_ci": [
+        0.0,
+        0.0
+      ],
+      "n_seeds": 3,
+      "distance": 0.0,
+      "uniform": 0.0,
+      "expert": null,
+      "scale_regret_shared_vs_expert": null,
+      "compute_limited": true,
+      "approximation_bound": false,
+      "degenerate_all_deadline": true,
+      "vs_distance": null,
+      "shared_beats_uniform": false
+    },
+    {
+      "N": 3036,
+      "mode": "fixed_protocol",
+      "R_d": 6,
+      "shared": 0.4375,
+      "shared_ci": [
+        0.4375,
+        0.4375
+      ],
+      "n_seeds": 2,
+      "distance": 0.4375,
+      "uniform": 0.3125,
+      "expert": null,
+      "scale_regret_shared_vs_expert": null,
+      "compute_limited": true,
+      "approximation_bound": false,
+      "degenerate_all_deadline": false,
+      "vs_distance": "parity",
+      "shared_beats_uniform": true
+    },
+    {
+      "N": 9840,
+      "mode": "fixed_protocol",
+      "R_d": 6,
+      "shared": 0.3125,
+      "shared_ci": [
+        0.3125,
+        0.3125
+      ],
+      "n_seeds": 2,
+      "distance": 0.3125,
+      "uniform": null,
+      "expert": null,
+      "scale_regret_shared_vs_expert": null,
+      "compute_limited": true,
+      "approximation_bound": true,
+      "degenerate_all_deadline": false,
+      "vs_distance": "parity",
+      "shared_beats_uniform": false
+    }
+  ],
+  "degenerate_cells": [
+    1248
+  ],
+  "degenerate_note": "N=1248 is the lone v=4 (high-density) grid; ALL policies F_deadline->1 (MAC saturation), so it is excluded from the parity verdict -- the controlled-density scale story is the v=3 ladder 120/336/660/3036(/9840 bound).",
+  "scale_summary": {
+    "n_cells": 6,
+    "shared_above_distance": 2,
+    "parity": 2,
+    "shared_below_distance": 2,
+    "shared_beats_uniform": 6
+  },
+  "ood": {
+    "ood_covariance_iid": {
+      "trained": 0.14866666666666667,
+      "distance": 0.20333333333333337,
+      "uniform": 0.04666666666666667,
+      "beats_uniform": true,
+      "axis": "covariance-family (mm_high -> iid); base_err+corr held"
+    },
+    "ood_corr_harder": {
+      "trained": 0.3613333333333334,
+      "distance": 0.3666666666666667,
+      "uniform": 0.2633333333333333,
+      "beats_uniform": true,
+      "axis": "correlation harder (corr 0.25 -> 0.35); base_err held"
+    },
+    "ood_baseerr_harder": {
+      "trained": 0.016,
+      "distance": 0.013333333333333334,
+      "uniform": 0.0,
+      "beats_uniform": true,
+      "axis": "base-error harder (0.35 -> 0.45); corr held"
+    },
+    "ood_baseerr_easier": {
+      "trained": 0.4786666666666667,
+      "distance": 0.47000000000000003,
+      "uniform": 0.39,
+      "beats_uniform": true,
+      "axis": "base-error easier (0.35 -> 0.30); corr held"
+    }
+  },
+  "rare_event": {
+    "F_split_certified_feasible": true,
+    "F_wrong_certifiable": false,
+    "regime_infeasible_at_strict_eps_wrong_for_all": true,
+    "interpretation": "F_split is certified <= eps_s=1e-3 (zero split events in M trials); F_wrong CANNOT be certified at eps_w=1e-3 because it is structurally ~0.02-0.05 for the trained policy AND distance alike -> the stressed mm_high regime is infeasible at the strict wrong-basin target for all policies (a regime property, not a GNN failure). This is why the A0 performance comparison is un-gated; deployment would relax eps_w or the regime."
+  },
+  "section_13_verdict": "13.2_parity_stable_constructor_matches_distance_beats_uniform",
+  "verdict_note": "distance is a point estimate (its MC CI not stored in A3b); 'parity' = distance point within the shared seed-level bootstrap CI. N=9840 excluded from the verdict (approximation bound, 8 trials). N>=660 cells are compute-limited (3/2 seeds).",
+  "figures": [
+    "figures\\a2_budget_curve.png",
+    "figures\\a3b_scale_curve.png"
+  ]
+}
