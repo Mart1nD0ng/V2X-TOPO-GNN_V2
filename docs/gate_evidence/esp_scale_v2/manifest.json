@@ -47,6 +47,22 @@
         "verdict": "STOP+REPORT (stop-condition #1/#2): trained ESP/ESD-GNN performance SUPERIORITY cannot be established with the current training signal. Honest contribution available now: the evaluator/diagnostic + the training-signal-gap finding + the §13.2 'stable learned constructor that matches strong heuristics' framing. Direction is the user's call.",
         "namespace_clean": "headroom_mc_results.json: forbidden=[] legacy=[]; macro blocks validated; manifest hash-bound (EV2-headroom-mc)."
       }
+    },
+    "EV4-mc-faithful-reinforce": {
+      "date": "2026-06-28",
+      "contributes_to": ["G-ESP-MC-FAITHFUL-TRAINING"],
+      "modules": [
+        "src/optimization/mc_reinforce.py (batched_subset_log_prob + train_esp_reinforce, per-node credit + participation weighting)",
+        "src/validation/dynamic_mc.py (gated reinforce=True: differentiable per-(trial,node) sum log pi + per-node correct reward; judge default path unchanged)",
+        "docs/gate_evidence/esp_scale_v2/run_reinforce_poc.py"
+      ],
+      "tests": ["tests/optimization/test_mc_reinforce.py (5: log-prob vs reference + mask + normalised/differentiable; judge-invariant under reinforce; a step trains)"],
+      "evidence": {
+        "result_json": "docs/gate_evidence/esp_scale_v2/reinforce_poc_results.json",
+        "finding": "GAP CLOSING via per-node-credit REINFORCE. mm_high(0.35,0.25) R_d=6 N=120, held-out MC 200x2 trials: GNN init Pc=0.370 (~uniform 0.368). Network-level REINFORCE (one reward/trial across all nodes) -> 0.370, delta +0.000 (gradient is MC sampling noise; the env-domination of EV2 as a credit-assignment problem). Per-node REINFORCE (each node credited by its own correct finalisation, omega-weighted, per-node baseline) -> 0.392, delta +0.022 toward distance 0.427 in 40 bounded steps. The variance reduction was the key.",
+        "honest_caveat": "delta +0.022 is a real positive direction but NOT yet CI-separated at 400 eval trials (init [0.32,0.42] vs trained [0.34,0.44]); 1 model seed (compute-limited). Longer multi-seed confirmation needed to CI-separate + reach distance.",
+        "judge_integrity": "the reinforce mode is gated; a test asserts reinforce=False/True give bit-identical basins; the 82-test MC/metrics regression is clean."
+      }
     }
   }
 }

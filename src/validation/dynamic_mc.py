@@ -85,8 +85,10 @@ class DynamicMCResult:
     basin_F_deadline_ci: tuple[float, float] = (float("nan"), float("nan"))
     basin_tau_correct_mean: float = float("nan")   # mean correct first-hit epoch (T_confirm/Δ_poll)
     # ---- MC-faithful REINFORCE training mode (gated; None unless reinforce=True) ----
-    reinforce_logp: torch.Tensor | None = None     # [T] differentiable sum_{active,epochs} log pi(chosen)
-    reinforce_correct: torch.Tensor | None = None  # [T] 1.0 if the correct basin was first-hit, else 0.0
+    # PER-NODE credit assignment (variance reduction): each node's selections are credited by ITS OWN
+    # correct finalisation, not the whole-network outcome.
+    reinforce_logp: torch.Tensor | None = None     # [T, N] differentiable sum_{epochs} log pi(S_{i,t})
+    reinforce_correct: torch.Tensor | None = None  # [T, N] 1.0 if node i finalised CORRECT, else 0.0
 
     def macro_block(self) -> dict:
         """The namespaced macrostate headline block (``macro_P_correct`` ... ; macrostate_v2).
@@ -228,8 +230,8 @@ def run_dynamic_mc(
     rounds_to_decide = torch.full((T, N), r_max + 1, dtype=torch.int64, device=device)
     cumulative_time = torch.zeros(T, dtype=dtype, device=device)
     cumulative_energy = torch.zeros(T, dtype=dtype, device=device)
-    # REINFORCE: per-trial sum of log pi(chosen) over active nodes x epochs (differentiable; gated).
-    reinforce_logp = torch.zeros(T, dtype=dtype, device=device) if reinforce else None
+    # REINFORCE: per-(trial, node) sum of log pi(chosen) over the epochs the node was active (differentiable).
+    reinforce_logp = torch.zeros((T, N), dtype=dtype, device=device) if reinforce else None
 
     # ---- macrostate basin first-hitting bookkeeping (spec §3-§4; the headline metric) ----
     track_basin = service_profile is not None
@@ -273,7 +275,7 @@ def run_dynamic_mc(
             lw = reinforce_slot_logw.unsqueeze(0).expand(T, N, nmax)              # [T,N,nmax] (grad)
             mk = slot_mask.unsqueeze(0).expand(T, N, nmax)
             lp = batched_subset_log_prob(lw, chosen.to(dtype), k, mk)            # [T, N]
-            reinforce_logp = reinforce_logp + (lp * active.to(dtype)).sum(dim=1)  # [T] (only active poll)
+            reinforce_logp = reinforce_logp + lp * active.to(dtype)              # [T, N] (only active poll)
 
         # ---- poll outcomes: success ~ Bern(ell), read peer's ACTUAL colour ----
         peer_colour = pref[:, slot_dst]                    # [T, N, nmax] in {+1,-1}
@@ -370,7 +372,7 @@ def run_dynamic_mc(
         W_paths = torch.stack(W_traj, dim=1)
         bo = basin_outcome_probabilities(C_paths, W_paths, service_profile)
         if reinforce:
-            reinforce_correct = (bo["outcome_code"] == 0).to(dtype)   # [T] correct-basin first-hit reward
+            reinforce_correct = (decided == 1).to(dtype)   # [T, N] per-node correct finalisation reward
         basin_kw = dict(
             basin_P_correct=bo["P_correct"], basin_F_wrong=bo["F_wrong"],
             basin_F_split=bo["F_split"], basin_F_deadline=bo["F_deadline"],

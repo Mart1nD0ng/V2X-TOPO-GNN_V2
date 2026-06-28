@@ -35,8 +35,9 @@ PROTO = ProtocolConfig(k=3, alpha=2, beta=3, r_max=6)
 PROFILE = ConsensusServiceProfile.urban_default().replace(k=3, alpha=2, beta=3, max_poll_epochs=6)
 GRID, SCEN, BE, CORR = (5, 5, 3), "matched_marginal_high", 0.35, 0.25
 SEEDS_MODEL = [0] if SMOKE else [0]        # 1-seed POC (compute-limited): show the gap CAN close
-STEPS = 3 if SMOKE else 30
+STEPS = 3 if SMOKE else 40
 TRAIN_TRIALS = 20 if SMOKE else 100
+LR = 1e-2                                   # per-node credit is low-variance -> a larger step is safe
 EVAL_TRIALS = 20 if SMOKE else 200         # tighter held-out CIs to resolve the delta
 EVAL_SEEDS = [0] if SMOKE else [0, 1]
 
@@ -82,7 +83,7 @@ def main():
         log(f"seed {s}: GNN init held-out Pc={init_macro['macro_P_correct']:.3f}; REINFORCE {STEPS} steps ...")
         ts = time.perf_counter()
         res = train_esp_reinforce(model, train_inst, PROTO, PHY, PROFILE, steps=STEPS,
-                                  trials=TRAIN_TRIALS, lr=5e-3, base_seed=100 * (s + 1))
+                                  trials=TRAIN_TRIALS, lr=LR, base_seed=100 * (s + 1))
         trained_macro = _eval(lambda sc: ESDGNNQueryPolicy(model, sc))
         out["per_seed"][str(s)] = {
             "init": init_macro, "trained": trained_macro,

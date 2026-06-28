@@ -16,7 +16,7 @@ the harness is built to the full design and the runs are the feasible subset.
 | Gate | Scope | Status |
 |------|-------|--------|
 | G-ESP-TRAINING-BUDGET | full-physics budget curves (pilot/medium/full), ≥5 seeds, mixed N{100,300,1000}; does longer training improve macro + beat the distance heuristic? select best checkpoint | ⛔ **STOP+REPORT** (EV1+EV2): flat training curve + a confirmed **training-signal gap** — the MC judge rewards peer selection (spread 0.075–0.085, CI-separated) but the analytic *training* surrogate is blind to it (spread ≤0.002). The GNN can't be trained to beat heuristics on this surrogate. Round premise (model superiority) challenged — user decision needed. |
-| G-ESP-MC-FAITHFUL-TRAINING | **(user-chosen direction, 2026-06-28)** close the EV2 training-signal gap: train the GNN on the MC basin via the score-function (REINFORCE) gradient `∇E[R]=E[(R−b)·Σ∇log π(Sₜ)]` so it learns the peer-selection the judge rewards; then retry the budget gate | 🟡 EV3: differentiable `batched_subset_log_prob` (REINFORCE core) + 3 tests; full rollout (judge MC extended with gated log-π) + budget retry next |
+| G-ESP-MC-FAITHFUL-TRAINING | **(user-chosen direction, 2026-06-28)** close the EV2 training-signal gap: train the GNN on the MC basin via the score-function (REINFORCE) gradient `∇E[R]=E[(R−b)·Σ∇log π(Sₜ)]` so it learns the peer-selection the judge rewards; then retry the budget gate | 🟡 EV4: **gap closing** — per-node-credit REINFORCE lifts held-out MC Pc 0.370→**0.392** (+0.022 toward distance 0.427) where network-level REINFORCE was flat (+0.000) and analytic training was flat. 10 tests; judge-invariant. Longer multi-seed confirmation next (CI-separate + reach distance?) |
 | G-ESP-BASELINE-ORACLE | 8 baselines (uniform/distance/link-quality/load-balanced/region-bridge/edge-logit-oracle/expert/shared) through the canonical full-physics path; oracle headroom | 🟡 EV2 prep: 3 heuristics + edge-logit oracle + MC-spread evidence done (5 tests); deployable baselines ready |
 | G-ESP-FIXED-PROTOCOL-SCALE | fixed protocol across N{100,300,1000,3000}+10000; macro+UCB+D99/CVaR+energy+strict+diagnostics+runtime/mem | ☐ |
 | G-ESP-FIXED-SERVICE-SCALE | pre-registered R_d(N)∝√N calibration; scale-regret + normalized + feasibility-retention + expert/heuristic comparison | ☐ |
@@ -112,3 +112,27 @@ Legend: ☐ not started · 🟡 in progress · 🟢 green.
   **proof-of-concept test that REINFORCE IMPROVES the MC `macro_P_correct`** on a small scene where analytic
   training was flat (the gap-closing demonstration); then retry the budget gate (pilot/medium/full) under the
   MC-faithful trainer and compare to the distance heuristic.
+
+### EV4 — Slice: MC-faithful REINFORCE trainer + the gap-closing demonstration (2026-06-28)
+* **Implementation.** `run_dynamic_mc` gains a GATED `reinforce=True` mode (src/validation/dynamic_mc.py):
+  keeps the GNN's per-edge log-weights differentiable, accumulates **per-(trial, node)** `Σ_epochs log π(S_{i,t})`
+  (sampling + physics use a DETACHED copy → the rollout is numerically identical to the judge, asserted by a
+  test that reinforce=False/True give bit-identical basins), and exposes per-node correct-finalisation reward.
+  `src/optimization/mc_reinforce.py::train_esp_reinforce` descends `−mean_t Σ_i ω_i (R_{i}−b_i)·log π(S_{i,t})`
+  with a **per-node baseline** `b_i` (variance reduction) + participation weighting. 10 tests; 82-test
+  MC/metrics regression clean.
+* **The gap-closing result (mm_high(0.35,0.25) R_d=6, N=120; held-out MC, 200×2 trials):**
+  - GNN init held-out `macro_P_correct` = **0.370** (≈ uniform 0.368).
+  - **network-level** REINFORCE (one reward per trial shared across all nodes): held-out **0.370, Δ +0.000** —
+    the network-basin reward gives almost no per-node credit; the gradient is pure MC sampling noise (training
+    curve oscillates 0.28–0.49, no trend). *This is the env-domination of EV2 re-appearing as a
+    credit-assignment problem.*
+  - **per-node** REINFORCE (credit each node by ITS OWN correct finalisation, ω-weighted, baseline per node):
+    held-out **0.392, Δ +0.022** toward distance (0.427) in 40 bounded steps — **the gap is closing** where
+    the analytic surrogate (and network-level REINFORCE) were flat. Variance reduction was the key.
+* **Honest caveat:** Δ +0.022 is a real positive *direction* but **not yet CI-separated** at 400 eval trials
+  (init [0.32,0.42] vs trained [0.34,0.44] overlap); 1 model seed (compute-limited). Confirmation needed: does
+  longer, multi-seed REINFORCE keep climbing toward / reach distance (0.427), CI-separated?
+* **Next:** a longer multi-seed REINFORCE confirmation run (more steps; ≥2-3 seeds; tighter eval) — if it
+  CI-separately reaches/approaches distance, the budget gate closes under the MC-faithful trainer (the GNN
+  becomes a trainable topology constructor on the true objective); then proceed to the scale gates.

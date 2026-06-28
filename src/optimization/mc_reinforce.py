@@ -74,23 +74,28 @@ def train_esp_reinforce(model, instances, proto, phy, profile, *, steps: int, tr
             return uniform_participation(sc.num_nodes, dtype=_torch.float64, device=sc.positions.device)
 
     opt = _torch.optim.Adam(model.parameters(), lr=lr)
-    history = {"loss": [], "mc_P_correct": [], "logp_mean": []}
+    history = {"loss": [], "mc_P_correct": [], "correct_mass": []}
     n = len(instances)
     for step in range(steps):
         scene, ev = instances[step % n]
-        omega = participation_fn(scene)
+        omega = participation_fn(scene).to(_torch.float64)
         opt.zero_grad()
         res = run_dynamic_mc(scene, ev, ESDGNNQueryPolicy(model, scene), proto, phy, num_trials=trials,
                              generator=_torch.Generator().manual_seed(base_seed + step),
                              link_override=link_override, service_profile=profile, participation=omega,
                              reinforce=True)
-        R = res.reinforce_correct                                     # [T] in {0,1}
-        logp = res.reinforce_logp                                     # [T] differentiable
-        advantage = (R - R.mean()).detach()                          # baseline = batch mean (var reduction)
-        loss = -(advantage * logp).mean()
+        R = res.reinforce_correct                                     # [T, N] per-node correct in {0,1}
+        logp = res.reinforce_logp                                    # [T, N] differentiable
+        # PER-NODE advantage (baseline = each node's mean reward over trials) -> low-variance credit;
+        # participation-weighted to align with the participation-weighted macrostate objective.
+        baseline = R.mean(dim=0, keepdim=True)                       # [1, N]
+        advantage = (R - baseline).detach()                          # [T, N]
+        loss = -(omega.unsqueeze(0) * advantage * logp).sum(dim=1).mean()   # mean over trials
         loss.backward()
         opt.step()
+        # training progress: participation-weighted correct MASS per trial (smooth) + the basin P_correct
+        mass = (omega.unsqueeze(0) * R).sum(dim=1)                   # [T]
         history["loss"].append(float(loss.detach()))
-        history["mc_P_correct"].append(float(R.mean()))
-        history["logp_mean"].append(float(logp.detach().mean()))
+        history["correct_mass"].append(float(mass.mean()))
+        history["mc_P_correct"].append(float((mass >= profile.correct_basin_mass).to(_torch.float64).mean()))
     return {"model": model, "history": history}
