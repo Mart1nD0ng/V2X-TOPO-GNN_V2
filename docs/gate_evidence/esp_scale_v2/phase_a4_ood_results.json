@@ -1,0 +1,260 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "experiment": "phase_a4_ood",
+  "query_family": "ESP",
+  "smoke": false,
+  "git_commit": "1e55d4b",
+  "node_count": 120,
+  "ablation": "OUT-OF-DISTRIBUTION (declared); one axis varied per cell",
+  "train_regime": {
+    "scenario": "matched_marginal_high",
+    "base_node_err": 0.35,
+    "corr_strength": 0.25
+  },
+  "model_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "scene_seeds": [
+    0,
+    1
+  ],
+  "trials_per_scene": 150,
+  "feasibility_note": "plan cells corr=0.45/base_err=0.20 infeasible for matched_marginal -> feasible one-axis equivalents used",
+  "cells": {
+    "ood_covariance_iid": {
+      "axis": "covariance-family (mm_high -> iid); base_err+corr held",
+      "scenario": "iid",
+      "base_node_err": 0.35,
+      "corr_strength": 0.25,
+      "trained_seed_mean_P_correct": 0.14866666666666667,
+      "trained_seed_bootstrap_ci": [
+        0.13066666666666665,
+        0.16600000000000004
+      ],
+      "trained_across_seed_sd": 0.023045848023258143,
+      "trained_per_seed_P_correct": [
+        0.17,
+        0.17333333333333334,
+        0.14666666666666667,
+        0.12000000000000001,
+        0.13333333333333333
+      ],
+      "distance_P_correct": 0.20333333333333337,
+      "distance_ci": [
+        0.1616731582345449,
+        0.252495276897445
+      ],
+      "uniform_P_correct": 0.04666666666666667,
+      "uniform_ci": [
+        0.027998674550830858,
+        0.07679803531378282
+      ],
+      "trained_vs_uniform_paired": {
+        "mean_diff": 0.10200000000000001,
+        "ci": [
+          0.084,
+          0.11933333333333336
+        ],
+        "sd": 0.023045848023258146,
+        "n_seeds": 5,
+        "separated": true,
+        "trained_better": true
+      },
+      "gap_to_distance": 0.0546666666666667,
+      "trained_ungated_cost": 0.8513333333333333,
+      "reliability_status_distance": {
+        "macro_F_wrong": 0.0,
+        "macro_F_wrong_ucb": 0.012643429997735661,
+        "macro_F_split": 0.0,
+        "macro_F_split_ucb": 0.012643429997735661,
+        "eps_wrong": 0.001,
+        "eps_split": 0.001,
+        "feasible_wrong_ucb": false,
+        "feasible_split_ucb": false
+      }
+    },
+    "ood_corr_harder": {
+      "axis": "correlation harder (corr 0.25 -> 0.35); base_err held",
+      "scenario": "matched_marginal_high",
+      "base_node_err": 0.35,
+      "corr_strength": 0.35,
+      "trained_seed_mean_P_correct": 0.3613333333333334,
+      "trained_seed_bootstrap_ci": [
+        0.35400000000000004,
+        0.36800000000000005
+      ],
+      "trained_across_seed_sd": 0.009006170724070861,
+      "trained_per_seed_P_correct": [
+        0.3666666666666667,
+        0.37,
+        0.3666666666666667,
+        0.35333333333333333,
+        0.35000000000000003
+      ],
+      "distance_P_correct": 0.3666666666666667,
+      "distance_ci": [
+        0.31414058316550164,
+        0.4225643315005613
+      ],
+      "uniform_P_correct": 0.2633333333333333,
+      "uniform_ci": [
+        0.216710708085638,
+        0.3159405154466235
+      ],
+      "trained_vs_uniform_paired": {
+        "mean_diff": 0.09800000000000005,
+        "ci": [
+          0.09066666666666671,
+          0.10466666666666671
+        ],
+        "sd": 0.009006170724070861,
+        "n_seeds": 5,
+        "separated": true,
+        "trained_better": true
+      },
+      "gap_to_distance": 0.005333333333333301,
+      "trained_ungated_cost": 0.6386666666666666,
+      "reliability_status_distance": {
+        "macro_F_wrong": 0.12,
+        "macro_F_wrong_ucb": 0.16165866816614016,
+        "macro_F_split": 0.0,
+        "macro_F_split_ucb": 0.012643429997735661,
+        "eps_wrong": 0.001,
+        "eps_split": 0.001,
+        "feasible_wrong_ucb": false,
+        "feasible_split_ucb": false
+      }
+    },
+    "ood_baseerr_harder": {
+      "axis": "base-error harder (0.35 -> 0.45); corr held",
+      "scenario": "matched_marginal_high",
+      "base_node_err": 0.45,
+      "corr_strength": 0.25,
+      "trained_seed_mean_P_correct": 0.016,
+      "trained_seed_bootstrap_ci": [
+        0.012,
+        0.021333333333333336
+      ],
+      "trained_across_seed_sd": 0.0064117946872237815,
+      "trained_per_seed_P_correct": [
+        0.02666666666666667,
+        0.01,
+        0.013333333333333334,
+        0.016666666666666666,
+        0.013333333333333334
+      ],
+      "distance_P_correct": 0.013333333333333334,
+      "distance_ci": [
+        0.0051968776846794676,
+        0.033776060846449914
+      ],
+      "uniform_P_correct": 0.0,
+      "uniform_ci": [
+        0.0,
+        0.012643429997735661
+      ],
+      "trained_vs_uniform_paired": {
+        "mean_diff": 0.016,
+        "ci": [
+          0.012,
+          0.021333333333333336
+        ],
+        "sd": 0.0064117946872237815,
+        "n_seeds": 5,
+        "separated": true,
+        "trained_better": true
+      },
+      "gap_to_distance": -0.002666666666666666,
+      "trained_ungated_cost": 0.984,
+      "reliability_status_distance": {
+        "macro_F_wrong": 0.0,
+        "macro_F_wrong_ucb": 0.012643429997735661,
+        "macro_F_split": 0.0,
+        "macro_F_split_ucb": 0.012643429997735661,
+        "eps_wrong": 0.001,
+        "eps_split": 0.001,
+        "feasible_wrong_ucb": false,
+        "feasible_split_ucb": false
+      }
+    },
+    "ood_baseerr_easier": {
+      "axis": "base-error easier (0.35 -> 0.30); corr held",
+      "scenario": "matched_marginal_high",
+      "base_node_err": 0.3,
+      "corr_strength": 0.25,
+      "trained_seed_mean_P_correct": 0.4786666666666667,
+      "trained_seed_bootstrap_ci": [
+        0.46066666666666667,
+        0.4966666666666667
+      ],
+      "trained_across_seed_sd": 0.023523038352503127,
+      "trained_per_seed_P_correct": [
+        0.49000000000000005,
+        0.5,
+        0.4966666666666667,
+        0.45000000000000007,
+        0.45666666666666667
+      ],
+      "distance_P_correct": 0.47000000000000003,
+      "distance_ci": [
+        0.41425780716856503,
+        0.5265007986312992
+      ],
+      "uniform_P_correct": 0.39,
+      "uniform_ci": [
+        0.3365290761052125,
+        0.44625247849428934
+      ],
+      "trained_vs_uniform_paired": {
+        "mean_diff": 0.08866666666666669,
+        "ci": [
+          0.07066666666666668,
+          0.10666666666666669
+        ],
+        "sd": 0.023523038352503127,
+        "n_seeds": 5,
+        "separated": true,
+        "trained_better": true
+      },
+      "gap_to_distance": -0.008666666666666656,
+      "trained_ungated_cost": 0.5213333333333333,
+      "reliability_status_distance": {
+        "macro_F_wrong": 0.03333333333333333,
+        "macro_F_wrong_ucb": 0.06026245145756911,
+        "macro_F_split": 0.0,
+        "macro_F_split_ucb": 0.012643429997735661,
+        "eps_wrong": 0.001,
+        "eps_split": 0.001,
+        "feasible_wrong_ucb": false,
+        "feasible_split_ucb": false
+      }
+    }
+  },
+  "manifest": {
+    "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+    "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+    "evidence_hash": "fcef065621c5a669421dce4fb53a5ef1bc8f148426d5764d3a0db1dcba337035",
+    "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+    "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+    "policy_hash": "esd_gnn_mc_faithful_ood",
+    "checkpoint_hash": "a4-ood",
+    "experiment_config_hash": "3257e60eda9a3612831e743a3c80d6da0c485a77ab779eb275987cd1fcc84072",
+    "query_law": "esp",
+    "full_physics": true,
+    "git_commit": "1e55d4b",
+    "manifest_id": "A4-ood",
+    "model_seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "runtime_total_s": 340.9
+}

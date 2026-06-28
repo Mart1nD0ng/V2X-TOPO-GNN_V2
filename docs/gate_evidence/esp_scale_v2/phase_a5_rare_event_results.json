@@ -1,0 +1,71 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "experiment": "phase_a5_rare_event",
+  "query_family": "ESP",
+  "smoke": false,
+  "git_commit": "1e55d4b",
+  "node_count": 120,
+  "scenario": "matched_marginal_high",
+  "base_node_err": 0.35,
+  "corr_strength": 0.25,
+  "cert_model_seed": 0,
+  "cert_checkpoint_hash": "78fd71c2c75938810f1bc717e515286c64fc9b3f0222ce7e56dd946263bc89c5",
+  "method": "per-checkpoint zero-failure UCB (3/M at eps=1e-3 needs M>=3800); single deployable policy",
+  "certifications": {
+    "trained_esp_seed0": {
+      "label": "trained_esp_seed0",
+      "M_trials": 4000,
+      "M_sufficient_for_eps": true,
+      "macro_F_wrong": 0.025500000000000002,
+      "macro_F_wrong_ucb": 0.03085936007320886,
+      "eps_wrong": 0.001,
+      "macro_F_split": 0.0,
+      "macro_F_split_ucb": 0.000959478516832434,
+      "eps_split": 0.001,
+      "F_split_zero_failure": true,
+      "F_split_certified": true,
+      "F_wrong_certified": false,
+      "F_wrong_structurally_infeasible": true
+    },
+    "distance": {
+      "label": "distance",
+      "M_trials": 4000,
+      "M_sufficient_for_eps": true,
+      "macro_F_wrong": 0.021500000000000002,
+      "macro_F_wrong_ucb": 0.02647530926923186,
+      "eps_wrong": 0.001,
+      "macro_F_split": 0.0,
+      "macro_F_split_ucb": 0.000959478516832434,
+      "eps_split": 0.001,
+      "F_split_zero_failure": true,
+      "F_split_certified": true,
+      "F_wrong_certified": false,
+      "F_wrong_structurally_infeasible": true
+    }
+  },
+  "headline": {
+    "F_split_certified_feasible": true,
+    "F_wrong_certifiable": false,
+    "regime_infeasible_at_strict_eps_wrong_for_all": true,
+    "interpretation": "F_split is certified <= eps_s=1e-3 (zero split events in M trials); F_wrong CANNOT be certified at eps_w=1e-3 because it is structurally ~0.02-0.05 for the trained policy AND distance alike -> the stressed mm_high regime is infeasible at the strict wrong-basin target for all policies (a regime property, not a GNN failure). This is why the A0 performance comparison is un-gated; deployment would relax eps_w or the regime."
+  },
+  "manifest": {
+    "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+    "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+    "evidence_hash": "6f1b0f00fcf8a57d7e28517b8d90f8b8a5fc9f1e5404b55ca5f2cb9859b14e3c",
+    "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+    "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+    "policy_hash": "esd_gnn_mc_faithful_cert",
+    "checkpoint_hash": "78fd71c2c75938810f1bc717e515286c64fc9b3f0222ce7e56dd946263bc89c5",
+    "experiment_config_hash": "ed8c040e201d2ff8098f8db3db8cc98d657dc675117296e3d498188036184d89",
+    "query_law": "esp",
+    "full_physics": true,
+    "git_commit": "1e55d4b",
+    "manifest_id": "A5-rare-event",
+    "model_seeds": [
+      0
+    ]
+  },
+  "runtime_total_s": 37.7
+}

@@ -49,8 +49,8 @@ retro-tuned:
 | G-ESP-BASELINE-ORACLE | 8 baselines (uniform/distance/link-quality/load-balanced/region-bridge/edge-logit-oracle/expert/shared) through the canonical full-physics path; oracle headroom | 🟢 **(EV2+EV6+EV8)** — distance is the strong heuristic the trained policy matches (EV6); uniform the weak one it CI-separately beats; scale-specific experts (N=336/660) trained (A3a) → scale-regret vs shared small (N=336: 0.008). Deployable-baseline layer complete. |
 | G-ESP-FIXED-PROTOCOL-SCALE | fixed protocol across N{100,300,1000,3000}+10000; macro+UCB+D99/CVaR+energy+strict+diagnostics+runtime/mem | ✅ **(EV8, compute-limited)** — shared-ESP (trained@N=120) **matches distance and beats uniform across N=120→3036** under fixed R_d=6: N=120 0.461≈0.463, N=336 0.429 vs 0.447, N=660 0.420≈0.420, N=3036 0.438≈0.4375 (uniform 0.42/0.38/0.37/0.31). **§13.2 parity holds across a 25× scale-up.** N=1248 (the lone v=4 grid) is a density/MAC-saturation outlier (all policies → total deadline, excluded). N=9840 = approximation bound (8 trials). Seeds 5/5/3/–/2 (N≥660 compute-limited). |
 | G-ESP-FIXED-SERVICE-SCALE | pre-registered R_d(N)∝√N calibration; scale-regret + normalized + feasibility-retention + expert/heuristic comparison | ✅ **(EV8, compute-limited)** — pre-registered R_d(N)=round(6√(N/120)) ladder. Empirically fixed_service ≈ fixed_protocol at these N (the MC first-hits the basin/deadline before R_d epochs, so extra R_d buys nothing) — stated, not hidden. Scale-regret shared-vs-expert small (N=336: 0.008; shared trained@120 ≈ expert trained@N). fixed_service dropped at N≥3036 (same-as-fixed_protocol, labeled). |
-| G-ESP-OOD-GENERALIZATION | one-axis-at-a-time (node count/density/geometry/covariance/PHY-load/sensor-group/profile/mobility) | ☐ |
-| G-ESP-RARE-EVENT-CERTIFICATION | enough MC for UCB cert at p<1e-3, OR rare-event/splitting/IS, OR labelled approximation | ☐ |
+| G-ESP-OOD-GENERALIZATION | one-axis-at-a-time (node count/density/geometry/covariance/PHY-load/sensor-group/profile/mobility) | ✅ **(EV9)** — 4 declared OOD cells (one axis varied, others pinned), 5 seeds. Trained **beats uniform in ALL 4** (CI-separated). Within the matched-marginal family it **tracks distance** (corr→0.35: 0.361 vs 0.367; base_err→0.30: 0.479 vs 0.470; →0.45: 0.016 vs 0.013). **Honest limit:** transfers POORLY to the `iid` covariance family (0.149 vs distance 0.203) — the policy learned mm_high correlated-error structure; structure-agnostic distance wins under iid. |
+| G-ESP-RARE-EVENT-CERTIFICATION | enough MC for UCB cert at p<1e-3, OR rare-event/splitting/IS, OR labelled approximation | ✅ **(EV10)** — per-checkpoint zero-failure UCB (seed 0, M=4000). **F_split CERTIFIED ≤ eps_s=1e-3** (zero split events → UCB 0.00096). **F_wrong NOT certifiable** at eps_w=1e-3: structurally ~0.02–0.03 for trained (UCB 0.031) AND distance (UCB 0.027) alike → the stressed regime is infeasible at the strict wrong-basin target for **all** policies (a regime property, not a GNN failure — why A0 un-gates J). |
 | G-ESP-SCALE-SYNTHESIS | unified report; scale-regret + feasibility curves; fixed-proto vs fixed-service; baseline/oracle headroom; OOD matrix; honest failure modes; paper-claim recommendation | ☐ |
 
 Legend: ☐ not started · 🟡 in progress · 🟢 green.
@@ -269,3 +269,34 @@ Legend: ☐ not started · 🟡 in progress · 🟢 green.
   uniform and matches distance, and this parity TRANSFERS across a 25× node-count scale-up** under both
   calibration modes — not §13.1 superiority (shared does not CI-separately pull ahead of distance), but a clean,
   honest parity result. Next: A4 OOD, A5 rare-event, A6 synthesis.
+
+### EV9 — Campaign A / Phase A4: OOD generalization — within-family transfer, an iid limit (2026-06-28)
+* **Setup.** The 5 N=120 shared checkpoints (trained on mm_high(0.35,0.25)) evaluated on 4 declared OOD
+  regimes, ONE distribution axis varied with the others pinned to training (5 seeds, 150 trials × 2 scenes,
+  seed-level bootstrap). `phase_a4_ood_results.json`. (The plan's corr=0.45 / base_err=0.20 cells are
+  infeasible for matched_marginal → feasible one-axis equivalents corr→0.35, base_err→0.45/0.30, documented.)
+* **Result (trained vs distance vs uniform; trained beats uniform, CI-separated, in ALL 4):**
+
+  | OOD axis | trained | distance | uniform |
+  |---|---|---|---|
+  | covariance-family → iid | 0.149 [0.131,0.166] | 0.203 | 0.047 |
+  | correlation harder (→0.35) | 0.361 [0.354,0.368] | 0.367 | 0.263 |
+  | base-error harder (→0.45) | 0.016 [0.012,0.021] | 0.013 | 0.000 |
+  | base-error easier (→0.30) | 0.479 [0.461,0.497] | 0.470 | 0.390 |
+
+* **Verdict.** Within the **matched-marginal family** (correlation / base-error shifts) the trained policy
+  **tracks distance** and **beats uniform** — OOD generalization holds. **Honest limit:** transferring to the
+  **iid covariance family** (uncorrelated errors — a structure the policy never trained on), trained falls
+  behind distance (0.149 vs 0.203) though it still beats uniform. The learned policy encodes mm_high
+  correlated-error structure; the structure-agnostic distance heuristic generalizes better across covariance
+  families. A real, reportable boundary of the learned constructor.
+
+### EV10 — Campaign A / Phase A5: rare-event certification — F_split certified, F_wrong infeasible for all (2026-06-28)
+* **Setup.** Per-checkpoint zero-failure UCB on a single deployable policy (seed 0, N=120, M=4000 trials;
+  eps=1e-3 needs M≳3800). `phase_a5_rare_event_results.json`.
+* **Result.**
+  - **F_split CERTIFIED feasible** ≤ eps_s=1e-3: zero split events in 4000 trials → Wilson UCB 0.00096 < 1e-3.
+  - **F_wrong NOT certifiable** at eps_w=1e-3: trained F_wrong 0.026 (UCB 0.031), distance 0.022 (UCB 0.027) —
+    both orders of magnitude above 1e-3. The stressed mm_high regime is **structurally infeasible at the strict
+    wrong-basin target for EVERY policy** (a regime property, not a GNN failure). This is exactly why the A0
+    performance comparison is un-gated; a deployment would relax eps_w or de-stress the regime.

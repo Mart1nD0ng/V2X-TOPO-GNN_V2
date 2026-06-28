@@ -116,6 +116,27 @@
         "anomalies_surfaced": "N=1248 (lone v=4 grid, deg 13.2) collapses to P_correct=0 (F_deadline->1) for ALL policies even at fixed_service R_d=19 -- a density/MAC-saturation outlier (fully connected, not a bug), EXCLUDED from the parity verdict. fixed_service ~= fixed_protocol at these N (MC first-hits before R_d). N=9840 = approximation bound (8 trials), never a validated N=10000 claim.",
         "verdict": "section-13.2: stable learned ESP constructor that CI-separately beats uniform and MATCHES distance, parity TRANSFERS across scale + both calibration modes. NOT 13.1 superiority (shared does not CI-separately pull ahead). Compute-limited: seeds 5/5/3/-/2; N>=660 reduced."
       }
+    },
+    "EV9-a4-ood": {
+      "date": "2026-06-28",
+      "contributes_to": ["G-ESP-OOD-GENERALIZATION"],
+      "campaign_phase": "A4",
+      "modules": ["docs/gate_evidence/esp_scale_v2/run_phase_a4_ood.py"],
+      "evidence": {
+        "result_json": "docs/gate_evidence/esp_scale_v2/phase_a4_ood_results.json",
+        "finding": "4 declared OOD cells (one axis varied, 5 seeds). Trained BEATS uniform CI-separated in ALL 4. Tracks distance within the matched-marginal family (corr->0.35: 0.361 vs 0.367; base_err->0.30: 0.479 vs 0.470; ->0.45: 0.016 vs 0.013). HONEST LIMIT: transfers poorly to the iid covariance family (0.149 vs distance 0.203) -- the policy learned mm_high correlated-error structure; structure-agnostic distance generalizes better across covariance families.",
+        "fix_note": "plan cells corr=0.45/base_err=0.20 infeasible for matched_marginal -> feasible one-axis equivalents used (documented)."
+      }
+    },
+    "EV10-a5-rare-event": {
+      "date": "2026-06-28",
+      "contributes_to": ["G-ESP-RARE-EVENT-CERTIFICATION"],
+      "campaign_phase": "A5",
+      "modules": ["docs/gate_evidence/esp_scale_v2/run_phase_a5_rare_event.py"],
+      "evidence": {
+        "result_json": "docs/gate_evidence/esp_scale_v2/phase_a5_rare_event_results.json",
+        "finding": "Per-checkpoint zero-failure UCB (seed 0, M=4000). F_split CERTIFIED <= eps_s=1e-3 (zero split events -> UCB 0.00096). F_wrong NOT certifiable at eps_w=1e-3: trained 0.026 (UCB 0.031), distance 0.022 (UCB 0.027) -> the stressed mm_high regime is structurally infeasible at the strict wrong-basin target for ALL policies (regime property, not GNN failure -> why A0 un-gates J)."
+      }
     }
   }
 }
