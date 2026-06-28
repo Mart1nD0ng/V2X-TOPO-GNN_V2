@@ -50,7 +50,22 @@ Legend: ☐ not started · 🟡 in progress · 🟢 green.
   → no measurable headroom, workflow §5.3). Switched to **mm_high(base_err=0.35, corr=0.25), R_d=6**:
   distance analytic **Pc=0.42, F_deadline=0.56, F_wrong=0.016** — lots of room, deadline-dominated (the
   improvable basin is exactly ESP's learnable strength: faster-quorum peer selection), reliability-safe.
-* **Run executing (bounded/compute-limited):** 3 model seeds, 50 full-physics steps, budgets {5,15,30,50},
-  4 held-out validation scenes. Answers: does training lift the GNN's held-out Pc above distance's 0.42
-  (learning headroom, §13.1) or plateau at it (§13.2) or below (§13.3)?
-* **Next:** collect the curve, record the budget verdict + best checkpoint, then G-ESP-BASELINE-ORACLE.
+* **Result (seed 0; remaining seeds killed — finding is structural, not statistical):** the budget curve is
+  **perfectly FLAT** — GNN `macro_P_correct` = **0.422 at every budget {5,15,30,50}**, identical to the
+  distance heuristic (0.423). The training loss *rises* 0.6→75.5 but that is **entirely the dual μ_d ascending**
+  (F_deadline=0.56 ≫ ε_d, the constraint never satisfied); the **primal (model output) does not move**. So
+  longer training produces **zero macrostate improvement** here.
+* **Diagnosis — why (analytic peer-insensitivity):** a heuristic-spread scan over regimes shows the **analytic
+  macrostate objective is ~insensitive to ESP peer selection**: all 5 structurally-different heuristics
+  (uniform / distance / link_quality / load_balanced / region_bridge) give **identical** analytic Pc in every
+  regime — ceiling (iid easy: all 1.0), floor (R_d=4: all 0.0), or invariant (mm_high_R6: all 0.422; spread
+  ≤ 0.002). The macro basin is **dominated by the environment's bulk correctness** (q_i, which the policy
+  cannot change), not the polling pattern → the GNN has **no gradient to learn from** on this surrogate, and
+  no heuristic beats another. (The oracle would confirm this but its full-physics backward is ~18 s/step;
+  the heuristic invariance already establishes it.)
+* **Round-critical juncture (stop-condition #1/#2 territory).** This connects to the prior round's finding
+  (GNN ≈ distance). The decisive open question: does the **dynamic-MC judge** see peer-selection headroom that
+  the analytic **training surrogate** is blind to? If MC spread ~0 too → the basin is genuinely peer-invariant
+  (env-dominated, **§13.2**: GNN matches heuristics, stable but not superior). If MC spread is meaningful →
+  a **training-signal gap** (the surrogate can't teach what the judge rewards, **§13.3**). `run_headroom_mc.py`
+  (the MC-spread evidence) is executing to resolve this **before** the STOP+REPORT.

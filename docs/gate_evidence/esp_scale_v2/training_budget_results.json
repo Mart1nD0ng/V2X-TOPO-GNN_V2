@@ -1,0 +1,162 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "experiment": "training_budget",
+  "smoke": false,
+  "query_family": "ESP",
+  "scale_protocol": "fixed_protocol",
+  "node_count": 120,
+  "training_node_counts": [
+    120
+  ],
+  "scenario": "matched_marginal_high",
+  "base_node_err": 0.35,
+  "total_steps": 50,
+  "budget_points": [
+    5,
+    15,
+    30,
+    50
+  ],
+  "model_seeds": [
+    0,
+    1,
+    2
+  ],
+  "manifest": {
+    "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+    "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+    "evidence_hash": "efd159916cb59fc423aafb5d7a4b563b107fc69c5b8f53d69c8f7cb54481c76a",
+    "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+    "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+    "policy_hash": "esd_gnn_esp_training",
+    "checkpoint_hash": "budget-curve",
+    "experiment_config_hash": "43f27a419ea07c82b15cc7c446c0ceb89b062e3dc5013936301e08cbfff62691",
+    "query_law": "esp",
+    "full_physics": true,
+    "git_commit": "90f4b1f",
+    "manifest_id": "EV1-training-budget",
+    "model_seeds": [
+      0,
+      1,
+      2
+    ]
+  },
+  "compute_limited_note": "BOUNDED: 3 model seeds (headline target >=5), single training scale N=120, iid regime, full physics. Validation macro is the ANALYTIC screen (workflow \u00a71.3); the dynamic MC is the final judge (later gates). Mixed-scale N{100,300,1000} + structured regimes are follow-up passes.",
+  "per_seed": {
+    "0": {
+      "checkpoint_hash": "8911c43e37cadd9c01f3be608d1ac11228b7155245e1a7f03ef408123f497e3f",
+      "curve": {
+        "5": {
+          "gnn": {
+            "macro_P_correct": 0.42172732014988445,
+            "macro_F_wrong": 0.01561959985366929,
+            "macro_F_split": 0.0,
+            "macro_F_deadline": 0.5626530799263534
+          },
+          "distance": {
+            "macro_P_correct": 0.42346104172087745,
+            "macro_F_wrong": 0.016153684498567442,
+            "macro_F_split": 9.475180312436436e-16,
+            "macro_F_deadline": 0.5603852737805495
+          }
+        },
+        "15": {
+          "gnn": {
+            "macro_P_correct": 0.42187006679504724,
+            "macro_F_wrong": 0.015625081202247763,
+            "macro_F_split": 0.0,
+            "macro_F_deadline": 0.5625048520026937
+          },
+          "distance": {
+            "macro_P_correct": 0.42346104172087745,
+            "macro_F_wrong": 0.016153684498567442,
+            "macro_F_split": 9.475180312436436e-16,
+            "macro_F_deadline": 0.5603852737805495
+          }
+        },
+        "30": {
+          "gnn": {
+            "macro_P_correct": 0.4218825899260828,
+            "macro_F_wrong": 0.01562898158946327,
+            "macro_F_split": 0.0,
+            "macro_F_deadline": 0.5624884284840077
+          },
+          "distance": {
+            "macro_P_correct": 0.42346104172087745,
+            "macro_F_wrong": 0.016153684498567442,
+            "macro_F_split": 9.475180312436436e-16,
+            "macro_F_deadline": 0.5603852737805495
+          }
+        },
+        "50": {
+          "gnn": {
+            "macro_P_correct": 0.42189116790611914,
+            "macro_F_wrong": 0.01563428060307183,
+            "macro_F_split": 2.6034164798505357e-18,
+            "macro_F_deadline": 0.5624745514892295
+          },
+          "distance": {
+            "macro_P_correct": 0.42346104172087745,
+            "macro_F_wrong": 0.016153684498567442,
+            "macro_F_split": 9.475180312436436e-16,
+            "macro_F_deadline": 0.5603852737805495
+          }
+        }
+      },
+      "final_loss": 75.47504784505149,
+      "loss_history": [
+        0.626356119578028,
+        2.155134220056792,
+        3.6835617548224424,
+        5.212240498736219,
+        6.7401576703834,
+        8.268586845154077,
+        9.795974380284365,
+        11.323941825129836,
+        12.85089829745936,
+        14.378411266253748,
+        15.905299485071358,
+        17.43260057992325,
+        18.959640654669474,
+        20.48697336331757,
+        22.014178474930038,
+        23.541569786939533,
+        25.06883530279533,
+        26.5961675790007,
+        28.123404890455692,
+        29.65115815070373,
+        31.177269684598677,
+        32.705816082886095,
+        34.232828168868785,
+        35.772095347819146,
+        37.28827528742937,
+        38.81457708325172,
+        40.346562661346,
+        41.878206744433406,
+        43.400880101581414,
+        44.92536218010363,
+        46.45169274924201,
+        47.979651447244535,
+        49.50826489636669,
+        51.03659165099948,
+        52.56110818189652,
+        54.08791884011113,
+        55.614872962517865,
+        57.1411864662105,
+        58.66818906003799,
+        60.19430217778181,
+        61.71695512520196,
+        63.238866643679216,
+        64.78200076705424,
+        66.3146241848569,
+        67.83416198175847,
+        69.35715958403952,
+        70.87481196048822,
+        72.414803351501,
+        73.94751718743528,
+        75.47504784505149
+      ]
+    }
+  }
+}
