@@ -1,0 +1,43 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "phase": "A3a_experts",
+  "query_family": "ESP",
+  "smoke": false,
+  "git_commit": "28cbf9e",
+  "compute_limited": "1 seed x 80 steps per expert (vs >=5-seed headline) -- workflow 9.1",
+  "calibration": "fixed_service R_d(N)=round(6*sqrt(N/120)) (pre-registered)",
+  "experts": {
+    "336": {
+      "path": "checkpoints\\expert_N336_seed0_steps80.pt",
+      "checkpoint_hash": "1be8afbe01e545e7ec8287797f7c4b27a46ee24db5f150ec76dcb5c3fa7defe6",
+      "grid": [
+        8,
+        8,
+        3
+      ],
+      "R_d": 10,
+      "train_mc_P_correct": [
+        0.41,
+        0.38
+      ],
+      "resumed": false
+    },
+    "660": {
+      "path": "checkpoints\\expert_N660_seed0_steps80.pt",
+      "checkpoint_hash": "98d4ed3ec1a791350fe7dbb77bbda0ef50525ab4e1016475b4e9d315be15dad5",
+      "grid": [
+        11,
+        11,
+        3
+      ],
+      "R_d": 14,
+      "train_mc_P_correct": [
+        0.33,
+        0.35
+      ],
+      "resumed": false
+    }
+  },
+  "runtime_total_s": 1420.1
+}
