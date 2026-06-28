@@ -55,14 +55,19 @@ def batched_subset_log_prob(log_weights: torch.Tensor, chosen: torch.Tensor, k: 
 
 
 def train_esp_reinforce(model, instances, proto, phy, profile, *, steps: int, trials: int = 100,
-                        lr: float = 5e-3, participation_fn=None, link_override=None, base_seed: int = 0):
+                        lr: float = 5e-3, participation_fn=None, link_override=None, base_seed: int = 0,
+                        snapshot_steps: tuple[int, ...] = ()):
     """Train an ESP/ESD-GNN by the MC-faithful score-function gradient (G-ESP-MC-FAITHFUL-TRAINING).
 
     Each step rolls out ``trials`` full-physics MC trials of the GNN policy (``reinforce=True``), takes the
     per-trial reward ``R`` = correct-basin first-hit and the differentiable per-trial ``sum log pi``, and
     descends ``-mean((R - b) * sum_log_pi)`` with a per-batch mean baseline ``b`` (variance reduction).
-    Returns ``{model, history}`` with the per-step training MC ``macro_P_correct`` (= ``R.mean()``) so the
-    gap-closing (MC improves where analytic training was flat) is visible."""
+    Returns ``{model, history, snapshots}`` with the per-step training MC ``macro_P_correct`` (= ``R.mean()``)
+    so the gap-closing (MC improves where analytic training was flat) is visible.
+
+    ``snapshot_steps``: budgets at which to snapshot ``state_dict`` along the SAME persistent-Adam trajectory
+    (cloned, never mutated -> the snapshot is trajectory-preserving; a step-150 run with snapshots at 40/80
+    yields the identical step-150 weights as a plain step-150 run + free intermediate budgets for A2)."""
     import torch as _torch
 
     from src.metrics.participation import uniform_participation
@@ -75,6 +80,8 @@ def train_esp_reinforce(model, instances, proto, phy, profile, *, steps: int, tr
 
     opt = _torch.optim.Adam(model.parameters(), lr=lr)
     history = {"loss": [], "mc_P_correct": [], "correct_mass": []}
+    snapshots: dict[int, dict] = {}
+    snap_set = set(int(s) for s in snapshot_steps)
     n = len(instances)
     for step in range(steps):
         scene, ev = instances[step % n]
@@ -98,4 +105,6 @@ def train_esp_reinforce(model, instances, proto, phy, profile, *, steps: int, tr
         history["loss"].append(float(loss.detach()))
         history["correct_mass"].append(float(mass.mean()))
         history["mc_P_correct"].append(float((mass >= profile.correct_basin_mass).to(_torch.float64).mean()))
-    return {"model": model, "history": history}
+        if (step + 1) in snap_set:
+            snapshots[step + 1] = {k: v.detach().clone() for k, v in model.state_dict().items()}
+    return {"model": model, "history": history, "snapshots": snapshots}

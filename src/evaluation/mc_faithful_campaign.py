@@ -19,10 +19,9 @@ eval (``evaluate_macro``, extended here) so the held-out eval scenes share the t
 """
 from __future__ import annotations
 
-import io
 import os
 import statistics
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import torch
 
@@ -35,8 +34,9 @@ from src.models import ESDGNN, ESDGNNQueryPolicy
 from src.optimization.mc_reinforce import train_esp_reinforce
 
 __all__ = [
-    "MCFaithfulCheckpoint", "train_mc_faithful", "save_checkpoint", "load_checkpoint",
-    "checkpoint_policy_factory", "aggregate_seed_macros",
+    "MCFaithfulCheckpoint", "train_mc_faithful", "materialize_snapshot", "save_checkpoint",
+    "load_checkpoint", "checkpoint_policy_factory", "aggregate_seed_macros", "ungated_cost",
+    "reliability_status", "seed_level_bootstrap_ci", "paired_seed_separation",
 ]
 
 
@@ -51,17 +51,20 @@ class MCFaithfulCheckpoint:
     k: int
     train_meta: dict          # regime/grid/steps/trials/lr/scene seeds -- the full training descriptor
     history: dict             # per-step {loss, mc_P_correct, correct_mass}
+    snapshots: dict = field(default_factory=dict)   # {budget_step: state_dict} along the SAME trajectory
 
 
 def train_mc_faithful(seed: int, grid: tuple[int, int, int], *, profile: ConsensusServiceProfile,
                       proto: ProtocolConfig, phy: RoundPhysicsConfig, scenario: str, base_node_err: float,
                       corr_strength: float, steps: int, trials: int = 100, n_train_scenes: int = 2,
                       lr: float = 1e-2, hidden_dim: int = 16, train_scene_seed0: int = 1000,
-                      base_seed: int = 0, link_override: float | None = None) -> MCFaithfulCheckpoint:
+                      base_seed: int = 0, link_override: float | None = None,
+                      snapshot_steps: tuple[int, ...] = ()) -> MCFaithfulCheckpoint:
     """Train ONE MC-faithful ESP/ESD-GNN checkpoint (model seed ``seed``).
 
     ``link_override=None`` => trained on the FULL physical chain (constraint: do NOT train on ideal links and
     evaluate on full physics). The ``base_seed`` decorrelates per-step MC generators across model seeds.
+    ``snapshot_steps`` => also keep state_dicts at those budgets (for the A2 budget curve along one trajectory).
     """
     torch.manual_seed(int(seed))
     model = ESDGNN(_esp_config(hidden_dim, profile.k)).double()
@@ -69,13 +72,27 @@ def train_mc_faithful(seed: int, grid: tuple[int, int, int], *, profile: Consens
                                       base_node_err=base_node_err, corr_strength=corr_strength)
                  for i in range(n_train_scenes)]
     res = train_esp_reinforce(model, instances, proto, phy, profile, steps=steps, trials=trials, lr=lr,
-                              link_override=link_override, base_seed=base_seed)
+                              link_override=link_override, base_seed=base_seed,
+                              snapshot_steps=snapshot_steps)
     meta = {"grid": list(grid), "scenario": scenario, "base_node_err": base_node_err,
             "corr_strength": corr_strength, "steps": steps, "trials": trials, "lr": lr,
             "n_train_scenes": n_train_scenes, "train_scene_seed0": train_scene_seed0,
             "base_seed": base_seed, "hidden_dim": hidden_dim, "link_override": link_override}
     return MCFaithfulCheckpoint(model=model, checkpoint_hash=checkpoint_hash(model), model_seed=int(seed),
-                                hidden_dim=hidden_dim, k=profile.k, train_meta=meta, history=res["history"])
+                                hidden_dim=hidden_dim, k=profile.k, train_meta=meta, history=res["history"],
+                                snapshots=res.get("snapshots", {}))
+
+
+def materialize_snapshot(ckpt: MCFaithfulCheckpoint, step: int) -> MCFaithfulCheckpoint:
+    """Build a standalone checkpoint at a snapshot ``step`` of ``ckpt``'s trajectory (same seed/config)."""
+    if step not in ckpt.snapshots:
+        raise KeyError(f"no snapshot at step {step}; have {sorted(ckpt.snapshots)}")
+    model = ESDGNN(_esp_config(ckpt.hidden_dim, ckpt.k)).double()
+    model.load_state_dict(ckpt.snapshots[step])
+    meta = dict(ckpt.train_meta, steps=int(step), snapshot_of_steps=ckpt.train_meta.get("steps"))
+    return MCFaithfulCheckpoint(model=model, checkpoint_hash=checkpoint_hash(model),
+                                model_seed=ckpt.model_seed, hidden_dim=ckpt.hidden_dim, k=ckpt.k,
+                                train_meta=meta, history=ckpt.history)
 
 
 def save_checkpoint(ckpt: MCFaithfulCheckpoint, path: str) -> str:
@@ -127,3 +144,64 @@ def aggregate_seed_macros(macros: list[dict], n_pool_per_seed: int) -> dict:
     block["across_seed_sd_P_correct"] = (statistics.stdev([m["macro_P_correct"] for m in macros])
                                          if len(macros) > 1 else 0.0)
     return block
+
+
+# ---------------------------------------------------------------- pre-registered performance / reliability
+# A0 pre-registration (hash-bound before any A2-A5 run; see ESP_SCALE_V2_PROGRESS.md "Campaign A pre-reg"):
+# the performance comparison J is UN-GATED, because the verified dynamic-MC F_wrong is ~0.035-0.0525 for
+# EVERY policy in the stressed headline regime while the profile keeps eps_w=1e-3 -- so the feasibility-gated
+# headline_cost returns +inf for ALL policies and scale_regret/normalized_scale_regret/feasibility_retention
+# all collapse to NaN. Feasibility (F_wrong/F_split UCB vs eps) is reported SEPARATELY as a reliability column,
+# NEVER folded into the performance/regret denominator.
+def ungated_cost(macro: dict) -> float:
+    """Pre-registered UN-GATED performance cost ``J = 1 - macro_P_correct`` (lower is better). No feasibility
+    gate (see module note): the gate would return +inf for every policy in the stressed regime."""
+    return 1.0 - macro["macro_P_correct"]
+
+
+def reliability_status(macro: dict, profile: ConsensusServiceProfile) -> dict:
+    """Separate reliability column: the UCB of F_wrong / F_split vs the profile budgets (constraint #5).
+    Reported alongside, never inside, the performance comparison."""
+    fw_ucb = macro.get("macro_F_wrong_ci", (0.0, 1.0))[1]
+    fs_ucb = macro.get("macro_F_split_ci", (0.0, 1.0))[1]
+    return {"macro_F_wrong": macro["macro_F_wrong"], "macro_F_wrong_ucb": fw_ucb,
+            "macro_F_split": macro["macro_F_split"], "macro_F_split_ucb": fs_ucb,
+            "eps_wrong": profile.max_wrong_basin_probability,
+            "eps_split": profile.max_split_basin_probability,
+            "feasible_wrong_ucb": fw_ucb <= profile.max_wrong_basin_probability,
+            "feasible_split_ucb": fs_ucb <= profile.max_split_basin_probability}
+
+
+def seed_level_bootstrap_ci(values: list[float], *, n_boot: int = 5000, ci: float = 0.95,
+                            rng_seed: int = 0) -> dict:
+    """Seed-level percentile bootstrap on the MEAN of per-seed values (each model seed = ONE observation;
+    the unit of replication is the model init, NOT the MC trial -- this is the spec-9.3 headline interval
+    that the pooled-binomial Wilson CI is NOT, since pooling trials across seeds conflates model-init
+    variance with within-MC Bernoulli draws and understates uncertainty)."""
+    vals = torch.tensor([float(v) for v in values], dtype=torch.float64)
+    m = int(len(vals))
+    if m == 0:
+        raise ValueError("no per-seed values")
+    g = torch.Generator().manual_seed(int(rng_seed))
+    means = torch.empty(n_boot, dtype=torch.float64)
+    for b in range(n_boot):
+        idx = torch.randint(0, m, (m,), generator=g)
+        means[b] = vals[idx].mean()
+    lo = float(torch.quantile(means, (1 - ci) / 2))
+    hi = float(torch.quantile(means, 1 - (1 - ci) / 2))
+    return {"mean": float(vals.mean()), "ci": [lo, hi], "n_seeds": m,
+            "sd": float(vals.std(unbiased=True)) if m > 1 else 0.0}
+
+
+def paired_seed_separation(trained_per_seed: list[float], ref_per_seed: list[float], *,
+                           n_boot: int = 5000, ci: float = 0.95, rng_seed: int = 0) -> dict:
+    """Paired (CRN) across-seed separation: bootstrap the MEAN of the per-seed differences
+    ``trained_i - ref_i``. ``separated`` iff the CI excludes 0 (lower bound > 0 => trained beats ref).
+    The pairing (same scene seeds + same model seed index) removes scene/seed common variance."""
+    if len(trained_per_seed) != len(ref_per_seed):
+        raise ValueError("paired arrays must have equal length")
+    diffs = [t - r for t, r in zip(trained_per_seed, ref_per_seed)]
+    boot = seed_level_bootstrap_ci(diffs, n_boot=n_boot, ci=ci, rng_seed=rng_seed)
+    lo, hi = boot["ci"]
+    return {"mean_diff": boot["mean"], "ci": boot["ci"], "sd": boot["sd"], "n_seeds": boot["n_seeds"],
+            "separated": (lo > 0.0 or hi < 0.0), "trained_better": lo > 0.0}

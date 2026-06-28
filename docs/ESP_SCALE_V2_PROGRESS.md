@@ -11,6 +11,35 @@ in N; full-physics MC is ~0.4 s/trial @N=120, ~linear in N. The publication-grad
 GPU-hours. Per workflow §9.1 every reduction is run **bounded and explicitly labeled compute-limited**;
 the harness is built to the full design and the runs are the feasible subset.
 
+## Campaign A — pre-registration (A0, 2026-06-28, hash-bound BEFORE any A2–A5 headline run)
+
+User chose **(A)** — the full publication-grade campaign. A multi-agent design+adversarial-review workflow
+(7 agents) produced the vetted execution matrix (`docs/gate_evidence/esp_scale_v2/campaign_a_plan.json`,
+order A0→A2→A3a→A3b→A4→A5→A6, ~600 compute-min). Two reviews independently flagged two **plan-fatal**
+issues; the fixes below are **pre-registered here and committed before any headline eval** so they cannot be
+retro-tuned:
+
+1. **Performance comparison is UN-GATED** (`mc_faithful_campaign.ungated_cost`, J = 1 − macro_P_correct, no
+   feasibility gate). *Why:* the verified dynamic-MC `F_wrong` is ~0.035–0.0525 for **every** policy in the
+   stressed headline regime (distance 0.0525, uniform 0.035, trained 0.0525) while the profile keeps
+   `eps_w = eps_s = 1e-3`, so the feasibility-gated `headline_cost` returns **+inf for all policies** →
+   `scale_regret`/`normalized_scale_regret`/`feasibility_retention` all collapse to **NaN**. Feasibility
+   (`F_wrong`/`F_split` UCB vs ε, `mc_faithful_campaign.reliability_status`) is reported **separately** as a
+   reliability column, never folded into the performance/regret denominator. `F_split ≡ 0` so `eps_s` is fine.
+2. **Headline CI = seed-level bootstrap** (`paired_seed_separation` / `seed_level_bootstrap_ci`), each model
+   seed = ONE observation, paired CRN across policies. The pooled-binomial Wilson CI from
+   `aggregate_seed_macros` (n = trials×seeds) is **demoted to a diagnostic** — it conflates model-init
+   variance with within-MC Bernoulli draws and understates uncertainty.
+3. **≥5-seed headline asserted** (writers pass `min_seeds=5`; any reduction labeled compute-limited per §9.1).
+4. **Service-profile calibration rule (already pre-registered, re-confirmed unchanged):**
+   `R_d(N) = round(6·√(N/120))` → ladder 6/10/14/19/30/54 for N=120/336/660/1248/3036/9840. Not tuned post-hoc.
+5. **Budget axis from one trajectory:** `train_esp_reinforce(snapshot_steps=…)` saves state_dicts at
+   {40,80,150} along the SAME persistent-Adam trajectory (trajectory-preserving — tested), so the A2 budget
+   curve and the A1 headline checkpoints come from one 5-seed×150-step run.
+6. **Tail metrics:** `evaluate_macro` will pool the fields the MC already carries (T_confirm, energy, latency
+   CVaR) when A3 needs them; D95/D99/basin-CVaR99 have no MC producer and are **dropped + labeled
+   compute-limited-deferred** (§9.1), not mislabeled zero-cost.
+
 ## Gate status
 
 | Gate | Scope | Status |
