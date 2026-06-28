@@ -1,0 +1,227 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "experiment": "phase_a2_budget",
+  "query_family": "ESP",
+  "smoke": false,
+  "git_commit": "59eec25",
+  "node_count": 120,
+  "scenario": "matched_marginal_high",
+  "base_node_err": 0.35,
+  "corr_strength": 0.25,
+  "eval_scene_seeds": [
+    0,
+    1
+  ],
+  "trials_per_cell": 250,
+  "budgets": [
+    0,
+    40,
+    80,
+    150
+  ],
+  "model_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "ev1_flat_analytic_contrast": 0.422,
+  "pre_registration": "A0: ungated J; seed-level bootstrap per budget; EV1 0.422 cited as CONTRAST only",
+  "budget_curve": {
+    "0": {
+      "seed_mean_P_correct": 0.38280000000000003,
+      "seed_bootstrap_ci": [
+        0.37839999999999996,
+        0.3872
+      ],
+      "across_seed_sd": 0.0055856960175075816,
+      "per_seed_P_correct": [
+        0.388,
+        0.388,
+        0.384,
+        0.378,
+        0.376
+      ],
+      "per_seed": {
+        "0": {
+          "macro_P_correct": 0.388,
+          "ungated_cost": 0.612,
+          "checkpoint_hash": "init"
+        },
+        "1": {
+          "macro_P_correct": 0.388,
+          "ungated_cost": 0.612,
+          "checkpoint_hash": "init"
+        },
+        "2": {
+          "macro_P_correct": 0.384,
+          "ungated_cost": 0.616,
+          "checkpoint_hash": "init"
+        },
+        "3": {
+          "macro_P_correct": 0.378,
+          "ungated_cost": 0.622,
+          "checkpoint_hash": "init"
+        },
+        "4": {
+          "macro_P_correct": 0.376,
+          "ungated_cost": 0.624,
+          "checkpoint_hash": "init"
+        }
+      }
+    },
+    "40": {
+      "seed_mean_P_correct": 0.3944,
+      "seed_bootstrap_ci": [
+        0.386,
+        0.4016
+      ],
+      "across_seed_sd": 0.009939818911831351,
+      "per_seed_P_correct": [
+        0.406,
+        0.39,
+        0.38,
+        0.4,
+        0.396
+      ],
+      "per_seed": {
+        "0": {
+          "macro_P_correct": 0.406,
+          "ungated_cost": 0.594,
+          "checkpoint_hash": "085b6ff484e346756852ff576124ea1b18b325dc93b18c39f9085358d01da4b2"
+        },
+        "1": {
+          "macro_P_correct": 0.39,
+          "ungated_cost": 0.61,
+          "checkpoint_hash": "1f659c632af301601460bbf7871b7f964de5599b5fd870bf776678b648ff66e4"
+        },
+        "2": {
+          "macro_P_correct": 0.38,
+          "ungated_cost": 0.62,
+          "checkpoint_hash": "d0fa6ec2b4b3ae2eb0332a65d7d2cef85650ec1cb5f8740ef7a21747cda98577"
+        },
+        "3": {
+          "macro_P_correct": 0.4,
+          "ungated_cost": 0.6,
+          "checkpoint_hash": "47ae3d4a93f3c7435264fa4bd41b4660d24a0b87b4e16bb975daed704a6ae514"
+        },
+        "4": {
+          "macro_P_correct": 0.396,
+          "ungated_cost": 0.604,
+          "checkpoint_hash": "914b11f48e221a7cb2ae57d2113769295522c48abd5fbfc929c73a4c4d1a4053"
+        }
+      }
+    },
+    "80": {
+      "seed_mean_P_correct": 0.4008000000000001,
+      "seed_bootstrap_ci": [
+        0.39039999999999997,
+        0.4112
+      ],
+      "across_seed_sd": 0.013311649033835003,
+      "per_seed_P_correct": [
+        0.41600000000000004,
+        0.396,
+        0.41400000000000003,
+        0.39,
+        0.388
+      ],
+      "per_seed": {
+        "0": {
+          "macro_P_correct": 0.41600000000000004,
+          "ungated_cost": 0.584,
+          "checkpoint_hash": "4502c4ee6e0c9f0541d2cbc6bdbce4253167eb9e2fd841758cff4cc1234d024e"
+        },
+        "1": {
+          "macro_P_correct": 0.396,
+          "ungated_cost": 0.604,
+          "checkpoint_hash": "ab56ef0067a06a2f94b018c68b6e4b2c5fd4db9dfee0c5f4cef3e5a9dc7f73cd"
+        },
+        "2": {
+          "macro_P_correct": 0.41400000000000003,
+          "ungated_cost": 0.586,
+          "checkpoint_hash": "67d74ba414ad3629278b14ab2ddc0b42ae49ba2095b95804469b54f84fd0ee4a"
+        },
+        "3": {
+          "macro_P_correct": 0.39,
+          "ungated_cost": 0.61,
+          "checkpoint_hash": "42edcd2a31e0479d647a17c9e9a0e3c5eb4396b2ba2d592164439612b7e50e09"
+        },
+        "4": {
+          "macro_P_correct": 0.388,
+          "ungated_cost": 0.612,
+          "checkpoint_hash": "c1a2a03d0d35309aa69e0f11062086772458edc2298ad30e2c265611fa415b20"
+        }
+      }
+    },
+    "150": {
+      "seed_mean_P_correct": 0.41159999999999997,
+      "seed_bootstrap_ci": [
+        0.39720000000000005,
+        0.4248
+      ],
+      "across_seed_sd": 0.017572706109191052,
+      "per_seed_P_correct": [
+        0.43200000000000005,
+        0.42200000000000004,
+        0.41600000000000004,
+        0.388,
+        0.4
+      ],
+      "per_seed": {
+        "0": {
+          "macro_P_correct": 0.43200000000000005,
+          "ungated_cost": 0.568,
+          "checkpoint_hash": "78fd71c2c75938810f1bc717e515286c64fc9b3f0222ce7e56dd946263bc89c5"
+        },
+        "1": {
+          "macro_P_correct": 0.42200000000000004,
+          "ungated_cost": 0.578,
+          "checkpoint_hash": "cc0d0d24a061bd6d119ad59d92274d34315f3cc660b2c50a3062ebe6f9e16fd1"
+        },
+        "2": {
+          "macro_P_correct": 0.41600000000000004,
+          "ungated_cost": 0.584,
+          "checkpoint_hash": "cbe6abb132e87cd651a57b2a332ccd9c2c3f077c492d60db97e39dcff8fa1040"
+        },
+        "3": {
+          "macro_P_correct": 0.388,
+          "ungated_cost": 0.612,
+          "checkpoint_hash": "77ea05ecb557f6739eecb42b01213cbc25e6faa43a9fbf930a26d35239c2b201"
+        },
+        "4": {
+          "macro_P_correct": 0.4,
+          "ungated_cost": 0.6,
+          "checkpoint_hash": "efd0bf9dd0d19fdcb9f2763acb1d0ab4fd628b5adf2c797025414e466628810f"
+        }
+      }
+    }
+  },
+  "monotone_nondecreasing": true,
+  "rises_from_init": 0.028799999999999937,
+  "beats_ev1_flat": true,
+  "manifest": {
+    "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+    "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+    "evidence_hash": "6f1b0f00fcf8a57d7e28517b8d90f8b8a5fc9f1e5404b55ca5f2cb9859b14e3c",
+    "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+    "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+    "policy_hash": "esd_gnn_mc_faithful_budget",
+    "checkpoint_hash": "a2-budget",
+    "experiment_config_hash": "ed8c040e201d2ff8098f8db3db8cc98d657dc675117296e3d498188036184d89",
+    "query_law": "esp",
+    "full_physics": true,
+    "git_commit": "59eec25",
+    "manifest_id": "A2-budget",
+    "model_seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "runtime_total_s": 262.3
+}

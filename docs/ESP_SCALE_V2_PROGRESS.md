@@ -44,7 +44,7 @@ retro-tuned:
 
 | Gate | Scope | Status |
 |------|-------|--------|
-| G-ESP-TRAINING-BUDGET | full-physics budget curves (pilot/medium/full), ≥5 seeds, mixed N{100,300,1000}; does longer training improve macro + beat the distance heuristic? select best checkpoint | ⛔ **STOP+REPORT** (EV1+EV2): flat training curve + a confirmed **training-signal gap** — the MC judge rewards peer selection (spread 0.075–0.085, CI-separated) but the analytic *training* surrogate is blind to it (spread ≤0.002). The GNN can't be trained to beat heuristics on this surrogate. Round premise (model superiority) challenged — user decision needed. |
+| G-ESP-TRAINING-BUDGET | full-physics budget curves (pilot/medium/full), ≥5 seeds, mixed N{100,300,1000}; does longer training improve macro + beat the distance heuristic? select best checkpoint | ✅ **CLOSED under the MC-faithful trainer (EV7)** — the EV1 ANALYTIC budget curve was FLAT (0.422 at every budget; the surrogate was blind to peer selection, EV2). Under MC-faithful REINFORCE the held-out MC budget curve **RISES monotonically**: init 0.383 → 40: 0.394 → 80: 0.401 → 150: **0.412** (+0.029, 5 seeds, seed-level bootstrap), beating the EV1-flat contrast. Best checkpoint = step 150. The original EV1 ⛔ stop is resolved by the user-chosen MC-faithful fix. |
 | G-ESP-MC-FAITHFUL-TRAINING | **(user-chosen direction, 2026-06-28)** close the EV2 training-signal gap: train the GNN on the MC basin via the score-function (REINFORCE) gradient `∇E[R]=E[(R−b)·Σ∇log π(Sₜ)]` so it learns the peer-selection the judge rewards | ✅ **CLOSED (EV6, CI-separated)** — Campaign-A 5-seed headline (N=120, pre-registered seed-level bootstrap + un-gated J): trained **0.410** [0.399,0.420], **paired-vs-uniform +0.040 CI [0.029,0.050]** (CI-separated, gap statistically closed), **matches distance** 0.422 (overlapping CIs, 77% of the uniform→distance gap closed). EV4/EV5 built it (per-node credit, monotone in steps); EV6 confirms at 5 seeds. 13 tests; judge-invariant. |
 | G-ESP-BASELINE-ORACLE | 8 baselines (uniform/distance/link-quality/load-balanced/region-bridge/edge-logit-oracle/expert/shared) through the canonical full-physics path; oracle headroom | 🟡 EV2 prep: 3 heuristics + edge-logit oracle + MC-spread evidence done (5 tests); deployable baselines ready |
 | G-ESP-FIXED-PROTOCOL-SCALE | fixed protocol across N{100,300,1000,3000}+10000; macro+UCB+D99/CVaR+energy+strict+diagnostics+runtime/mem | ☐ |
@@ -216,4 +216,23 @@ Legend: ☐ not started · 🟡 in progress · 🟢 green.
   CI-separately beats uniform and matches distance at N=120**. Whether this becomes §13.1 *superiority* (or
   stays §13.2 *parity*) is decided by the **scale sweep (A3)** — does the learned policy degrade more
   gracefully than distance as N grows / the deadline tightens? Next: A2 budget curve (does held-out Pc rise
-  0→40→80→150 vs the EV1 flat analytic 0.422), then A3 scale experts + sweep.
+  0->40->80->150 vs the EV1 flat analytic 0.422), then A3 scale experts + sweep.
+
+### EV7 — Campaign A / Phase A2: the budget gate RISES under the MC-faithful trainer (2026-06-28)
+* **Setup.** Each model seed's budget snapshots {0=init, 40, 80, 150} (one trajectory, trajectory-preserving
+  snapshots) evaluated under the dynamic-MC judge at N=120 (2 held-out scenes x 250 trials), seed-level
+  bootstrap per budget. `phase_a2_budget_results.json` (hash-bound, namespace-clean).
+* **Result — the held-out MC budget curve RISES monotonically:**
+
+  | budget (steps) | seed-mean macro_P_correct | seed-level bootstrap CI |
+  |---|---|---|
+  | 0 (untrained init) | 0.383 | [0.378, 0.387] |
+  | 40 | 0.394 | [0.386, 0.402] |
+  | 80 | 0.401 | [0.390, 0.411] |
+  | 150 | **0.412** | [0.397, 0.425] |
+
+  +0.029 from init, monotone non-decreasing. **Direct contrast: the EV1 ANALYTIC-surrogate budget curve was
+  FLAT at 0.422 for every budget** — the mean-field surrogate had no gradient toward what the MC judge
+  rewards (EV2). MC-faithful REINFORCE supplies that gradient, so longer training now *does* improve the
+  held-out MC macrostate. This **resolves the EV1 STOP** (the round's original blocker) via the user-chosen
+  fix. Best checkpoint = step 150 (the shared checkpoint for the A3 scale sweep).

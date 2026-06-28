@@ -93,6 +93,17 @@
         "verdict": "section 13.2: MC-faithful REINFORCE -> stable learned ESP constructor that CI-separately beats uniform and matches distance at N=120. Superiority-vs-parity decided by the A3 scale sweep.",
         "namespace_clean": "phase_a1_eval_results.json: forbidden=[]; manifest hash-bound (A1-headline). Note: bare 'reliability' is a FORBIDDEN_BARE token -> key is reliability_status."
       }
+    },
+    "EV7-a2-budget": {
+      "date": "2026-06-28",
+      "contributes_to": ["G-ESP-TRAINING-BUDGET"],
+      "campaign_phase": "A2 (Campaign A)",
+      "modules": ["docs/gate_evidence/esp_scale_v2/run_phase_a2_eval.py (budget snapshots {0,40,80,150} along one trajectory)"],
+      "evidence": {
+        "result_json": "docs/gate_evidence/esp_scale_v2/phase_a2_budget_results.json",
+        "finding": "Budget gate CLOSED under the MC-faithful trainer. Held-out dynamic-MC budget curve (N=120, 5 seeds, 2 scenes x 250 trials, seed-level bootstrap) RISES monotonically: init 0.383 [0.378,0.387] -> 40: 0.394 [0.386,0.402] -> 80: 0.401 [0.390,0.411] -> 150: 0.412 [0.397,0.425] (+0.029). DIRECT CONTRAST to the EV1 analytic-surrogate budget curve which was FLAT at 0.422 for every budget (the mean-field surrogate had no gradient toward what the MC judge rewards). Best checkpoint = step 150.",
+        "verdict": "Resolves the EV1 STOP (the round's original blocker): under MC-faithful REINFORCE, longer training DOES improve the held-out MC macrostate. EV1 0.422 cited as contrast only (analytic, not an MC headline)."
+      }
     }
   }
 }
