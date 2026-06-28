@@ -84,6 +84,9 @@ class DynamicMCResult:
     basin_F_split_ci: tuple[float, float] = (float("nan"), float("nan"))
     basin_F_deadline_ci: tuple[float, float] = (float("nan"), float("nan"))
     basin_tau_correct_mean: float = float("nan")   # mean correct first-hit epoch (T_confirm/Δ_poll)
+    # ---- MC-faithful REINFORCE training mode (gated; None unless reinforce=True) ----
+    reinforce_logp: torch.Tensor | None = None     # [T] differentiable sum_{active,epochs} log pi(chosen)
+    reinforce_correct: torch.Tensor | None = None  # [T] 1.0 if the correct basin was first-hit, else 0.0
 
     def macro_block(self) -> dict:
         """The namespaced macrostate headline block (``macro_P_correct`` ... ; macrostate_v2).
@@ -144,8 +147,16 @@ def run_dynamic_mc(
     service_profile=None,
     participation: torch.Tensor | None = None,
     dtype: torch.dtype = torch.float64,
+    reinforce: bool = False,
 ) -> DynamicMCResult:
-    """Run the independent dynamic Monte-Carlo (spec §8). See module docstring."""
+    """Run the independent dynamic Monte-Carlo (spec §8). See module docstring.
+
+    ``reinforce=True`` (ESP path only; needs a ``service_profile``) is a GATED training mode for the
+    MC-faithful score-function gradient (G-ESP-MC-FAITHFUL-TRAINING): it keeps the policy's per-edge
+    log-weights DIFFERENTIABLE and accumulates, per trial, ``sum_{active nodes, epochs} log pi(chosen)``
+    (the sampling + physics use a DETACHED copy, so the rollout is numerically identical to the judge),
+    and exposes per-trial ``reinforce_correct`` (1 if the correct basin was first-hit). The default path
+    (``reinforce=False``) is unchanged."""
     if evidence.num_nodes != scene.num_nodes:
         raise ValueError("evidence and scene must have the same N")
     k, alpha, beta, r_max = protocol_cfg.k, protocol_cfg.alpha, protocol_cfg.beta, protocol_cfg.r_max
@@ -191,9 +202,16 @@ def run_dynamic_mc(
         slot_logw = None
     else:
         log_weights = query_policy.log_weights(gc).to(device=device, dtype=dtype)
-        pi = edge_inclusion_probabilities(gc.src_index, gc.dst_index, N, log_weights, k)
         neg = torch.full((), float("-inf"), dtype=dtype, device=device)
-        slot_logw = torch.where(slot_mask, log_weights[slot_edge], neg)  # [N, nmax]
+        # REINFORCE: keep a DIFFERENTIABLE slot log-weight for the log-pi accumulation; everything that
+        # drives the rollout (inclusion pi, sampling) uses a DETACHED copy so the rollout is identical.
+        reinforce_slot_logw = None
+        if reinforce:
+            big_neg = torch.full((), -1e30, dtype=dtype, device=device)
+            reinforce_slot_logw = torch.where(slot_mask, log_weights[slot_edge], big_neg)  # grad [N,nmax]
+            log_weights = log_weights.detach()
+        pi = edge_inclusion_probabilities(gc.src_index, gc.dst_index, N, log_weights, k)
+        slot_logw = torch.where(slot_mask, log_weights[slot_edge], neg)  # [N, nmax] (detached if reinforce)
         cdq_sampler = None
 
     if eligible_mask is None:
@@ -210,6 +228,8 @@ def run_dynamic_mc(
     rounds_to_decide = torch.full((T, N), r_max + 1, dtype=torch.int64, device=device)
     cumulative_time = torch.zeros(T, dtype=dtype, device=device)
     cumulative_energy = torch.zeros(T, dtype=dtype, device=device)
+    # REINFORCE: per-trial sum of log pi(chosen) over active nodes x epochs (differentiable; gated).
+    reinforce_logp = torch.zeros(T, dtype=dtype, device=device) if reinforce else None
 
     # ---- macrostate basin first-hitting bookkeeping (spec §3-§4; the headline metric) ----
     track_basin = service_profile is not None
@@ -246,6 +266,14 @@ def run_dynamic_mc(
         # ---- sample k-subsets for every (trial, node) from the SAME query law ----
         chosen = (cdq_sampler.sample(T, generator) if query_law in ("cdq", "cdq2")
                   else _sample_subsets(slot_logw, slot_mask, k, T, generator))   # [T, N, nmax] bool
+
+        # ---- REINFORCE: credit each ACTIVE node's sampled subset with its differentiable log pi ----
+        if reinforce:
+            from src.optimization.mc_reinforce import batched_subset_log_prob
+            lw = reinforce_slot_logw.unsqueeze(0).expand(T, N, nmax)              # [T,N,nmax] (grad)
+            mk = slot_mask.unsqueeze(0).expand(T, N, nmax)
+            lp = batched_subset_log_prob(lw, chosen.to(dtype), k, mk)            # [T, N]
+            reinforce_logp = reinforce_logp + (lp * active.to(dtype)).sum(dim=1)  # [T] (only active poll)
 
         # ---- poll outcomes: success ~ Bern(ell), read peer's ACTUAL colour ----
         peer_colour = pref[:, slot_dst]                    # [T, N, nmax] in {+1,-1}
@@ -335,11 +363,14 @@ def run_dynamic_mc(
 
     # ---- macrostate basin first-hitting outcomes (the headline metric, spec §4) ----
     basin_kw = {}
+    reinforce_correct = None
     if track_basin:
         from src.metrics.first_hitting import basin_outcome_probabilities
         C_paths = torch.stack(C_traj, dim=1)              # [T, R+1]
         W_paths = torch.stack(W_traj, dim=1)
         bo = basin_outcome_probabilities(C_paths, W_paths, service_profile)
+        if reinforce:
+            reinforce_correct = (bo["outcome_code"] == 0).to(dtype)   # [T] correct-basin first-hit reward
         basin_kw = dict(
             basin_P_correct=bo["P_correct"], basin_F_wrong=bo["F_wrong"],
             basin_F_split=bo["F_split"], basin_F_deadline=bo["F_deadline"],
@@ -357,7 +388,8 @@ def run_dynamic_mc(
         undecided_freq=undecided_freq, mean_rounds_to_decide=mean_rounds,
         mean_finalisation_time=mean_time, finished_fraction=float(finished.to(dtype).mean()),
         num_trials=T, mean_energy=mean_energy, latency_cvar=latency_cvar,
-        energy_cvar=energy_cvar, cvar_level=cvar_level, **basin_kw,
+        energy_cvar=energy_cvar, cvar_level=cvar_level,
+        reinforce_logp=reinforce_logp, reinforce_correct=reinforce_correct, **basin_kw,
     )
 
 

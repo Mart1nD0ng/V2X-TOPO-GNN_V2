@@ -31,6 +31,56 @@ def test_respects_mask():
     assert torch.allclose(got, ref, atol=1e-9)
 
 
+def _tiny_scene():
+    from src.evaluation.esp_scale import build_scale_instance
+    return build_scale_instance((5, 5, 3), 0, scenario="matched_marginal_high", base_node_err=0.35,
+                                corr_strength=0.25)
+
+
+def test_reinforce_mode_does_not_change_the_judge():
+    """The gated reinforce path must be numerically IDENTICAL to the default judge (same basins) under
+    the same CRN -- it only ADDS the log-pi accumulation."""
+    import torch
+    from src.config.service_profile import ConsensusServiceProfile
+    from src.environment import ProtocolConfig, RoundPhysicsConfig
+    from src.metrics.participation import uniform_participation
+    from src.sampling.baseline_policies import DistanceQueryPolicy
+    from src.validation import run_dynamic_mc
+    scene, ev = _tiny_scene()
+    phy = RoundPhysicsConfig(subchannels=10, slots_per_window=40)
+    proto = ProtocolConfig(k=3, alpha=2, beta=3, r_max=6)
+    prof = ConsensusServiceProfile.urban_default().replace(k=3, alpha=2, beta=3, max_poll_epochs=6)
+    om = uniform_participation(scene.num_nodes)
+    kw = dict(num_trials=30, link_override=None, service_profile=prof, participation=om)
+    base = run_dynamic_mc(scene, ev, DistanceQueryPolicy(beta_per_m=0.04), proto, phy,
+                          generator=torch.Generator().manual_seed(0), **kw)
+    rein = run_dynamic_mc(scene, ev, DistanceQueryPolicy(beta_per_m=0.04), proto, phy,
+                          generator=torch.Generator().manual_seed(0), reinforce=True, **kw)
+    assert rein.basin_P_correct == base.basin_P_correct          # judge outcome unchanged
+    assert rein.basin_F_wrong == base.basin_F_wrong
+    assert base.reinforce_logp is None and rein.reinforce_logp is not None
+
+
+def test_reinforce_returns_differentiable_logp_and_a_step_trains():
+    import torch
+    from src.config.service_profile import ConsensusServiceProfile
+    from src.environment import ProtocolConfig, RoundPhysicsConfig
+    from src.evaluation.esp_scale import _esp_config
+    from src.models import ESDGNN
+    from src.optimization.mc_reinforce import train_esp_reinforce
+    scene, ev = _tiny_scene()
+    phy = RoundPhysicsConfig(subchannels=10, slots_per_window=40)
+    proto = ProtocolConfig(k=3, alpha=2, beta=3, r_max=6)
+    prof = ConsensusServiceProfile.urban_default().replace(k=3, alpha=2, beta=3, max_poll_epochs=6)
+    torch.manual_seed(0)
+    model = ESDGNN(_esp_config(8, prof.k)).double()
+    p0 = next(model.parameters()).detach().clone()
+    out = train_esp_reinforce(model, [(scene, ev)], proto, phy, prof, steps=2, trials=30, lr=5e-3)
+    assert len(out["history"]["mc_P_correct"]) == 2
+    assert all(0.0 <= v <= 1.0 for v in out["history"]["mc_P_correct"])
+    assert not torch.equal(next(model.parameters()).detach(), p0)   # REINFORCE moved the model
+
+
 def test_differentiable_and_normalised():
     torch.manual_seed(2)
     n, k = 5, 2

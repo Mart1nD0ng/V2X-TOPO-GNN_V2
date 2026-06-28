@@ -26,7 +26,7 @@ import torch
 
 from src.mainline.symmetric_polynomials import log_elementary_symmetric
 
-__all__ = ["batched_subset_log_prob"]
+__all__ = ["batched_subset_log_prob", "train_esp_reinforce"]
 
 _NEG = -1e30
 
@@ -52,3 +52,45 @@ def batched_subset_log_prob(log_weights: torch.Tensor, chosen: torch.Tensor, k: 
     selected = (ch * lw).sum(dim=-1)                                  # sum_{j in S} s_j
     log_ek = log_elementary_symmetric(lw, k)[..., k]                  # log e_k over valid candidates
     return selected - log_ek
+
+
+def train_esp_reinforce(model, instances, proto, phy, profile, *, steps: int, trials: int = 100,
+                        lr: float = 5e-3, participation_fn=None, link_override=None, base_seed: int = 0):
+    """Train an ESP/ESD-GNN by the MC-faithful score-function gradient (G-ESP-MC-FAITHFUL-TRAINING).
+
+    Each step rolls out ``trials`` full-physics MC trials of the GNN policy (``reinforce=True``), takes the
+    per-trial reward ``R`` = correct-basin first-hit and the differentiable per-trial ``sum log pi``, and
+    descends ``-mean((R - b) * sum_log_pi)`` with a per-batch mean baseline ``b`` (variance reduction).
+    Returns ``{model, history}`` with the per-step training MC ``macro_P_correct`` (= ``R.mean()``) so the
+    gap-closing (MC improves where analytic training was flat) is visible."""
+    import torch as _torch
+
+    from src.metrics.participation import uniform_participation
+    from src.models import ESDGNNQueryPolicy
+    from src.validation import run_dynamic_mc
+
+    if participation_fn is None:
+        def participation_fn(sc):
+            return uniform_participation(sc.num_nodes, dtype=_torch.float64, device=sc.positions.device)
+
+    opt = _torch.optim.Adam(model.parameters(), lr=lr)
+    history = {"loss": [], "mc_P_correct": [], "logp_mean": []}
+    n = len(instances)
+    for step in range(steps):
+        scene, ev = instances[step % n]
+        omega = participation_fn(scene)
+        opt.zero_grad()
+        res = run_dynamic_mc(scene, ev, ESDGNNQueryPolicy(model, scene), proto, phy, num_trials=trials,
+                             generator=_torch.Generator().manual_seed(base_seed + step),
+                             link_override=link_override, service_profile=profile, participation=omega,
+                             reinforce=True)
+        R = res.reinforce_correct                                     # [T] in {0,1}
+        logp = res.reinforce_logp                                     # [T] differentiable
+        advantage = (R - R.mean()).detach()                          # baseline = batch mean (var reduction)
+        loss = -(advantage * logp).mean()
+        loss.backward()
+        opt.step()
+        history["loss"].append(float(loss.detach()))
+        history["mc_P_correct"].append(float(R.mean()))
+        history["logp_mean"].append(float(logp.detach().mean()))
+    return {"model": model, "history": history}
