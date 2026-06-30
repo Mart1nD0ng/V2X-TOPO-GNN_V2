@@ -149,6 +149,22 @@
         "verdict": "section-13.2 PARITY. MC-faithful REINFORCE yields a stable learned ESP constructor that CI-separately BEATS uniform (paired +0.040 [0.029,0.050]; 6/6 scale cells; 4/4 OOD cells) and MATCHES distance (gap +0.012 overlapping CIs; tracks across N=120->3036 both modes), with parity transferring across a 25x scale-up. NOT 13.1 superiority. Honest limits: iid-OOD transfer, N=1248 density collapse, regime infeasible at strict eps_w. All pre-registered (A0), namespace-clean, hash-bound.",
         "round_status": "COMPLETE -- all 8 ESP-scale-v2 gates green (EV6-EV11 + EV2/EV1 lineage)."
       }
+    },
+    "EV12-mc-oracle-headroom": {
+      "date": "2026-06-30",
+      "contributes_to": ["post-round: can the GNN beat distance?"],
+      "modules": [
+        "src/evaluation/esp_baselines.py (train_mc_edge_logit_oracle + wrong_penalty)",
+        "src/validation/dynamic_mc.py (reinforce_wrong, gated)",
+        "docs/gate_evidence/esp_scale_v2/run_oracle_probe.py + run_oracle_reliability.py"
+      ],
+      "evidence": {
+        "result_json": ["docs/gate_evidence/esp_scale_v2/oracle_probe_results.json", "docs/gate_evidence/esp_scale_v2/oracle_reliability_results.json"],
+        "un_gated_finding": "MC-judged free per-edge oracle CI-separately beats distance by +0.099 (CI [0.087,0.109]); both inits reach ~0.52; gain is reduced deadline misses (Fd ~0.55->0.42) converted ~3:1 to correct vs wrong, at ~2.5x distance's F_wrong.",
+        "reliability_finding": "DECISIVE: reward=correct-lambda*wrong; at lambda=2 the oracle F_wrong matches distance (~0.023) and the P_correct gap COLLAPSES to -0.0067 (both scenes, statistically 0). Higher lambda strictly worse. The +0.10 un-gated win was reliability-bought.",
+        "corrected_verdict": "ISO-RELIABILITY headroom over distance ~= 0 -> distance is the reliability-feasible per-edge Pareto optimum; section-13.2 parity is the HONEST CEILING at equal reliability, NOT a learning gap. Supersedes the optimistic un-gated read. Compute-limited: 2-3 scenes; per-scene oracle = upper bound; Wilson hw ~0.025.",
+        "judge_integrity": "reinforce_wrong is gated; judge-invariant test still passes."
+      }
     }
   }
 }

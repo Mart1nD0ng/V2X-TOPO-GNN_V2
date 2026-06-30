@@ -1,0 +1,160 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "experiment": "mc_oracle_reliability_frontier",
+  "query_family": "ESP",
+  "smoke": false,
+  "git_commit": "0f93c80",
+  "node_count": 120,
+  "scenario": "matched_marginal_high",
+  "base_node_err": 0.35,
+  "corr_strength": 0.25,
+  "scene_seeds": [
+    0,
+    1
+  ],
+  "wrong_penalties": [
+    0.0,
+    2.0,
+    5.0,
+    12.0
+  ],
+  "train_steps": 100,
+  "train_trials": 120,
+  "eval_trials": 1500,
+  "note": "free-edge oracle with reward=correct-lambda*wrong; traces reliability-feasible headroom vs distance.",
+  "per_scene": {
+    "0": {
+      "distance": {
+        "Pc": 0.43,
+        "Fw": 0.024666666666666667,
+        "Fs": 0.0,
+        "Fd": 0.5453333333333333,
+        "Fw_ucb": 0.03381386872533289
+      },
+      "frontier": {
+        "0.0": {
+          "Pc": 0.496,
+          "Fw": 0.041999999999999996,
+          "Fs": 0.0,
+          "Fd": 0.46199999999999997,
+          "gap_vs_distance": 0.066,
+          "Fw_minus_distance": 0.01733333333333333,
+          "train_s": 563.0
+        },
+        "2.0": {
+          "Pc": 0.42333333333333334,
+          "Fw": 0.022666666666666665,
+          "Fs": 0.0,
+          "Fd": 0.5539999999999999,
+          "gap_vs_distance": -0.006666666666666654,
+          "Fw_minus_distance": -0.0020000000000000018,
+          "train_s": 583.0
+        },
+        "5.0": {
+          "Pc": 0.3973333333333333,
+          "Fw": 0.017333333333333333,
+          "Fs": 0.0,
+          "Fd": 0.5853333333333333,
+          "gap_vs_distance": -0.03266666666666668,
+          "Fw_minus_distance": -0.007333333333333334,
+          "train_s": 597.0
+        },
+        "12.0": {
+          "Pc": 0.36733333333333335,
+          "Fw": 0.014666666666666666,
+          "Fs": 0.0,
+          "Fd": 0.618,
+          "gap_vs_distance": -0.06266666666666665,
+          "Fw_minus_distance": -0.01,
+          "train_s": 603.0
+        }
+      }
+    },
+    "1": {
+      "distance": {
+        "Pc": 0.41733333333333333,
+        "Fw": 0.024,
+        "Fs": 0.0,
+        "Fd": 0.5586666666666666,
+        "Fw_ucb": 0.03304638919870056
+      },
+      "frontier": {
+        "0.0": {
+          "Pc": 0.49666666666666665,
+          "Fw": 0.052,
+          "Fs": 0.0,
+          "Fd": 0.4513333333333333,
+          "gap_vs_distance": 0.07933333333333331,
+          "Fw_minus_distance": 0.027999999999999997,
+          "train_s": 546.0
+        },
+        "2.0": {
+          "Pc": 0.4106666666666667,
+          "Fw": 0.024,
+          "Fs": 0.0,
+          "Fd": 0.5653333333333334,
+          "gap_vs_distance": -0.006666666666666654,
+          "Fw_minus_distance": 0.0,
+          "train_s": 516.0
+        },
+        "5.0": {
+          "Pc": 0.36866666666666664,
+          "Fw": 0.016666666666666666,
+          "Fs": 0.0,
+          "Fd": 0.6146666666666667,
+          "gap_vs_distance": -0.04866666666666669,
+          "Fw_minus_distance": -0.007333333333333334,
+          "train_s": 537.0
+        },
+        "12.0": {
+          "Pc": 0.354,
+          "Fw": 0.016666666666666666,
+          "Fs": 0.0,
+          "Fd": 0.6293333333333333,
+          "gap_vs_distance": -0.06333333333333335,
+          "Fw_minus_distance": -0.007333333333333334,
+          "train_s": 536.0
+        }
+      }
+    }
+  },
+  "headline": {
+    "iso_reliability_per_scene": {
+      "0": {
+        "lambda": 2.0,
+        "oracle_Pc": 0.42333333333333334,
+        "oracle_Fw": 0.022666666666666665,
+        "gap_at_matched_reliability": -0.006666666666666654
+      },
+      "1": {
+        "lambda": 2.0,
+        "oracle_Pc": 0.4106666666666667,
+        "oracle_Fw": 0.024,
+        "gap_at_matched_reliability": -0.006666666666666654
+      }
+    },
+    "mean_gap_at_matched_reliability": -0.006666666666666654,
+    "ungated_mean_gap_for_reference": 0.099,
+    "verdict": "HEADROOM MOSTLY RELIABILITY-BOUGHT (~-0.007 at matched F_wrong) -> most of the un-gated +0.10 is paid for with F_wrong; the legitimate (iso-reliability) target is small"
+  },
+  "manifest": {
+    "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+    "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+    "evidence_hash": "6f1b0f00fcf8a57d7e28517b8d90f8b8a5fc9f1e5404b55ca5f2cb9859b14e3c",
+    "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+    "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+    "policy_hash": "mc_oracle_reliability",
+    "checkpoint_hash": "oracle-reliab",
+    "experiment_config_hash": "ed8c040e201d2ff8098f8db3db8cc98d657dc675117296e3d498188036184d89",
+    "query_law": "esp",
+    "full_physics": true,
+    "git_commit": "0f93c80",
+    "manifest_id": "Lever1a-reliability",
+    "model_seeds": [
+      0,
+      1
+    ]
+  },
+  "runtime_total_s": 4502.6
+}

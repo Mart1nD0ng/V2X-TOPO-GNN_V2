@@ -346,3 +346,37 @@ MC-faithful REINFORCE fix (EV3–EV6) **closed that training-signal gap**, and t
 that beats the naive baseline and matches the strong heuristic, with parity transferring across scale, plus
 clearly-reported limits. All results macrostate_v2 namespace-clean, hash-bound, with pre-registered
 (A0) un-gated J + seed-level-bootstrap statistics fixed before any headline run.
+
+---
+
+## Post-round: can the GNN beat distance? — MC oracle headroom probes (Lever 1, 2026-06-30)
+
+After the round, a 18-agent research workflow asked *how to get from §13.2 parity to §13.1 superiority*. Its
+top recommendation was a never-run gate experiment: a **dynamic-MC-judged free-edge oracle** (optimise free
+per-edge logits per scene against the MC basin reward, not the peer-blind analytic objective) — an upper bound
+on what any diagonal ESP law (a trained GNN included) can do under the judge.
+
+### EV12 — Lever 1: MC free-edge oracle — un-gated headroom is LARGE but RELIABILITY-BOUGHT (iso-reliability ≈ 0)
+* **Un-gated probe** (`oracle_probe_results.json`, 3 scenes, 2000-trial CRN eval, distance + random inits):
+  the free per-edge oracle CI-separately BEATS distance by **+0.099** (CI [0.087, 0.109], per-scene gaps
+  +0.087…+0.109; both inits independently reach ~0.52 — a robust attractor, not an optimiser artefact). This
+  initially looked like "parity was a learning gap, not a no-headroom ceiling."
+* **Mechanism (basin decomposition):** the gain is almost entirely **reduced deadline misses** (F_deadline
+  ~0.55 → ~0.42) converted ~3:1 into correct vs wrong — a diagonal "decide faster / reach quorum sooner"
+  improvement, NOT diversity. But it also raises F_wrong (~0.02 → ~0.05).
+* **Reliability frontier** (`oracle_reliability_results.json`, Lever 1a, reward = `correct − λ·wrong`,
+  λ∈{0,2,5,12}, 2 scenes): **this is the decisive, sobering result.** At **λ=2, where the oracle's F_wrong is
+  pulled down to distance's level (~0.023 vs ~0.025)**, the P_correct gap over distance **COLLAPSES to
+  −0.0067** (both scenes; statistically 0 at the ~0.025 Wilson half-width). Higher λ → strictly worse than
+  distance. So the un-gated +0.10 was **almost entirely bought by spending the F_wrong budget**; once the
+  oracle is held to distance's reliability it **becomes distance** (it stops "gambling" on risky nodes,
+  F_deadline climbs back).
+* **Corrected verdict (supersedes the optimistic un-gated read):** the **iso-reliability headroom over distance
+  is ≈ 0** — distance sits on the (P_correct, F_wrong) Pareto frontier of per-edge policies in this regime.
+  §13.2 parity is the **honest ceiling at equal reliability**, NOT a learning/optimisation failure to be tuned
+  away. This vindicates the research's own caveat (the only mechanism with new expressive power buys its win
+  with F_wrong). Compute-limited: 2–3 scenes; per-scene oracle is an upper bound; eval Wilson hw ~0.025.
+* **Next:** Lever 1b distillation diagnosis (is the GNN's parity a feature/capacity/generalization issue?) —
+  now interpreted in light of the above: even the un-gated oracle operating point is not a legitimate win, so
+  the open question becomes whether a DIFFERENT regime/objective (lower deadline pressure, or a latency/energy
+  objective distance does not already optimise) has non-zero iso-reliability headroom that is GNN-learnable.
