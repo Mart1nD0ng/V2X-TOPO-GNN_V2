@@ -410,3 +410,27 @@ on what any diagonal ESP law (a trained GNN included) can do under the judge.
   learn. If none appears even there, parity is robust and the honest deliverable is the oracle-certified
   no-iso-reliability-headroom characterisation + the capability/trainer diagnosis. Compute-limited: 4 train +
   2 held-out scenes; per-scene oracle = upper bound; held-out MC un-gated only.
+
+### EV14 — Route A: iso-reliability headroom vs deadline budget R_d — parity is robust (no headroom even at large R_d)
+* **Setup** (`oracle_reliability_rd_results.json`): re-ran the EV12 reliability-frontier machine (free-edge
+  oracle, reward = correct − λ·wrong) at R_d ∈ {10, 14} (EV12 had R_d=6), 2 scenes, reporting the iso-reliability
+  gap over distance (the gap at the λ where the oracle's F_wrong matches distance's).
+* **Result — iso-reliability headroom stays ≈ 0 at every R_d:**
+
+  | R_d | distance mean F_deadline | iso-reliability gap (oracle − distance at matched F_wrong) |
+  |---|---|---|
+  | 6 (EV12) | 0.553 | −0.007 |
+  | 10 | 0.552 | −0.022 |
+  | 14 | 0.552 | −0.022 |
+
+* **Decisive mechanistic insight:** **R_d=14 gives results bit-identical to R_d=10, and distance's F_deadline is
+  INVARIANT at ~0.552 across R_d∈{6,10,14}.** So R_d was **never the binding constraint** — the ~55% deadline
+  misses are **physics/MAC-limited** (those trials structurally cannot form a quorum under the link/contention
+  physics), not epoch-budget-limited. Relaxing the deadline therefore changes nothing.
+* **Verdict:** there is **NO legitimate iso-reliability P_correct headroom over distance, and it does not open up
+  by relaxing the deadline** — distance is the per-edge reliability-feasible optimum across the deadline-budget
+  range. The "less-deadline-dominated regime" escape hatch is **closed**: the limit is the consensus physics, not
+  the time budget. Parity is robust on the P_correct axis. (Compute-limited: 2 scenes; the un-gated oracle still
+  beats distance ~+0.06 at every R_d, but it is all reliability-bought, exactly as at R_d=6.)
+* **Next:** Route B — the multi-objective Pareto surface (is distance dominated on latency/energy at matched
+  reliability+Pc, or only the P_correct ceiling?).

@@ -176,6 +176,16 @@
         "critical_caveat": "The +0.032 is the same un-gated, RELIABILITY-BOUGHT operating point as the oracle (EV12: iso-reliability headroom ~0; the distill eval measured P_correct only). So the GNN can beat distance on un-gated P_correct (trainer-fixable) but NOT at equal reliability.",
         "combined_verdict": "(a)+(b): model capability is not the bottleneck and the trainer is fixable, but a legitimate reliability-matched win over distance does not exist in this regime. Highest-value next: re-probe iso-reliability oracle headroom in a less deadline-dominated regime (larger R_d / lower N)."
       }
+    },
+    "EV14-reliability-vs-Rd": {
+      "date": "2026-06-30",
+      "contributes_to": ["Route A: does relaxing the deadline open iso-reliability headroom?"],
+      "modules": ["docs/gate_evidence/esp_scale_v2/run_oracle_reliability_rd.py"],
+      "evidence": {
+        "result_json": "docs/gate_evidence/esp_scale_v2/oracle_reliability_rd_results.json",
+        "finding": "iso-reliability headroom over distance stays ~0 at every deadline budget: R_d=6 -0.007, R_d=10 -0.022, R_d=14 -0.022 (R_d=14 bit-identical to R_d=10). distance F_deadline INVARIANT at ~0.552 across R_d in {6,10,14} -> R_d was NEVER the binding constraint; the ~55% deadline misses are physics/MAC-limited (cannot form quorum), not epoch-limited. The un-gated oracle still beats distance ~+0.06 at every R_d but it is entirely reliability-bought.",
+        "verdict": "NO legitimate iso-reliability P_correct headroom over distance, and relaxing the deadline does NOT open it. The less-deadline-dominated escape hatch is closed -- the limit is consensus physics, not the time budget. Parity is robust on the P_correct axis. Compute-limited: 2 scenes."
+      }
     }
   }
 }

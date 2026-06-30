@@ -1,0 +1,261 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "experiment": "oracle_reliability_vs_Rd",
+  "query_family": "ESP",
+  "smoke": false,
+  "git_commit": "4c78956",
+  "node_count": 120,
+  "scenario": "matched_marginal_high",
+  "base_node_err": 0.35,
+  "corr_strength": 0.25,
+  "scene_seeds": [
+    0,
+    1
+  ],
+  "R_d_list": [
+    10,
+    14
+  ],
+  "wrong_penalties": [
+    0.0,
+    2.0,
+    5.0
+  ],
+  "train_steps": 80,
+  "eval_trials": 1500,
+  "note": "iso-reliability headroom over distance vs deadline budget R_d (EV12 found ~0 at R_d=6).",
+  "per_Rd": {
+    "10": {
+      "per_scene": {
+        "0": {
+          "distance": {
+            "Pc": 0.43,
+            "Fw": 0.024666666666666667,
+            "Fs": 0.0,
+            "Fd": 0.5453333333333333,
+            "Tconfirm": 5.545736434108528,
+            "energy": 310.22496930732194,
+            "Fw_ucb": 0.03381386872533289
+          },
+          "frontier": {
+            "0.0": {
+              "Pc": 0.49133333333333334,
+              "Fw": 0.04466666666666667,
+              "Fs": 0.0,
+              "Fd": 0.46399999999999997,
+              "Tconfirm": 5.398914518317503,
+              "energy": 291.6414576934474,
+              "gap_vs_distance": 0.06133333333333335,
+              "Fw_minus_distance": 0.02
+            },
+            "2.0": {
+              "Pc": 0.416,
+              "Fw": 0.020666666666666667,
+              "Fs": 0.0,
+              "Fd": 0.5633333333333334,
+              "Tconfirm": 5.560897435897436,
+              "energy": 315.4913257239299,
+              "gap_vs_distance": -0.014000000000000012,
+              "Fw_minus_distance": -0.004
+            },
+            "5.0": {
+              "Pc": 0.3853333333333333,
+              "Fw": 0.014666666666666666,
+              "Fs": 0.0,
+              "Fd": 0.6,
+              "Tconfirm": 5.743944636678201,
+              "energy": 330.2259660649295,
+              "gap_vs_distance": -0.04466666666666669,
+              "Fw_minus_distance": -0.01
+            }
+          },
+          "iso_reliability": {
+            "lambda": 2.0,
+            "gap": -0.014000000000000012,
+            "oracle_Fw": 0.020666666666666667
+          }
+        },
+        "1": {
+          "distance": {
+            "Pc": 0.41733333333333333,
+            "Fw": 0.024,
+            "Fs": 0.0,
+            "Fd": 0.5586666666666666,
+            "Tconfirm": 5.578274760383387,
+            "energy": 311.72033005026134,
+            "Fw_ucb": 0.03304638919870056
+          },
+          "frontier": {
+            "0.0": {
+              "Pc": 0.4693333333333333,
+              "Fw": 0.04533333333333333,
+              "Fs": 0.0,
+              "Fd": 0.48533333333333334,
+              "Tconfirm": 5.389204545454546,
+              "energy": 293.4057227618407,
+              "gap_vs_distance": 0.05199999999999999,
+              "Fw_minus_distance": 0.02133333333333333
+            },
+            "2.0": {
+              "Pc": 0.4093333333333333,
+              "Fw": 0.025333333333333333,
+              "Fs": 0.0,
+              "Fd": 0.5653333333333334,
+              "Tconfirm": 5.599348534201955,
+              "energy": 315.43479599231233,
+              "gap_vs_distance": -0.008000000000000007,
+              "Fw_minus_distance": 0.0013333333333333322
+            },
+            "5.0": {
+              "Pc": 0.38666666666666666,
+              "Fw": 0.019333333333333334,
+              "Fs": 0.0,
+              "Fd": 0.594,
+              "Tconfirm": 5.786206896551724,
+              "energy": 330.8314287672776,
+              "gap_vs_distance": -0.030666666666666675,
+              "Fw_minus_distance": -0.004666666666666666
+            }
+          },
+          "iso_reliability": {
+            "lambda": 5.0,
+            "gap": -0.030666666666666675,
+            "oracle_Fw": 0.019333333333333334
+          }
+        }
+      },
+      "mean_iso_reliability_gap": -0.022333333333333344,
+      "distance_mean_Fd": 0.552
+    },
+    "14": {
+      "per_scene": {
+        "0": {
+          "distance": {
+            "Pc": 0.43,
+            "Fw": 0.024666666666666667,
+            "Fs": 0.0,
+            "Fd": 0.5453333333333333,
+            "Tconfirm": 5.545736434108528,
+            "energy": 310.22496930732194,
+            "Fw_ucb": 0.03381386872533289
+          },
+          "frontier": {
+            "0.0": {
+              "Pc": 0.49133333333333334,
+              "Fw": 0.04466666666666667,
+              "Fs": 0.0,
+              "Fd": 0.46399999999999997,
+              "Tconfirm": 5.398914518317503,
+              "energy": 291.6414576934474,
+              "gap_vs_distance": 0.06133333333333335,
+              "Fw_minus_distance": 0.02
+            },
+            "2.0": {
+              "Pc": 0.416,
+              "Fw": 0.020666666666666667,
+              "Fs": 0.0,
+              "Fd": 0.5633333333333334,
+              "Tconfirm": 5.560897435897436,
+              "energy": 315.4913257239299,
+              "gap_vs_distance": -0.014000000000000012,
+              "Fw_minus_distance": -0.004
+            },
+            "5.0": {
+              "Pc": 0.3853333333333333,
+              "Fw": 0.014666666666666666,
+              "Fs": 0.0,
+              "Fd": 0.6,
+              "Tconfirm": 5.743944636678201,
+              "energy": 330.2259660649295,
+              "gap_vs_distance": -0.04466666666666669,
+              "Fw_minus_distance": -0.01
+            }
+          },
+          "iso_reliability": {
+            "lambda": 2.0,
+            "gap": -0.014000000000000012,
+            "oracle_Fw": 0.020666666666666667
+          }
+        },
+        "1": {
+          "distance": {
+            "Pc": 0.41733333333333333,
+            "Fw": 0.024,
+            "Fs": 0.0,
+            "Fd": 0.5586666666666666,
+            "Tconfirm": 5.578274760383387,
+            "energy": 311.72033005026134,
+            "Fw_ucb": 0.03304638919870056
+          },
+          "frontier": {
+            "0.0": {
+              "Pc": 0.4693333333333333,
+              "Fw": 0.04533333333333333,
+              "Fs": 0.0,
+              "Fd": 0.48533333333333334,
+              "Tconfirm": 5.389204545454546,
+              "energy": 293.4057227618407,
+              "gap_vs_distance": 0.05199999999999999,
+              "Fw_minus_distance": 0.02133333333333333
+            },
+            "2.0": {
+              "Pc": 0.4093333333333333,
+              "Fw": 0.025333333333333333,
+              "Fs": 0.0,
+              "Fd": 0.5653333333333334,
+              "Tconfirm": 5.599348534201955,
+              "energy": 315.43479599231233,
+              "gap_vs_distance": -0.008000000000000007,
+              "Fw_minus_distance": 0.0013333333333333322
+            },
+            "5.0": {
+              "Pc": 0.38666666666666666,
+              "Fw": 0.019333333333333334,
+              "Fs": 0.0,
+              "Fd": 0.594,
+              "Tconfirm": 5.786206896551724,
+              "energy": 330.8314287672776,
+              "gap_vs_distance": -0.030666666666666675,
+              "Fw_minus_distance": -0.004666666666666666
+            }
+          },
+          "iso_reliability": {
+            "lambda": 5.0,
+            "gap": -0.030666666666666675,
+            "oracle_Fw": 0.019333333333333334
+          }
+        }
+      },
+      "mean_iso_reliability_gap": -0.022333333333333344,
+      "distance_mean_Fd": 0.552
+    }
+  },
+  "headline": {
+    "iso_reliability_gap_by_Rd": {
+      "10": -0.022333333333333344,
+      "14": -0.022333333333333344
+    },
+    "Rd6_reference_from_EV12": -0.0067,
+    "verdict": "NO iso-reliability headroom even at larger R_d (best -0.022) -> distance is the per-edge reliability-feasible optimum across the deadline-budget range; parity is robust"
+  },
+  "manifest": {
+    "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+    "service_profile_hash": "5cb87def41a1e724bb0a3a5c860b4278abe0fbc7d8ec662a9f59083449b60155",
+    "evidence_hash": "6f1b0f00fcf8a57d7e28517b8d90f8b8a5fc9f1e5404b55ca5f2cb9859b14e3c",
+    "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+    "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+    "policy_hash": "mc_oracle_reliability_rd",
+    "checkpoint_hash": "oracle-rd",
+    "experiment_config_hash": "425502d7c592392c30e6db11bbcc5065dfacf5a4374bbd29e5b1123bba89fd77",
+    "query_law": "esp",
+    "full_physics": true,
+    "git_commit": "4c78956",
+    "manifest_id": "RouteA-Rd-sweep",
+    "model_seeds": [
+      0,
+      1
+    ]
+  },
+  "runtime_total_s": 5552.5
+}
