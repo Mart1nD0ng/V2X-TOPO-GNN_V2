@@ -100,7 +100,8 @@ def free_logit_policy(logits: torch.Tensor) -> _FreeLogitPolicy:
 
 def train_mc_edge_logit_oracle(scene, ev, profile, proto, phy, *, steps: int = 150, train_trials: int = 150,
                                init: str = "distance", lr: float = 0.1, base_seed: int = 0,
-                               distance_beta: float = 0.04, rand_seed: int = 0, rand_scale: float = 0.5):
+                               distance_beta: float = 0.04, rand_seed: int = 0, rand_scale: float = 0.5,
+                               wrong_penalty: float = 0.0):
     """MC-JUDGED per-scene topology headroom oracle (Campaign-A Lever 1, the gate for section-13.1).
 
     Unlike ``direct_edge_logit_oracle`` (which optimises the peer-BLIND analytic macro, EV1/EV2), this
@@ -111,10 +112,12 @@ def train_mc_edge_logit_oracle(scene, ev, profile, proto, phy, *, steps: int = 1
     cannot CI-separately beat the distance heuristic, the regime has no diagonal topology headroom and
     parity is the honest ceiling (workflow §5.3); if they do, superiority is a training/capacity problem.
 
-    Performance is UN-GATED (reward = per-node correct finalisation, matching A0); reliability (F_wrong /
-    F_split) is read off the eval separately. ``init='distance'`` starts AT the distance operating point
-    (REINFORCE can only improve from there); ``init='random'`` is the independent control that distinguishes
-    a true no-headroom attractor from an optimiser artefact. Returns ``{logits, history, num_edges, init}``.
+    ``wrong_penalty`` (lambda >= 0) shapes the reward to ``correct - lambda * wrong`` (per node): lambda=0 is
+    the un-gated headroom (A0 performance metric); lambda>0 traces the RELIABILITY-FEASIBLE headroom frontier
+    (how much P_correct gain over distance survives once F_wrong is charged). reliability (F_wrong / F_split)
+    is read off the eval separately. ``init='distance'`` starts AT the distance operating point (REINFORCE can
+    only improve from there); ``init='random'`` is the independent control that distinguishes a true
+    no-headroom attractor from an optimiser artefact. Returns ``{logits, history, num_edges, init}``.
     """
     from src.validation import run_dynamic_mc
     gc = build_candidate_graph(scene.positions, scene.comm_radius)
@@ -136,6 +139,8 @@ def train_mc_edge_logit_oracle(scene, ev, profile, proto, phy, *, steps: int = 1
                              generator=torch.Generator().manual_seed(base_seed + step),
                              service_profile=profile, participation=omega, reinforce=True)
         R = res.reinforce_correct                                   # [T, N] per-node correct
+        if wrong_penalty:                                          # reliability-penalised reward (frontier)
+            R = R - wrong_penalty * res.reinforce_wrong
         logp = res.reinforce_logp                                  # [T, N] differentiable
         advantage = (R - R.mean(dim=0, keepdim=True)).detach()     # per-node baseline (variance reduction)
         loss = -(omega.unsqueeze(0) * advantage * logp).sum(dim=1).mean()

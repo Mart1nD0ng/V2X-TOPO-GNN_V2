@@ -89,6 +89,7 @@ class DynamicMCResult:
     # correct finalisation, not the whole-network outcome.
     reinforce_logp: torch.Tensor | None = None     # [T, N] differentiable sum_{epochs} log pi(S_{i,t})
     reinforce_correct: torch.Tensor | None = None  # [T, N] 1.0 if node i finalised CORRECT, else 0.0
+    reinforce_wrong: torch.Tensor | None = None    # [T, N] 1.0 if node i finalised WRONG, else 0.0
 
     def macro_block(self) -> dict:
         """The namespaced macrostate headline block (``macro_P_correct`` ... ; macrostate_v2).
@@ -366,6 +367,7 @@ def run_dynamic_mc(
     # ---- macrostate basin first-hitting outcomes (the headline metric, spec §4) ----
     basin_kw = {}
     reinforce_correct = None
+    reinforce_wrong = None
     if track_basin:
         from src.metrics.first_hitting import basin_outcome_probabilities
         C_paths = torch.stack(C_traj, dim=1)              # [T, R+1]
@@ -373,6 +375,8 @@ def run_dynamic_mc(
         bo = basin_outcome_probabilities(C_paths, W_paths, service_profile)
         if reinforce:
             reinforce_correct = (decided == 1).to(dtype)   # [T, N] per-node correct finalisation reward
+            reinforce_wrong = (decided == -1).to(dtype)    # [T, N] per-node WRONG finalisation (for the
+            #                                                reliability-penalised oracle reward)
         basin_kw = dict(
             basin_P_correct=bo["P_correct"], basin_F_wrong=bo["F_wrong"],
             basin_F_split=bo["F_split"], basin_F_deadline=bo["F_deadline"],
@@ -391,7 +395,8 @@ def run_dynamic_mc(
         mean_finalisation_time=mean_time, finished_fraction=float(finished.to(dtype).mean()),
         num_trials=T, mean_energy=mean_energy, latency_cvar=latency_cvar,
         energy_cvar=energy_cvar, cvar_level=cvar_level,
-        reinforce_logp=reinforce_logp, reinforce_correct=reinforce_correct, **basin_kw,
+        reinforce_logp=reinforce_logp, reinforce_correct=reinforce_correct,
+        reinforce_wrong=reinforce_wrong, **basin_kw,
     )
 
 
