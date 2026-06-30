@@ -1,0 +1,241 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "experiment": "mc_free_edge_oracle_probe",
+  "query_family": "ESP",
+  "smoke": false,
+  "git_commit": "34414ab",
+  "node_count": 120,
+  "scenario": "matched_marginal_high",
+  "base_node_err": 0.35,
+  "corr_strength": 0.25,
+  "scene_seeds": [
+    0,
+    1,
+    2
+  ],
+  "inits": [
+    "distance",
+    "random"
+  ],
+  "train_steps": 150,
+  "train_trials": 150,
+  "eval_trials": 2000,
+  "note": "MC-judged free per-edge oracle (upper bound on any diagonal ESP law) vs distance, CRN-paired per scene. Un-gated J; reliability separate. Gate for section-13.1 superiority.",
+  "per_scene": {
+    "0": {
+      "distance": {
+        "Pc": 0.422,
+        "Fw": 0.0245,
+        "Fs": 0.0,
+        "Fd": 0.5535,
+        "Pc_ci": [
+          0.4005245954639153,
+          0.4437744748817647
+        ],
+        "Fw_ucb": 0.032241642613695595
+      },
+      "oracle_best_init": "distance",
+      "oracle": {
+        "Pc": 0.524,
+        "Fw": 0.053,
+        "Fs": 0.0005,
+        "Fd": 0.4225,
+        "train_curve_first_last": [
+          0.556,
+          0.606
+        ],
+        "num_free_logits": 932,
+        "train_s": 768.0,
+        "Pc_ci": [
+          0.5020867246621958,
+          0.5458212536929796
+        ],
+        "Fw_ucb": 0.06370359645166596
+      },
+      "per_init": {
+        "distance": {
+          "Pc": 0.524,
+          "Fw": 0.053,
+          "Fs": 0.0005,
+          "Fd": 0.4225,
+          "train_curve_first_last": [
+            0.556,
+            0.606
+          ],
+          "num_free_logits": 932,
+          "train_s": 768.0
+        },
+        "random": {
+          "Pc": 0.518,
+          "Fw": 0.051500000000000004,
+          "Fs": 0.0,
+          "Fd": 0.4305,
+          "train_curve_first_last": [
+            0.52,
+            0.595
+          ],
+          "num_free_logits": 932,
+          "train_s": 712.0
+        }
+      },
+      "gap_oracle_minus_distance": 0.10200000000000004
+    },
+    "1": {
+      "distance": {
+        "Pc": 0.4475,
+        "Fw": 0.019,
+        "Fs": 0.0,
+        "Fd": 0.5335,
+        "Pc_ci": [
+          0.42582898188212964,
+          0.46937231546592423
+        ],
+        "Fw_ucb": 0.025970561896348936
+      },
+      "oracle_best_init": "distance",
+      "oracle": {
+        "Pc": 0.5345,
+        "Fw": 0.0475,
+        "Fs": 0.0,
+        "Fd": 0.418,
+        "train_curve_first_last": [
+          0.567,
+          0.604
+        ],
+        "num_free_logits": 932,
+        "train_s": 714.0,
+        "Pc_ci": [
+          0.5125934856942053,
+          0.5562742331913593
+        ],
+        "Fw_ucb": 0.05772111203373218
+      },
+      "per_init": {
+        "distance": {
+          "Pc": 0.5345,
+          "Fw": 0.0475,
+          "Fs": 0.0,
+          "Fd": 0.418,
+          "train_curve_first_last": [
+            0.567,
+            0.604
+          ],
+          "num_free_logits": 932,
+          "train_s": 714.0
+        },
+        "random": {
+          "Pc": 0.53,
+          "Fw": 0.045,
+          "Fs": 0.0,
+          "Fd": 0.425,
+          "train_curve_first_last": [
+            0.484,
+            0.578
+          ],
+          "num_free_logits": 932,
+          "train_s": 703.0
+        }
+      },
+      "gap_oracle_minus_distance": 0.08699999999999997
+    },
+    "2": {
+      "distance": {
+        "Pc": 0.41500000000000004,
+        "Fw": 0.02,
+        "Fs": 0.0,
+        "Fd": 0.5650000000000001,
+        "Pc_ci": [
+          0.39358855396622905,
+          0.4367373560258582
+        ],
+        "Fw_ucb": 0.027118789129249185
+      },
+      "oracle_best_init": "distance",
+      "oracle": {
+        "Pc": 0.5245,
+        "Fw": 0.053,
+        "Fs": 0.0,
+        "Fd": 0.4225,
+        "train_curve_first_last": [
+          0.539,
+          0.607
+        ],
+        "num_free_logits": 932,
+        "train_s": 701.0,
+        "Pc_ci": [
+          0.5025868270980274,
+          0.5463192341395474
+        ],
+        "Fw_ucb": 0.06370359645166596
+      },
+      "per_init": {
+        "distance": {
+          "Pc": 0.5245,
+          "Fw": 0.053,
+          "Fs": 0.0,
+          "Fd": 0.4225,
+          "train_curve_first_last": [
+            0.539,
+            0.607
+          ],
+          "num_free_logits": 932,
+          "train_s": 701.0
+        },
+        "random": {
+          "Pc": 0.516,
+          "Fw": 0.0485,
+          "Fs": 0.0,
+          "Fd": 0.4355,
+          "train_curve_first_last": [
+            0.463,
+            0.588
+          ],
+          "num_free_logits": 932,
+          "train_s": 715.0
+        }
+      },
+      "gap_oracle_minus_distance": 0.10949999999999993
+    }
+  },
+  "headline": {
+    "per_scene_gaps": [
+      0.10200000000000004,
+      0.08699999999999997,
+      0.10949999999999993
+    ],
+    "mean_gap": 0.09949999999999998,
+    "gap_bootstrap_ci": [
+      0.08699999999999997,
+      0.10949999999999993
+    ],
+    "gap_sd": 0.011456439237389591,
+    "oracle_CI_separately_beats_distance": true,
+    "all_scenes_oracle_above_distance": true,
+    "max_per_scene_gap": 0.10949999999999993,
+    "eval_wilson_halfwidth_at_Pc0.42": 0.0216,
+    "oracle_mean_F_wrong_ucb": 0.061709434979021364,
+    "distance_mean_F_wrong_ucb": 0.02844366454643124,
+    "verdict": "HEADROOM_EXISTS -> superiority achievable (training/capacity problem); fund diversity law + variance reduction in a non-deadline-dominated, reliability-feasible regime"
+  },
+  "manifest": {
+    "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+    "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+    "evidence_hash": "6f1b0f00fcf8a57d7e28517b8d90f8b8a5fc9f1e5404b55ca5f2cb9859b14e3c",
+    "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+    "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+    "policy_hash": "mc_free_edge_oracle",
+    "checkpoint_hash": "oracle-probe",
+    "experiment_config_hash": "ed8c040e201d2ff8098f8db3db8cc98d657dc675117296e3d498188036184d89",
+    "query_law": "esp",
+    "full_physics": true,
+    "git_commit": "34414ab",
+    "manifest_id": "Lever1-oracle-probe",
+    "model_seeds": [
+      0,
+      1,
+      2
+    ]
+  },
+  "runtime_total_s": 4341.7
+}
