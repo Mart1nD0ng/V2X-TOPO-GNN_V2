@@ -23,7 +23,8 @@ from src.optimization.macrostate_objective import macrostate_metrics
 from src.policies.heuristics import LinkQualityPolicy, LoadBalancedPolicy, RegionBridgePolicy
 from src.sampling.baseline_policies import DistanceQueryPolicy, UniformQueryPolicy
 
-__all__ = ["DEPLOYABLE_BASELINES", "make_baseline", "direct_edge_logit_oracle"]
+__all__ = ["DEPLOYABLE_BASELINES", "make_baseline", "direct_edge_logit_oracle",
+           "train_mc_edge_logit_oracle", "free_logit_policy"]
 
 # deployable baseline kinds (the GNN policies -- expert / shared -- are built by the caller from a model)
 DEPLOYABLE_BASELINES = ("uniform_esp", "distance", "link_quality", "load_balanced", "region_bridge")
@@ -90,3 +91,55 @@ def direct_edge_logit_oracle(scene, ev, profile, proto, phy, *, steps: int = 60,
         last = m
     return schema.macro_block(float(last["P_correct"].detach()), float(last["F_wrong"].detach()),
                               float(last["F_split"].detach()), float(last["F_deadline"].detach()))
+
+
+def free_logit_policy(logits: torch.Tensor) -> _FreeLogitPolicy:
+    """Wrap a free per-edge logit vector as an ESP query policy (for evaluation under the dynamic MC)."""
+    return _FreeLogitPolicy(logits)
+
+
+def train_mc_edge_logit_oracle(scene, ev, profile, proto, phy, *, steps: int = 150, train_trials: int = 150,
+                               init: str = "distance", lr: float = 0.1, base_seed: int = 0,
+                               distance_beta: float = 0.04, rand_seed: int = 0, rand_scale: float = 0.5):
+    """MC-JUDGED per-scene topology headroom oracle (Campaign-A Lever 1, the gate for section-13.1).
+
+    Unlike ``direct_edge_logit_oracle`` (which optimises the peer-BLIND analytic macro, EV1/EV2), this
+    optimises FREE per-edge logits directly against the DYNAMIC-MC basin reward via the score-function
+    gradient (``run_dynamic_mc(reinforce=True)`` -> per-(trial,node) ``log pi`` + per-node correct reward),
+    i.e. the same objective the judge measures. It upper-bounds what ANY diagonal (per-edge) ESP law -- a
+    trained GNN included -- can achieve on this scene under the judge: if even these free per-scene logits
+    cannot CI-separately beat the distance heuristic, the regime has no diagonal topology headroom and
+    parity is the honest ceiling (workflow §5.3); if they do, superiority is a training/capacity problem.
+
+    Performance is UN-GATED (reward = per-node correct finalisation, matching A0); reliability (F_wrong /
+    F_split) is read off the eval separately. ``init='distance'`` starts AT the distance operating point
+    (REINFORCE can only improve from there); ``init='random'`` is the independent control that distinguishes
+    a true no-headroom attractor from an optimiser artefact. Returns ``{logits, history, num_edges, init}``.
+    """
+    from src.validation import run_dynamic_mc
+    gc = build_candidate_graph(scene.positions, scene.comm_radius)
+    if init == "distance":
+        logits = (-distance_beta * gc.distance).clone().to(torch.float64)
+    elif init == "random":
+        g = torch.Generator().manual_seed(int(rand_seed))
+        logits = rand_scale * torch.randn(int(gc.num_edges), generator=g, dtype=torch.float64)
+    else:
+        raise ValueError(f"unknown init {init!r}")
+    logits = logits.requires_grad_(True)
+    omega = uniform_participation(scene.num_nodes, dtype=torch.float64, device=scene.positions.device)
+    opt = torch.optim.Adam([logits], lr=lr)
+    policy = _FreeLogitPolicy(logits)
+    history = []
+    for step in range(steps):
+        opt.zero_grad()
+        res = run_dynamic_mc(scene, ev, policy, proto, phy, num_trials=train_trials,
+                             generator=torch.Generator().manual_seed(base_seed + step),
+                             service_profile=profile, participation=omega, reinforce=True)
+        R = res.reinforce_correct                                   # [T, N] per-node correct
+        logp = res.reinforce_logp                                  # [T, N] differentiable
+        advantage = (R - R.mean(dim=0, keepdim=True)).detach()     # per-node baseline (variance reduction)
+        loss = -(omega.unsqueeze(0) * advantage * logp).sum(dim=1).mean()
+        loss.backward()
+        opt.step()
+        history.append(float(R.mean()))                            # in-sample per-node correct mass (proxy)
+    return {"logits": logits.detach(), "history": history, "num_edges": int(gc.num_edges), "init": init}
