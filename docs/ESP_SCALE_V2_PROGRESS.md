@@ -380,3 +380,33 @@ on what any diagonal ESP law (a trained GNN included) can do under the judge.
   now interpreted in light of the above: even the un-gated oracle operating point is not a legitimate win, so
   the open question becomes whether a DIFFERENT regime/objective (lower deadline pressure, or a latency/energy
   objective distance does not already optimise) has non-zero iso-reliability headroom that is GNN-learnable.
+
+### EV13 — Lever 1b: distillation diagnosis — the GNN is CAPABLE; parity was a TRAINER failure (not features/capacity)
+* **Setup** (`oracle_distill_results.json`): distil the GNN (per-node-centered MSE) to the per-scene MC-oracle
+  logits on 4 train scenes, test on 2 held-out scenes, capacity sweep hidden_dim 16 vs 64.
+* **Result (refutes the feature-gap hypothesis):**
+  - **Fit:** in-sample corr(GNN logits, oracle logits) = **0.856** (hidden_dim 16) ≈ **0.852** (64) — capacity
+    is NOT the limit (the big model fits no better) — and **held-out corr 0.857 ≈ in-sample** — the fit
+    GENERALISES. So the GNN's pure geometric+region features ARE enough to represent the oracle policy.
+  - **Held-out MC:** the distilled GNN **beats distance by +0.032** (scene 30: 0.464 vs 0.434; scene 31:
+    0.450 vs 0.417), capturing ~45% of the un-gated oracle's +0.071 headroom — **on scenes it never trained
+    on.** REINFORCE-trained GNNs stayed at distance (0.41); supervised distillation extracts a generalising
+    +0.03 the model was always capable of.
+* **Verdict: GNN-REACHABLE.** The original §13.2 parity was a **TRAINING/optimisation failure** (REINFORCE got
+  stuck at the distance attractor), NOT a feature, capacity, or generalisation limit. The model can represent
+  AND generalise a better-than-distance policy; the trainer was the bottleneck.
+* **CRITICAL caveat (combine with EV12/a):** the +0.03 the distilled GNN reaches is the SAME un-gated,
+  **reliability-bought** operating point as the oracle (the distillation eval measured P_correct only, not
+  F_wrong; the distilled policy mimics the oracle at corr 0.86, so it almost certainly inherits the oracle's
+  elevated F_wrong). EV12 showed that at MATCHED reliability the oracle headroom is ≈ 0. So: **the GNN CAN beat
+  distance on un-gated P_correct (trainer-fixable, e.g. distillation warm-start + REINFORCE), but NOT at equal
+  reliability** — the iso-reliability target is distance itself.
+* **Combined (a)+(b) bottom line:** in this regime, model capability is NOT the bottleneck and the trainer is
+  fixable, but a LEGITIMATE (reliability-matched) win over distance does not exist (oracle-certified). The
+  single highest-value next move: **re-probe the iso-reliability oracle headroom in a LESS deadline-dominated
+  regime** (larger R_d / lower N) — EV12's mechanism (the un-gated gain is "decide faster → fewer deadline
+  misses") suggests that where the deadline is not the binding constraint, decide-faster may buy correctness
+  WITHOUT the F_wrong trade, opening a non-zero iso-reliability headroom that EV13 proves the GNN could then
+  learn. If none appears even there, parity is robust and the honest deliverable is the oracle-certified
+  no-iso-reliability-headroom characterisation + the capability/trainer diagnosis. Compute-limited: 4 train +
+  2 held-out scenes; per-scene oracle = upper bound; held-out MC un-gated only.

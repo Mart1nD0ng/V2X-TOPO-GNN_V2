@@ -1,0 +1,84 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "experiment": "oracle_distillation_diagnosis",
+  "query_family": "ESP",
+  "smoke": false,
+  "git_commit": "6b9f812",
+  "node_count": 120,
+  "scenario": "matched_marginal_high",
+  "base_node_err": 0.35,
+  "corr_strength": 0.25,
+  "train_scenes": [
+    20,
+    21,
+    22,
+    23
+  ],
+  "heldout_scenes": [
+    30,
+    31
+  ],
+  "oracle_steps": 100,
+  "hidden_dims": [
+    16,
+    64
+  ],
+  "note": "distil GNN to per-scene MC-oracle logits; diagnose feature/capacity/generalization.",
+  "per_hidden_dim": {
+    "16": {
+      "in_sample_corr": 0.8560408078006074,
+      "heldout_corr": 0.8573676752361106,
+      "distill_final_loss": 1.4998827998708593
+    },
+    "64": {
+      "in_sample_corr": 0.8523091403170946,
+      "heldout_corr": 0.8510869453622396,
+      "distill_final_loss": 1.5000485696792265
+    }
+  },
+  "heldout_mc": {
+    "30": {
+      "distilled_gnn_Pc": 0.46399999999999997,
+      "distance_Pc": 0.434,
+      "oracle_Pc": 0.5046666666666666,
+      "distilled_minus_distance": 0.02999999999999997,
+      "oracle_minus_distance": 0.0706666666666666
+    },
+    "31": {
+      "distilled_gnn_Pc": 0.45,
+      "distance_Pc": 0.41666666666666663,
+      "oracle_Pc": 0.488,
+      "distilled_minus_distance": 0.03333333333333338,
+      "oracle_minus_distance": 0.07133333333333336
+    }
+  },
+  "headline": {
+    "best_in_sample_corr": 0.8560408078006074,
+    "small_in_sample_corr": 0.8560408078006074,
+    "mean_heldout_distilled_minus_distance": 0.031666666666666676,
+    "mean_heldout_oracle_minus_distance": 0.07099999999999998,
+    "verdict": "GNN-REACHABLE: distilled GNN fits in-sample (corr 0.86) AND beats distance held-out (+0.032) -> the headroom is learnable; parity was a TRAINING/objective failure, fix the trainer"
+  },
+  "manifest": {
+    "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+    "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+    "evidence_hash": "6f1b0f00fcf8a57d7e28517b8d90f8b8a5fc9f1e5404b55ca5f2cb9859b14e3c",
+    "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+    "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+    "policy_hash": "oracle_distill",
+    "checkpoint_hash": "distill",
+    "experiment_config_hash": "ed8c040e201d2ff8098f8db3db8cc98d657dc675117296e3d498188036184d89",
+    "query_law": "esp",
+    "full_physics": true,
+    "git_commit": "6b9f812",
+    "manifest_id": "Lever1b-distill",
+    "model_seeds": [
+      20,
+      21,
+      22,
+      23
+    ]
+  },
+  "runtime_total_s": 2984.6
+}

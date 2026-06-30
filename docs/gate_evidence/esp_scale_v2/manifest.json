@@ -165,6 +165,17 @@
         "corrected_verdict": "ISO-RELIABILITY headroom over distance ~= 0 -> distance is the reliability-feasible per-edge Pareto optimum; section-13.2 parity is the HONEST CEILING at equal reliability, NOT a learning gap. Supersedes the optimistic un-gated read. Compute-limited: 2-3 scenes; per-scene oracle = upper bound; Wilson hw ~0.025.",
         "judge_integrity": "reinforce_wrong is gated; judge-invariant test still passes."
       }
+    },
+    "EV13-oracle-distillation": {
+      "date": "2026-06-30",
+      "contributes_to": ["post-round: why is the GNN at parity?"],
+      "modules": ["docs/gate_evidence/esp_scale_v2/run_oracle_distill.py"],
+      "evidence": {
+        "result_json": "docs/gate_evidence/esp_scale_v2/oracle_distill_results.json",
+        "finding": "GNN-REACHABLE. Distilling the GNN to per-scene MC-oracle logits: in-sample corr 0.856 (hidden_dim 16) ~= 0.852 (64) -> NOT capacity-limited; held-out corr 0.857 ~= in-sample -> the fit generalises; pure geometric+region features suffice. Held-out MC: distilled GNN beats distance by +0.032 (captures ~45% of the un-gated oracle's +0.071) on unseen scenes. -> the original section-13.2 parity was a TRAINING/optimisation failure (REINFORCE stuck at the distance attractor), NOT a feature/capacity/generalisation limit.",
+        "critical_caveat": "The +0.032 is the same un-gated, RELIABILITY-BOUGHT operating point as the oracle (EV12: iso-reliability headroom ~0; the distill eval measured P_correct only). So the GNN can beat distance on un-gated P_correct (trainer-fixable) but NOT at equal reliability.",
+        "combined_verdict": "(a)+(b): model capability is not the bottleneck and the trainer is fixable, but a legitimate reliability-matched win over distance does not exist in this regime. Highest-value next: re-probe iso-reliability oracle headroom in a less deadline-dominated regime (larger R_d / lower N)."
+      }
     }
   }
 }
