@@ -1,0 +1,845 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "experiment": "multiobjective_pareto_measurement",
+  "query_family": "ESP",
+  "smoke": false,
+  "git_commit": "1f4cc37",
+  "regime": {
+    "scenario": "matched_marginal_high",
+    "base_node_err": 0.35,
+    "corr_strength": 0.25,
+    "R_d": 6,
+    "node_count": 120
+  },
+  "test_scenes": [
+    30,
+    31,
+    34,
+    35
+  ],
+  "gnn_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "trials_per_block": 1500,
+  "blocks": [
+    "gate",
+    "estim"
+  ],
+  "margins": {
+    "m_Fw": 0.005,
+    "m_Fd": 0.005,
+    "m_Pc": 0.012
+  },
+  "free_axes": [
+    "lat_basin",
+    "lat_cvar",
+    "energy",
+    "energy_cvar"
+  ],
+  "cvar_level": 0.9,
+  "note": "matched-reliability(Fw/Fs/Fd)+matched-Pc gate then Pareto over latency/energy; per-scene sign test PRIMARY (4 scenes); distance beta frozen 0.04; per-scene oracle EXCLUDED; CRN on common evidence (same seed/block); sample-split gate vs estim. compute-limited.",
+  "raw": {
+    "30": {
+      "gate": {
+        "distance": {
+          "Pc": 0.42466666666666664,
+          "Fw": 0.019333333333333334,
+          "Fs": 0.0,
+          "Fd": 0.5559999999999999,
+          "lat_basin": 5.56828885400314,
+          "lat_cvar": 0.014718779186246287,
+          "energy": 311.6848232298796,
+          "energy_cvar": 325.2451916544391
+        },
+        "uniform_esp": {
+          "Pc": 0.376,
+          "Fw": 0.008,
+          "Fs": 0.0,
+          "Fd": 0.616,
+          "lat_basin": 5.819148936170213,
+          "lat_cvar": 0.01523339306543864,
+          "energy": 336.27146627485774,
+          "energy_cvar": 352.15060718788766
+        },
+        "link_quality": {
+          "Pc": 0.42266666666666663,
+          "Fw": 0.016666666666666666,
+          "Fs": 0.0,
+          "Fd": 0.5606666666666666,
+          "lat_basin": 5.626182965299685,
+          "lat_cvar": 0.014698261290964638,
+          "energy": 315.23110775355536,
+          "energy_cvar": 329.07738351458187
+        },
+        "load_balanced": {
+          "Pc": 0.3853333333333333,
+          "Fw": 0.009333333333333332,
+          "Fs": 0.0,
+          "Fd": 0.6053333333333333,
+          "lat_basin": 5.8166089965397925,
+          "lat_cvar": 0.015064864082328011,
+          "energy": 334.28174004179243,
+          "energy_cvar": 350.0295666843645
+        },
+        "region_bridge": {
+          "Pc": 0.384,
+          "Fw": 0.01,
+          "Fs": 0.0,
+          "Fd": 0.606,
+          "lat_basin": 5.788194444444445,
+          "lat_cvar": 0.015478579525016627,
+          "energy": 334.3884299494028,
+          "energy_cvar": 349.7142653879534
+        },
+        "gnn": {
+          "Pc": 0.4106666666666666,
+          "Fw": 0.018533333333333332,
+          "Fs": 0.0,
+          "Fd": 0.5708,
+          "lat_basin": 5.721869698731515,
+          "lat_cvar": 0.01595239334483233,
+          "energy": 318.77598252571494,
+          "energy_cvar": 331.0760931147315
+        },
+        "gnn_per_seed_Pc": [
+          0.42666666666666664,
+          0.42333333333333334,
+          0.422,
+          0.39066666666666666,
+          0.39066666666666666
+        ]
+      },
+      "estim": {
+        "distance": {
+          "Pc": 0.442,
+          "Fw": 0.024666666666666667,
+          "Fs": 0.0,
+          "Fd": 0.5333333333333333,
+          "lat_basin": 5.532428355957768,
+          "lat_cvar": 0.014714368708594473,
+          "energy": 311.4550555567131,
+          "energy_cvar": 325.58606678533346
+        },
+        "uniform_esp": {
+          "Pc": 0.3833333333333333,
+          "Fw": 0.015333333333333332,
+          "Fs": 0.0,
+          "Fd": 0.6013333333333333,
+          "lat_basin": 5.817391304347826,
+          "lat_cvar": 0.01524008538587745,
+          "energy": 336.4446550668264,
+          "energy_cvar": 352.30115027504183
+        },
+        "link_quality": {
+          "Pc": 0.4373333333333333,
+          "Fw": 0.025333333333333333,
+          "Fs": 0.0,
+          "Fd": 0.5373333333333333,
+          "lat_basin": 5.564024390243903,
+          "lat_cvar": 0.014688530851957485,
+          "energy": 314.7080415114218,
+          "energy_cvar": 329.1606338307973
+        },
+        "load_balanced": {
+          "Pc": 0.38666666666666666,
+          "Fw": 0.016,
+          "Fs": 0.0,
+          "Fd": 0.5973333333333333,
+          "lat_basin": 5.836206896551724,
+          "lat_cvar": 0.015059952222698264,
+          "energy": 334.4080865907922,
+          "energy_cvar": 350.1452721800892
+        },
+        "region_bridge": {
+          "Pc": 0.39866666666666667,
+          "Fw": 0.018666666666666665,
+          "Fs": 0.0,
+          "Fd": 0.5826666666666667,
+          "lat_basin": 5.812709030100335,
+          "lat_cvar": 0.015470786934084541,
+          "energy": 334.5709805067093,
+          "energy_cvar": 349.39032347123157
+        },
+        "gnn": {
+          "Pc": 0.42333333333333334,
+          "Fw": 0.02493333333333333,
+          "Fs": 0.0,
+          "Fd": 0.5517333333333333,
+          "lat_basin": 5.715643223739436,
+          "lat_cvar": 0.01595158602420349,
+          "energy": 318.5808812067048,
+          "energy_cvar": 331.68340753920546
+        },
+        "gnn_per_seed_Pc": [
+          0.4353333333333333,
+          0.4373333333333333,
+          0.43,
+          0.408,
+          0.40599999999999997
+        ]
+      }
+    },
+    "31": {
+      "gate": {
+        "distance": {
+          "Pc": 0.4333333333333333,
+          "Fw": 0.024666666666666667,
+          "Fs": 0.0,
+          "Fd": 0.542,
+          "lat_basin": 5.575384615384616,
+          "lat_cvar": 0.01472991917032612,
+          "energy": 311.03766127711964,
+          "energy_cvar": 324.16578736824835
+        },
+        "uniform_esp": {
+          "Pc": 0.3753333333333333,
+          "Fw": 0.016666666666666666,
+          "Fs": 0.0,
+          "Fd": 0.608,
+          "lat_basin": 5.836589698046181,
+          "lat_cvar": 0.015243389767892603,
+          "energy": 335.68462457258175,
+          "energy_cvar": 351.388608553671
+        },
+        "link_quality": {
+          "Pc": 0.426,
+          "Fw": 0.022,
+          "Fs": 0.0,
+          "Fd": 0.5519999999999999,
+          "lat_basin": 5.618153364632238,
+          "lat_cvar": 0.014705848015436975,
+          "energy": 314.3844378429572,
+          "energy_cvar": 328.0127324046621
+        },
+        "load_balanced": {
+          "Pc": 0.384,
+          "Fw": 0.019333333333333334,
+          "Fs": 0.0,
+          "Fd": 0.5966666666666667,
+          "lat_basin": 5.824652777777778,
+          "lat_cvar": 0.015072439138128396,
+          "energy": 334.0232533496352,
+          "energy_cvar": 349.564188794793
+        },
+        "region_bridge": {
+          "Pc": 0.3913333333333333,
+          "Fw": 0.02,
+          "Fs": 0.0,
+          "Fd": 0.5886666666666667,
+          "lat_basin": 5.802385008517888,
+          "lat_cvar": 0.015495537947804143,
+          "energy": 334.01957890645014,
+          "energy_cvar": 348.9259177026478
+        },
+        "gnn": {
+          "Pc": 0.4169333333333333,
+          "Fw": 0.030533333333333336,
+          "Fs": 0.0,
+          "Fd": 0.5525333333333333,
+          "lat_basin": 5.732725544705117,
+          "lat_cvar": 0.015973744000773622,
+          "energy": 318.55631520395826,
+          "energy_cvar": 331.2647344652425
+        },
+        "gnn_per_seed_Pc": [
+          0.43,
+          0.428,
+          0.42533333333333334,
+          0.4033333333333333,
+          0.39799999999999996
+        ]
+      },
+      "estim": {
+        "distance": {
+          "Pc": 0.412,
+          "Fw": 0.012,
+          "Fs": 0.0,
+          "Fd": 0.576,
+          "lat_basin": 5.597087378640777,
+          "lat_cvar": 0.014734368812858842,
+          "energy": 312.75759202830744,
+          "energy_cvar": 326.1072755306602
+        },
+        "uniform_esp": {
+          "Pc": 0.36666666666666664,
+          "Fw": 0.012,
+          "Fs": 0.0,
+          "Fd": 0.6213333333333333,
+          "lat_basin": 5.825454545454545,
+          "lat_cvar": 0.015255822453285946,
+          "energy": 337.58849915921473,
+          "energy_cvar": 352.88562260952943
+        },
+        "link_quality": {
+          "Pc": 0.4053333333333333,
+          "Fw": 0.014,
+          "Fs": 0.0,
+          "Fd": 0.5806666666666667,
+          "lat_basin": 5.618421052631579,
+          "lat_cvar": 0.01471436020668429,
+          "energy": 316.13415808944217,
+          "energy_cvar": 329.52152855537395
+        },
+        "load_balanced": {
+          "Pc": 0.372,
+          "Fw": 0.01,
+          "Fs": 0.0,
+          "Fd": 0.618,
+          "lat_basin": 5.811827956989247,
+          "lat_cvar": 0.015077978556199413,
+          "energy": 335.60302914839866,
+          "energy_cvar": 350.44557342964583
+        },
+        "region_bridge": {
+          "Pc": 0.37066666666666664,
+          "Fw": 0.008666666666666666,
+          "Fs": 0.0,
+          "Fd": 0.6206666666666667,
+          "lat_basin": 5.825539568345324,
+          "lat_cvar": 0.015504018505696188,
+          "energy": 335.6166959347783,
+          "energy_cvar": 350.22815332491245
+        },
+        "gnn": {
+          "Pc": 0.4016,
+          "Fw": 0.016,
+          "Fs": 0.0,
+          "Fd": 0.5824,
+          "lat_basin": 5.723281020899887,
+          "lat_cvar": 0.015972804506644105,
+          "energy": 319.12734866933545,
+          "energy_cvar": 331.51770567245177
+        },
+        "gnn_per_seed_Pc": [
+          0.41466666666666663,
+          0.41466666666666663,
+          0.4126666666666666,
+          0.3833333333333333,
+          0.38266666666666665
+        ]
+      }
+    },
+    "34": {
+      "gate": {
+        "distance": {
+          "Pc": 0.42866666666666664,
+          "Fw": 0.016666666666666666,
+          "Fs": 0.0,
+          "Fd": 0.5546666666666666,
+          "lat_basin": 5.553654743390358,
+          "lat_cvar": 0.014723602716692433,
+          "energy": 310.9514254819755,
+          "energy_cvar": 324.1220319541717
+        },
+        "uniform_esp": {
+          "Pc": 0.3753333333333333,
+          "Fw": 0.010666666666666666,
+          "Fs": 0.0,
+          "Fd": 0.614,
+          "lat_basin": 5.818827708703375,
+          "lat_cvar": 0.015252247669237242,
+          "energy": 336.0543520028054,
+          "energy_cvar": 351.6761158357288
+        },
+        "link_quality": {
+          "Pc": 0.42466666666666664,
+          "Fw": 0.014666666666666666,
+          "Fs": 0.0,
+          "Fd": 0.5606666666666666,
+          "lat_basin": 5.577708006279435,
+          "lat_cvar": 0.014699784925292832,
+          "energy": 314.2478591444407,
+          "energy_cvar": 328.1113086560017
+        },
+        "load_balanced": {
+          "Pc": 0.3853333333333333,
+          "Fw": 0.011333333333333332,
+          "Fs": 0.0,
+          "Fd": 0.6033333333333333,
+          "lat_basin": 5.825259515570934,
+          "lat_cvar": 0.015069419377100237,
+          "energy": 333.77669796725803,
+          "energy_cvar": 348.83492614754306
+        },
+        "region_bridge": {
+          "Pc": 0.3813333333333333,
+          "Fw": 0.012,
+          "Fs": 0.0,
+          "Fd": 0.6066666666666667,
+          "lat_basin": 5.8024475524475525,
+          "lat_cvar": 0.01550370211350644,
+          "energy": 334.58836252069364,
+          "energy_cvar": 349.7654889363619
+        },
+        "gnn": {
+          "Pc": 0.41226666666666667,
+          "Fw": 0.016399999999999998,
+          "Fs": 0.0,
+          "Fd": 0.5713333333333332,
+          "lat_basin": 5.709493053352409,
+          "lat_cvar": 0.01595341979151483,
+          "energy": 318.51042671584787,
+          "energy_cvar": 331.28275294552685
+        },
+        "gnn_per_seed_Pc": [
+          0.43066666666666664,
+          0.42266666666666663,
+          0.42266666666666663,
+          0.39266666666666666,
+          0.39266666666666666
+        ]
+      },
+      "estim": {
+        "distance": {
+          "Pc": 0.4433333333333333,
+          "Fw": 0.020666666666666667,
+          "Fs": 0.0,
+          "Fd": 0.536,
+          "lat_basin": 5.574436090225564,
+          "lat_cvar": 0.014721954001955468,
+          "energy": 311.2132067030454,
+          "energy_cvar": 324.63975903737463
+        },
+        "uniform_esp": {
+          "Pc": 0.3893333333333333,
+          "Fw": 0.014666666666666666,
+          "Fs": 0.0,
+          "Fd": 0.596,
+          "lat_basin": 5.809931506849315,
+          "lat_cvar": 0.015248949187861707,
+          "energy": 335.5398488828362,
+          "energy_cvar": 351.3158365216926
+        },
+        "link_quality": {
+          "Pc": 0.436,
+          "Fw": 0.02,
+          "Fs": 0.0,
+          "Fd": 0.5439999999999999,
+          "lat_basin": 5.602446483180428,
+          "lat_cvar": 0.014699583772545937,
+          "energy": 314.29892283566966,
+          "energy_cvar": 327.91785854857113
+        },
+        "load_balanced": {
+          "Pc": 0.39666666666666667,
+          "Fw": 0.014666666666666666,
+          "Fs": 0.0,
+          "Fd": 0.5886666666666667,
+          "lat_basin": 5.788235294117647,
+          "lat_cvar": 0.015066126512598728,
+          "energy": 333.3897675584475,
+          "energy_cvar": 348.6063281504463
+        },
+        "region_bridge": {
+          "Pc": 0.39866666666666667,
+          "Fw": 0.016,
+          "Fs": 0.0,
+          "Fd": 0.5853333333333333,
+          "lat_basin": 5.804347826086956,
+          "lat_cvar": 0.01549619438233593,
+          "energy": 333.82143873292455,
+          "energy_cvar": 348.67457282548406
+        },
+        "gnn": {
+          "Pc": 0.42746666666666666,
+          "Fw": 0.022399999999999996,
+          "Fs": 0.0,
+          "Fd": 0.5501333333333334,
+          "lat_basin": 5.708646830631123,
+          "lat_cvar": 0.01595194784183871,
+          "energy": 318.2540537759968,
+          "energy_cvar": 331.17552019002073
+        },
+        "gnn_per_seed_Pc": [
+          0.4373333333333333,
+          0.43866666666666665,
+          0.4433333333333333,
+          0.41,
+          0.408
+        ]
+      }
+    },
+    "35": {
+      "gate": {
+        "distance": {
+          "Pc": 0.43,
+          "Fw": 0.02,
+          "Fs": 0.0,
+          "Fd": 0.5499999999999999,
+          "lat_basin": 5.587596899224806,
+          "lat_cvar": 0.01472318363241373,
+          "energy": 311.4202797607266,
+          "energy_cvar": 324.6675537184044
+        },
+        "uniform_esp": {
+          "Pc": 0.3853333333333333,
+          "Fw": 0.014666666666666666,
+          "Fs": 0.0,
+          "Fd": 0.6,
+          "lat_basin": 5.828719723183391,
+          "lat_cvar": 0.015253253203401705,
+          "energy": 336.16099158955774,
+          "energy_cvar": 351.6495473143313
+        },
+        "link_quality": {
+          "Pc": 0.42466666666666664,
+          "Fw": 0.019333333333333334,
+          "Fs": 0.0,
+          "Fd": 0.5559999999999999,
+          "lat_basin": 5.612244897959184,
+          "lat_cvar": 0.014700988874785848,
+          "energy": 314.5007759128446,
+          "energy_cvar": 328.3007415614143
+        },
+        "load_balanced": {
+          "Pc": 0.3853333333333333,
+          "Fw": 0.015333333333333332,
+          "Fs": 0.0,
+          "Fd": 0.5993333333333333,
+          "lat_basin": 5.825259515570934,
+          "lat_cvar": 0.01507557120951089,
+          "energy": 334.13800260482236,
+          "energy_cvar": 349.4161264314098
+        },
+        "region_bridge": {
+          "Pc": 0.3953333333333333,
+          "Fw": 0.014666666666666666,
+          "Fs": 0.0,
+          "Fd": 0.59,
+          "lat_basin": 5.833052276559865,
+          "lat_cvar": 0.01550219960316087,
+          "energy": 334.25067646727985,
+          "energy_cvar": 348.56889766424115
+        },
+        "gnn": {
+          "Pc": 0.418,
+          "Fw": 0.022666666666666665,
+          "Fs": 0.0,
+          "Fd": 0.5593333333333333,
+          "lat_basin": 5.714561518098489,
+          "lat_cvar": 0.015942450595687045,
+          "energy": 318.30295975904534,
+          "energy_cvar": 331.291234022685
+        },
+        "gnn_per_seed_Pc": [
+          0.4393333333333333,
+          0.42466666666666664,
+          0.42466666666666664,
+          0.4013333333333333,
+          0.39999999999999997
+        ]
+      },
+      "estim": {
+        "distance": {
+          "Pc": 0.432,
+          "Fw": 0.02333333333333333,
+          "Fs": 0.0,
+          "Fd": 0.5446666666666666,
+          "lat_basin": 5.561728395061729,
+          "lat_cvar": 0.014719859869459806,
+          "energy": 310.71809563228214,
+          "energy_cvar": 323.9294374040326
+        },
+        "uniform_esp": {
+          "Pc": 0.39,
+          "Fw": 0.013333333333333332,
+          "Fs": 0.0,
+          "Fd": 0.5966666666666667,
+          "lat_basin": 5.8136752136752134,
+          "lat_cvar": 0.015238198756729718,
+          "energy": 335.5439320751365,
+          "energy_cvar": 350.9071634201803
+        },
+        "link_quality": {
+          "Pc": 0.42666666666666664,
+          "Fw": 0.021333333333333333,
+          "Fs": 0.0,
+          "Fd": 0.5519999999999999,
+          "lat_basin": 5.6171875,
+          "lat_cvar": 0.014697206256325899,
+          "energy": 314.29349014675597,
+          "energy_cvar": 328.10415068797397
+        },
+        "load_balanced": {
+          "Pc": 0.3893333333333333,
+          "Fw": 0.014,
+          "Fs": 0.0,
+          "Fd": 0.5966666666666667,
+          "lat_basin": 5.844178082191781,
+          "lat_cvar": 0.015069738947983543,
+          "energy": 333.7716318087674,
+          "energy_cvar": 349.21809002259295
+        },
+        "region_bridge": {
+          "Pc": 0.39,
+          "Fw": 0.014,
+          "Fs": 0.0,
+          "Fd": 0.596,
+          "lat_basin": 5.8,
+          "lat_cvar": 0.015489244455731238,
+          "energy": 333.8809408011139,
+          "energy_cvar": 348.514705066811
+        },
+        "gnn": {
+          "Pc": 0.4173333333333333,
+          "Fw": 0.0208,
+          "Fs": 0.0,
+          "Fd": 0.5618666666666666,
+          "lat_basin": 5.700888403681482,
+          "lat_cvar": 0.01595035071679191,
+          "energy": 318.4177433123538,
+          "energy_cvar": 330.96828956294513
+        },
+        "gnn_per_seed_Pc": [
+          0.428,
+          0.42733333333333334,
+          0.42866666666666664,
+          0.4026666666666667,
+          0.39999999999999997
+        ]
+      }
+    }
+  },
+  "analysis": {
+    "uniform_esp": {
+      "reliability_gate": {
+        "mean_dFw": -0.007666666666666667,
+        "mean_dFs": 0.0,
+        "mean_dFd": 0.05883333333333335,
+        "passed": false
+      },
+      "pc_gate": {
+        "mean_dPc": -0.051166666666666666,
+        "passed": false
+      },
+      "admitted": false,
+      "free_axes_signs": {
+        "lat_basin": {
+          "mean_diff_vs_distance": 0.2501930876102656,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        },
+        "lat_cvar": {
+          "mean_diff_vs_distance": 0.0005231260977215579,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        },
+        "energy": {
+          "mean_diff_vs_distance": 24.74324631591645,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        },
+        "energy_cvar": {
+          "mean_diff_vs_distance": 26.78680851726081,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        }
+      },
+      "dominates_distance": false,
+      "strictly_better_axes": []
+    },
+    "link_quality": {
+      "reliability_gate": {
+        "mean_dFw": -0.0020000000000000005,
+        "mean_dFs": 0.0,
+        "mean_dFd": 0.006666666666666654,
+        "passed": false
+      },
+      "pc_gate": {
+        "mean_dPc": -0.004666666666666666,
+        "passed": true
+      },
+      "admitted": false,
+      "free_axes_signs": {
+        "lat_basin": {
+          "mean_diff_vs_distance": 0.034099801542518016,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        },
+        "lat_cvar": {
+          "mean_diff_vs_distance": -2.2717576338744314e-05,
+          "scenes_better": 4,
+          "scenes_worse": 0,
+          "direction": "better"
+        },
+        "energy": {
+          "mean_diff_vs_distance": 3.3226656657353857,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        },
+        "energy_cvar": {
+          "mean_diff_vs_distance": 3.6104082163288496,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        }
+      },
+      "dominates_distance": false,
+      "strictly_better_axes": [
+        "lat_cvar"
+      ]
+    },
+    "load_balanced": {
+      "reliability_gate": {
+        "mean_dFw": -0.006333333333333334,
+        "mean_dFs": 0.0,
+        "mean_dFd": 0.05049999999999999,
+        "passed": false
+      },
+      "pc_gate": {
+        "mean_dPc": -0.04416666666666666,
+        "passed": false
+      },
+      "admitted": false,
+      "free_axes_signs": {
+        "lat_basin": {
+          "mean_diff_vs_distance": 0.25369200249114043,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        },
+        "lat_cvar": {
+          "mean_diff_vs_distance": 0.0003458112116528399,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        },
+        "energy": {
+          "mean_diff_vs_distance": 22.75714129651442,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        },
+        "energy_cvar": {
+          "mean_diff_vs_distance": 24.538181256343336,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        }
+      },
+      "dominates_distance": false,
+      "strictly_better_axes": []
+    },
+    "region_bridge": {
+      "reliability_gate": {
+        "mean_dFw": -0.006,
+        "mean_dFs": 0.0,
+        "mean_dFd": 0.04716666666666669,
+        "passed": false
+      },
+      "pc_gate": {
+        "mean_dPc": -0.04116666666666666,
+        "passed": false
+      },
+      "admitted": false,
+      "free_axes_signs": {
+        "lat_basin": {
+          "mean_diff_vs_distance": 0.24422905116169424,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        },
+        "lat_cvar": {
+          "mean_diff_vs_distance": 0.0007674232212448269,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        },
+        "energy": {
+          "mean_diff_vs_distance": 22.936526513794504,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        },
+        "energy_cvar": {
+          "mean_diff_vs_distance": 24.136303982759543,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        }
+      },
+      "dominates_distance": false,
+      "strictly_better_axes": []
+    },
+    "gnn": {
+      "reliability_gate": {
+        "mean_dFw": 0.0018666666666666658,
+        "mean_dFs": 0.0,
+        "mean_dFd": 0.012833333333333335,
+        "passed": false
+      },
+      "pc_gate": {
+        "mean_dPc": -0.01469999999999999,
+        "passed": false
+      },
+      "admitted": false,
+      "free_axes_signs": {
+        "lat_basin": {
+          "mean_diff_vs_distance": 0.14569481476652268,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        },
+        "lat_cvar": {
+          "mean_diff_vs_distance": 0.0012340344241524065,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        },
+        "energy": {
+          "mean_diff_vs_distance": 7.059019261010704,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        },
+        "energy_cvar": {
+          "mean_diff_vs_distance": 6.270596051805541,
+          "scenes_better": 0,
+          "scenes_worse": 4,
+          "direction": "worse"
+        }
+      },
+      "dominates_distance": false,
+      "strictly_better_axes": []
+    }
+  },
+  "headline": {
+    "admitted_policies": [],
+    "policies_dominating_distance": [],
+    "distance_is_pareto_dominated": false,
+    "verdict": "DISTANCE NOT DOMINATED: among policies matched to it on reliability+Pc, none is CI/sign-strictly better on any latency/energy axis -> distance is on the multi-objective Pareto frontier (not just the P_correct iso-reliability ceiling)."
+  },
+  "manifest": {
+    "physics_hash": "b0bff9d98341b872c0920983d2a5e2c3c3a6e0b51b83961aecb80ee547ed0464",
+    "service_profile_hash": "f2afc8640684b5843fdc89eeb63a76c84f83d9fd4b1def52d938ed4c73d24768",
+    "evidence_hash": "6f1b0f00fcf8a57d7e28517b8d90f8b8a5fc9f1e5404b55ca5f2cb9859b14e3c",
+    "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+    "protocol_hash": "8bdff1b1372bea269e23d6f9ba9cc1d3e76a87d21d69af9ed95b2fd8369fcfc7",
+    "policy_hash": "pareto_measure",
+    "checkpoint_hash": "pareto-measure",
+    "experiment_config_hash": "ed8c040e201d2ff8098f8db3db8cc98d657dc675117296e3d498188036184d89",
+    "query_law": "esp",
+    "full_physics": true,
+    "git_commit": "1f4cc37",
+    "manifest_id": "RouteB-pareto-measure",
+    "model_seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "runtime_total_s": 938.5
+}

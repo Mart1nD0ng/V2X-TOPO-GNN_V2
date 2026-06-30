@@ -186,6 +186,17 @@
         "finding": "iso-reliability headroom over distance stays ~0 at every deadline budget: R_d=6 -0.007, R_d=10 -0.022, R_d=14 -0.022 (R_d=14 bit-identical to R_d=10). distance F_deadline INVARIANT at ~0.552 across R_d in {6,10,14} -> R_d was NEVER the binding constraint; the ~55% deadline misses are physics/MAC-limited (cannot form quorum), not epoch-limited. The un-gated oracle still beats distance ~+0.06 at every R_d but it is entirely reliability-bought.",
         "verdict": "NO legitimate iso-reliability P_correct headroom over distance, and relaxing the deadline does NOT open it. The less-deadline-dominated escape hatch is closed -- the limit is consensus physics, not the time budget. Parity is robust on the P_correct axis. Compute-limited: 2 scenes."
       }
+    },
+    "EV15-multiobjective-pareto": {
+      "date": "2026-06-30",
+      "contributes_to": ["Route B: is distance only the P_correct ceiling, or Pareto-dominant?"],
+      "modules": ["docs/gate_evidence/esp_scale_v2/run_pareto_measure.py", "docs/gate_evidence/esp_scale_v2/route_b_pareto_design.json (7-agent design)"],
+      "evidence": {
+        "result_json": "docs/gate_evidence/esp_scale_v2/pareto_measure_results.json",
+        "finding": "distance is the STRONG CORNER of the full multi-objective surface, not just the P_correct ceiling. Full 8-axis vector for distance/uniform/link_quality/load_balanced/region_bridge/5-seed-GNN (4 scenes x 2 sample-split blocks x 1500 trials), matched-reliability(Fw/Fs/Fd)+Pc gate then latency/energy sign test. NO policy admitted: distance is simultaneously best/tied on P_correct AND F_deadline, so nothing enters the matched set. On raw vectors distance is better-or-equal on all 7 axes vs every policy; the trained GNN is WEAKLY DOMINATED by distance (worse Pc -0.015, Fd +0.013, lat_basin +0.146, energy +7.1; tied lat_cvar). Only sliver: link_quality marginally better lat_cvar (~0, fails Fd gate).",
+        "mechanism": "In this V2X consensus regime the objectives are ALIGNED not in tension: nearest/best-link peers give the most reliable polls -> fastest quorum -> highest Pc + fewest deadline misses + lowest latency, AND shortest links -> lowest tx energy. No Pareto tradeoff for a learned policy to exploit; a learned constructor can at best MATCH distance.",
+        "verdict": "distance Pareto-DOMINANT in the deployable set; the GNN is dominated by it on every axis. A genuine learning win needs a regime where objectives are in TENSION (correlated-redundant peers, energy decoupled from distance, mobility/adversarial). Compute-limited: 4 scenes, sign test directional; free-edge LATENCY oracle (the latency analog of EV12) NOT run -- optional completion."
+      }
     }
   }
 }

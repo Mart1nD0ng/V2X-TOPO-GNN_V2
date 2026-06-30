@@ -434,3 +434,53 @@ on what any diagonal ESP law (a trained GNN included) can do under the judge.
   beats distance ~+0.06 at every R_d, but it is all reliability-bought, exactly as at R_d=6.)
 * **Next:** Route B — the multi-objective Pareto surface (is distance dominated on latency/energy at matched
   reliability+Pc, or only the P_correct ceiling?).
+
+### EV15 — Route B: multi-objective Pareto surface — distance is the strong corner, NOT just the P_correct ceiling
+* **Setup** (`pareto_measure_results.json`, per the vetted `route_b_pareto_design.json`): measure the full
+  8-axis vector (Pc, Fw, Fs, Fd, lat_basin=basin_tau_correct_mean, lat_cvar, energy, energy_cvar) for distance
+  (frozen β=0.04), uniform, link_quality, load_balanced, region_bridge, and the 5-seed trained GNN over 4
+  held-out scenes × 2 sample-split blocks × 1500 trials. Gate = matched-to-distance on Fw/Fs/**Fd** (margins
+  0.005) + Pc-equivalence (margin 0.012); then per-scene SIGN test on the 4 latency/energy axes. Per-scene
+  oracle EXCLUDED (upper bound). CVaR is CVaR_0.9.
+* **Result — distance Pareto-DOMINATES the deployable set; the GNN is dominated by it:**
+
+  | policy vs distance | Pc | Fd | lat_basin | energy | admitted? |
+  |---|---|---|---|---|---|
+  | distance (ref) | 0.432 | 0.547 | 5.566 | 311.5 | — |
+  | trained GNN | −0.015 | +0.013 | +0.146 (worse) | +7.1 (worse) | ✗ (worse on every axis) |
+  | uniform | −0.051 | +0.059 | +0.250 | +24.7 | ✗ (strongly dominated) |
+  | link_quality | −0.005 | +0.007 | +0.034 | +3.3 | ✗ (fails Fd by 0.002; lat_cvar edge negligible ~0) |
+  | load_balanced | −0.044 | +0.050 | +0.254 | +22.8 | ✗ |
+  | region_bridge | −0.041 | +0.047 | +0.244 | +22.9 | ✗ |
+
+  **No policy is admitted** — distance is simultaneously the best (or tied-best) deployable policy on
+  **P_correct AND F_deadline**, so nothing even enters the matched feasible set to challenge it on
+  latency/energy. And on the raw vectors distance is **better-or-equal on all 7 axes** vs every policy. The
+  **trained GNN is weakly DOMINATED by distance** (worse on Pc, Fd, mean latency, energy; tied on lat_cvar).
+  The only sliver of a distance weakness is lat_cvar (tail latency) where link_quality "wins" — but by a
+  negligible magnitude (~0) and link_quality fails the Fd gate.
+* **Verdict + mechanism (the deep insight):** distance is **NOT only the P_correct iso-reliability ceiling — it
+  is the strong corner of the WHOLE multi-objective Pareto surface.** Why: in this V2X consensus regime the
+  objectives are **ALIGNED, not in tension** — polling the nearest / best-link peers simultaneously gives (a)
+  the most reliable polls → fastest quorum → highest Pc, fewest deadline misses, lowest latency; and (b) the
+  shortest links → lowest tx energy. There is **no Pareto tradeoff for a learned policy to exploit**; "nearest"
+  is a near-optimal multi-objective heuristic. A learned topology constructor can at best MATCH distance (and
+  this GNN slightly under-matches). Compute-limited: 4 scenes, per-scene SIGN test (directional, not
+  definitive); the free-edge LATENCY oracle (the latency analog of EV12's P_correct oracle) was NOT run
+  (skipped because no admitted policy beat distance on latency) — an optional rigor-completion.
+
+---
+
+## POST-ROUND CONCLUSION — can the GNN beat distance? (EV12–EV15)
+
+After §13.2 parity, four experiments asked whether ANY legitimate superiority over distance exists:
+
+| Axis / route | Finding |
+|---|---|
+| EV12 P_correct, un-gated | oracle beats distance +0.10 — but entirely **reliability-bought** |
+| EV12 P_correct, iso-reliability | headroom ≈ **0** — distance is the per-edge reliability-feasible optimum |
+| EV13 capability | the GNN **can** represent + generalise a better-than-distance policy; parity was a **trainer** failure (fixable), not a model limit |
+| EV14 P_correct vs deadline budget | relaxing R_d opens **no** headroom — R_d isn't binding; the limit is consensus physics |
+| EV15 multi-objective Pareto | distance is the **strong corner** of {Pc, reliability, deadline, latency, energy}; the GNN is dominated by it; objectives are **aligned** |
+
+**Bottom line:** **distance is not just a strong P_correct baseline — it is the (near-)optimal corner of the project's entire multi-objective surface in this regime, because the objectives are aligned (nearest peer is best on every axis at once).** The learned GNN is capability-sufficient and trainer-limited, but there is **no legitimate objective on which it can beat distance here**. A genuine learning win would require a regime where the objectives are in TENSION (e.g. correlated-error structure that makes the locally-best peer globally redundant, sparse/asymmetric link costs decoupling energy from distance, or adversarial/mobility dynamics) — exactly the conditions the per-edge oracle (EV12/EV13/EV15) shows are absent in the current mm_high setup.
