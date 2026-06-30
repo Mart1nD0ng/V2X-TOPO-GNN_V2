@@ -484,3 +484,62 @@ After §13.2 parity, four experiments asked whether ANY legitimate superiority o
 | EV15 multi-objective Pareto | distance is the **strong corner** of {Pc, reliability, deadline, latency, energy}; the GNN is dominated by it; objectives are **aligned** |
 
 **Bottom line:** **distance is not just a strong P_correct baseline — it is the (near-)optimal corner of the project's entire multi-objective surface in this regime, because the objectives are aligned (nearest peer is best on every axis at once).** The learned GNN is capability-sufficient and trainer-limited, but there is **no legitimate objective on which it can beat distance here**. A genuine learning win would require a regime where the objectives are in TENSION (e.g. correlated-error structure that makes the locally-best peer globally redundant, sparse/asymmetric link costs decoupling energy from distance, or adversarial/mobility dynamics) — exactly the conditions the per-edge oracle (EV12/EV13/EV15) shows are absent in the current mm_high setup.
+
+
+---
+
+# NDH BENCHMARK — Non-Distance Headroom (new campaign, decision log)
+
+**Motivation (carry-over from EV12–EV15):** in the current `mm_high R_d=6` physics, distance is the
+strong corner of the *whole* multi-objective Pareto surface (EV15), and there is no iso-reliability
+P_correct headroom over distance at any deadline budget (EV14) — because the objectives are *aligned*
+(physics is highly distance-correlated). The NDH benchmark deliberately adds **non-distance** deployment
+mechanisms (SPS persistent collision, heterogeneous RSU/vehicle capacity, CSI aging, intersection-queue
+hotspots) to test whether a regime exists where a constrained (wrong-penalized) oracle has *equal-reliability*
+headroom over distance — and only then train a GNN. **Spec:** `docs/NON_DISTANCE_HEADROOM_TECHNICAL_SPEC.md`
++ `docs/NON_DISTANCE_HEADROOM_ENGINEERING_PLAN.md`. **Oracle-first; matched-distance reliability is headline;
+absolute F_w≤1e-3 deployment budget reported separately; strong heuristics get the GNN's observable proxies.**
+
+Non-degradable: macrostate_v2 only; dynamic-MC basin first-hitting is final judge; full physics in headline;
+train==eval physics hash; every mechanism enters the canonical path (not just tests); every parameter in the
+registry; no stress value as a deployment default; no oracle-only truth into GNN/heuristics; `omega_RSU=0`;
+RSU density capped; no legacy GRU/emission as current evidence.
+
+| Gate | Status | Evidence |
+|---|---|---|
+| **G-NDH-PARAM-AUDIT** | **DONE** | `docs/NDH_PARAMETER_REGISTRY.md` (this gate) |
+| G-NDH-SCENE-RSU-HOTSPOT | pending | — |
+| G-NDH-SPS-PERSISTENCE | pending | — |
+| G-NDH-CSI-AGING | pending | — |
+| G-NDH-HETEROGENEOUS-CAPACITY | pending | — |
+| G-NDH-FEATURE-SCHEMA | pending | — |
+| G-NDH-BASELINE-ENVELOPE | pending | — |
+| G-NDH-ORACLE-FRONTIER | pending (oracle-first gate) | — |
+| G-NDH-STATIC-ESDGNN-V2 | conditional | only if oracle headroom exists |
+| G-NDH-TEMPORAL-NEED / -V2 | conditional | only if history oracle beats static oracle |
+| G-NDH-SYNTHESIS | pending | final report |
+
+## EV16 — G-NDH-PARAM-AUDIT (2026-07-01)
+
+* **Deliverable:** `docs/NDH_PARAMETER_REGISTRY.md` — every SPS/RSU/capacity/CSI/hotspot parameter with
+  `default / sweep / stress / source / deployment-or-stress label`, the preserved baseline physics/protocol/
+  scene (FROZEN), the hard density/fraction caps, the C2 observability split (deployable proxy vs oracle-only
+  truth), and two assembled canonical profiles: **`NDH-DEPLOYMENT`** (headline, all defaults) and
+  **`NDH-STRESS`** (reported separately, never a deployment default).
+* **Key audit decisions:**
+  - SPS does **not** change the existing collision pool `S=subchannels·slots_per_window=100`; it adds a
+    *persistent per-node bucket + sensing-based reselection* layer so collision risk gains history (the
+    non-distance structure). S∈{40,60} is congestion **stress** only.
+  - Heterogeneous capacity replaces the global `service_rate μ=12` with per-node `μ_j` (vehicle lognormal
+    μ_veh=8 default; RSU `mult=5`); model/heuristics read only the **noisy proxy** `μ̂_j`, never true `μ_j`.
+  - CSI aging changes only the **feature** (stale `γ̂(t−a)`, default age 100 ms ≈ CAM 10 Hz); **physics keeps
+    current `γ(t)`** ⇒ no train/eval physics mismatch.
+  - RSU caps: `p_intersection_rsu ≤ 0.5`, RSU fraction ≤ 0.10–0.15, `omega_RSU=0` — anti-trivial-nearest-RSU.
+  - Hotspots: ≤10% of intersections, ≤30% of vehicles, non-overlapping (≥ 2·radius), static in Phase 1.
+  - Surrogate knobs (`tau_res`, `kappa_res`, `block_length_logstd`) are **declared lightweight surrogates**
+    (no ns-3, Q4), constrained to non-collapse bands by their sweeps; none tuned to favour the GNN.
+* **Acceptance:** all params present; no stress-as-default; hash-binding rule stated; observability split
+  satisfies Contract C2. Pure-documentation gate (no code/physics change → no dynamic-MC run this gate).
+* **Next:** G-NDH-SCENE-RSU-HOTSPOT (smallest next gate that unblocks everything): nonuniform urban scene +
+  sparse intersection hotspots + capped RSU placement, with failing tests first (caps, connectivity,
+  `omega_RSU=0`, reproducibility).
