@@ -513,7 +513,7 @@ RSU density capped; no legacy GRU/emission as current evidence.
 | **G-NDH-CSI-AGING** | **DONE** | `src/environment/csi_aging.py` (feature-only; physics keeps current γ) (EV19) |
 | **G-NDH-HETEROGENEOUS-CAPACITY** | **DONE** | `src/environment/receiver_capacity.py` + `round_physics` per-node μ_j queue (EV20) |
 | **G-NDH-FEATURE-SCHEMA** | **DONE** | `src/models/scene_features_v2.py` + `esd_gnn_v2.py` (leak-clean) (EV21) |
-| G-NDH-BASELINE-ENVELOPE | pending | — |
+| **G-NDH-BASELINE-ENVELOPE** | **DONE** | `src/evaluation/ndh_baselines.py` (11 heuristics + envelope) (EV22) |
 | G-NDH-ORACLE-FRONTIER | pending (oracle-first gate) | — |
 | G-NDH-STATIC-ESDGNN-V2 | conditional | only if oracle headroom exists |
 | G-NDH-TEMPORAL-NEED / -V2 | conditional | only if history oracle beats static oracle |
@@ -727,3 +727,38 @@ RSU density capped; no legacy GRU/emission as current evidence.
 * **Next:** G-NDH-BASELINE-ENVELOPE — strong heuristics as ESP policies reading the SAME `SceneFeaturesV2`
   columns (stale_link_quality, capacity_aware, resource_aware, distance_plus_*, load_balanced, rsu_nearest,
   rsu_capacity_aware, local_density_aware, best_heuristic_envelope) through the canonical dynamic-MC path.
+
+## EV22 — G-NDH-BASELINE-ENVELOPE (2026-07-01)
+
+* **Deliverable:** `src/evaluation/ndh_baselines.py` — 11 strong deployable heuristics as diagonal ESP
+  policies (`_ProxyLinearPolicy`) whose per-edge `log_weights` are FIXED linear combos of
+  `build_scene_features_v2` columns (distance, stale_link_quality, capacity_aware, resource_aware,
+  distance_plus_{capacity,resource,csi_age}, load_balanced, rsu_nearest, rsu_capacity_aware,
+  local_density_aware) — all DEPLOYABLE proxies (noisy `log μ̂`, stale CSI, SPS conflict, RSU role, local
+  density), never truth. Coefficients hand-set in normalised units (NOT results-tuned). `best_heuristic_
+  envelope` runs every heuristic through the canonical dynamic-MC judge (CRN, shared seed) and returns the
+  per-scene winner among the **reliability-feasible** set (F_wrong matched to distance within δ_w).
+* **Verification (6 tests):** edge-logweight shapes; `distance` reproduces `DistanceQueryPolicy` exactly;
+  **evidence-invariance** (same scene + different evidence → identical log_weights ⇒ no Y*/truth leak);
+  source audit (no evidence-model import); each heuristic runs through dynamic-MC well-formed; envelope
+  records a winner + name. (The source audit forbids only evidence/Y* source tokens — the envelope
+  legitimately reads the judge's `basin_*` OUTPUT to rank, which is evaluation, not a policy leak.)
+* **Diagnostic preview (non-collapse NDH band: SPS S_sps=40@S_phys=400, capacity μ_veh=8, RSU+hotspots,
+  R_d=20; 1 scene, 400 trials — NOT CI-separated, directional only):**
+
+  | heuristic | Pc | Fw | admitted? | ΔPc vs distance |
+  |---|---|---|---|---|
+  | distance_plus_resource | 0.745 | 0.098 | ✗ (Fw ≫) | **+0.040 (reliability-bought)** |
+  | stale_link_quality / distance_plus_capacity | 0.723 | 0.098 / 0.090 | ✗ | +0.018 (reliability-bought) |
+  | **distance_plus_csi_age (WINNER)** | 0.708 | 0.083 | ✓ matched | **+0.003 (≈ parity, within MC noise)** |
+  | distance (ref) | 0.705 | 0.083 | ✓ | 0 |
+  | capacity_aware / rsu_capacity_aware | 0.677 | 0.080 | ✓ | −0.027 |
+
+  **Same reliability-bought pattern as the old physics (EV12):** every heuristic that beats distance on
+  Pc does so by RAISING F_wrong (not reliability-feasible); at MATCHED reliability the best heuristic
+  (`distance_plus_csi_age`, a CSI-aware policy) beats distance by only **+0.003** ≈ parity. The mechanisms
+  did NOT (for these hand-coded heuristics) open a clear matched-reliability gap — but heuristics are
+  suboptimal; the **oracle** (free per-edge logits) is the real test (next gate).
+* **Next:** G-NDH-ORACLE-FRONTIER (the decisive oracle-first gate). The bar the wrong-penalized oracle must
+  clear = beat BOTH distance AND best_heuristic_envelope under matched wrong risk. If no NDH regime opens
+  matched-reliability headroom → STOP-and-report (do NOT train the GNN), honestly, as in EV12–15.
