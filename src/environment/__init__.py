@@ -37,6 +37,7 @@ from .urban_scene import ManhattanScene, build_manhattan_scene
 from .nonuniform_urban_scene import NonuniformUrbanScene, build_nonuniform_urban_scene
 from .sps_resource import assign_sps_buckets, same_resource_conflict_degree, sensed_channel_busy_ratio
 from .csi_aging import stale_csi_edge_features, csi_uncertainty_db
+from .receiver_capacity import assign_receiver_capacity, noisy_capacity_proxy
 
 __all__ = [
     "EVIDENCE_SCENARIOS",
@@ -69,5 +70,7 @@ __all__ = [
     "sensed_channel_busy_ratio",
     "stale_csi_edge_features",
     "csi_uncertainty_db",
+    "assign_receiver_capacity",
+    "noisy_capacity_proxy",
     "drift_scene",
 ]

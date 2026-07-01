@@ -511,7 +511,7 @@ RSU density capped; no legacy GRU/emission as current evidence.
 | **G-NDH-SCENE-RSU-HOTSPOT** | **DONE** | `src/environment/nonuniform_urban_scene.py` + `vehicle_only_participation` (EV17) |
 | **G-NDH-SPS-PERSISTENCE** | **DONE** | `src/environment/sps_resource.py` + `round_physics` SPS collision (EV18) |
 | **G-NDH-CSI-AGING** | **DONE** | `src/environment/csi_aging.py` (feature-only; physics keeps current γ) (EV19) |
-| G-NDH-HETEROGENEOUS-CAPACITY | pending | — |
+| **G-NDH-HETEROGENEOUS-CAPACITY** | **DONE** | `src/environment/receiver_capacity.py` + `round_physics` per-node μ_j queue (EV20) |
 | G-NDH-FEATURE-SCHEMA | pending | — |
 | G-NDH-BASELINE-ENVELOPE | pending | — |
 | G-NDH-ORACLE-FRONTIER | pending (oracle-first gate) | — |
@@ -657,3 +657,37 @@ RSU density capped; no legacy GRU/emission as current evidence.
 * **Next:** G-NDH-HETEROGENEOUS-CAPACITY — per-node receiver capacity `μ_j` in the round-physics queue
   (`ρ_j=(Λ_j+b_j)/μ_j`, vehicle/RSU lognormal, noisy proxy) — a real physics change (enters full physics
   + dynamic MC), so it warrants the tests-first + adversarial-review treatment like SPS.
+
+## EV20 — G-NDH-HETEROGENEOUS-CAPACITY (2026-07-01)
+
+* **Deliverable:** per-node receiver capacity `μ_j` in the M/M/1 queue (a real physics change, on the
+  canonical path, train==eval).
+  - `src/environment/receiver_capacity.py`: `assign_receiver_capacity` (vehicle lognormal
+    `μ_veh·exp(σ_μ ε)`; RSU `mult·μ_veh·exp(σ_rsu ε)` — higher mean, finite, overload still possible) +
+    `noisy_capacity_proxy` (`μ̂=μ·exp(σ_obs ξ)`, the DEPLOYABLE signal).
+  - `round_physics`: optional `node_capacity` [N] → `ρ_j = Λ_j/μ_j` (queue delay + drop use per-node μ);
+    `None` → **byte-identical** scalar `service_rate` path.
+  - Scene: `node_capacity` field (TRUE μ, physics-only) + `enable_heterogeneous_capacity` + capacity
+    params in `mechanism_config_hash`; threaded into both canonical paths; `heterogeneous_capacity`
+    trace sentinel (gated on `not disable_queueing`).
+* **Truth split (C2):** true `μ_j` enters PHYSICS only (verified: no GNN/policy/heuristic path reads
+  `scene.node_capacity`); the model will read only the noisy proxy `μ̂` (wired at the feature gate).
+* **Operating band (band check, R_d=20):** non-degenerate — homog Pc=0.757, hetero(μ_veh=8) Pc=0.773;
+  the queue binds via **DELAY** on typical load (ρ≈0.75<1); the DROP branch is a `μ_veh=4` STRESS-band
+  effect. (The stressed R_d=6 config is deadline-degenerate — use R_d=20 for the capacity oracle-frontier.)
+* **Verification:** 12 tests (RSU μ>vehicle μ, noisy proxy≠true + corr>0.5 + σ=0 recovers truth, higher
+  μ → lower drop+delay, **homogeneous byte-identity in BOTH ρ<1 and ρ>1 regimes**, None-unchanged,
+  differentiable, RSU-overload saturates, enters dynamic-MC, `mechanism_config_hash` binds params, trace
+  sentinel False under `disable_queueing`, non-finite/negative μ + negative σ rejected) + **133-test
+  env/protocol regression green**.
+* **Adversarial 3-lens review:** confirmed physics CORRECT with 0 critical/0 major — byte-identity
+  bit-for-bit across B>1/float32-64/all fields; truth split clean; train==eval identity; differentiable;
+  RSU overload genuine; defaults faithful to registry §4. All 8 minor/5 nit findings fixed or documented:
+  trace sentinel now gates `not disable_queueing`; `node_capacity` finiteness/positivity guard; negative
+  `σ_obs` rejected; proxy documented as log-unbiased/level-biased (`exp(σ²/2)`) → feature = `capacity_proxy_log`;
+  byte-identity test extended to the ρ>1 drop regime; real RSU-overload + tautology-removed tests; registry
+  §4 notes b_j Phase-1-ABSENT + the delay-vs-drop operating band.
+* **Next:** G-NDH-FEATURE-SCHEMA — `SceneFeaturesV2` + `ESDGNNStaticV2` wiring ALL mechanism proxies
+  (SPS conflict, **noisy** capacity proxy — never true μ, CSI-aging, hotspot, node_type) into the GNN with
+  a feature-availability mask; leak-critical (tests-first: assert true `node_capacity` NOT in the feature
+  tensor; old features reproducible when mechanisms off; baselines get the same observable features).

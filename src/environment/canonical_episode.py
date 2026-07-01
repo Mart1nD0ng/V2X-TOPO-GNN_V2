@@ -185,6 +185,7 @@ def run_consensus_episode(
     if resource_bucket is not None:
         from .sps_resource import assert_sps_pool_consistent
         assert_sps_pool_consistent(scene, phy_cfg)              # SPS bucket pool == physics resource_pool
+    node_capacity = getattr(scene, "node_capacity", None)       # NDH per-node mu_j (None = homogeneous)
     padding = build_bucketed_padding(gc.src_index, gc.dst_index, N)
     if bool(torch.any(padding.out_degree < k).cpu()):
         raise ValueError(
@@ -252,7 +253,8 @@ def run_consensus_episode(
         c_t, w_t, undec = terminal_outcomes(p, layout)              # [N, Q]
         u, v = readout_preference(p, layout)                        # [N, Q] answer when polled
         phys = round_physics(gc, gi, pi, undec, phy_cfg,
-                             geom_comm=geom_c, geom_int=geom_i, resource_bucket=resource_bucket, **abl)
+                             geom_comm=geom_c, geom_int=geom_i, resource_bucket=resource_bucket,
+                             node_capacity=node_capacity, **abl)
         if query_law == "cdq":
             h_plus, h_minus, h_zero = cdq_bucketed_quorum(
                 padding, quality, diversity, phys.ell_poll, u, v, k, alpha)
@@ -309,6 +311,8 @@ def run_consensus_episode(
             "mode2_collision": (not disable_collision) and full_phys and not sps_active,
             "sps_persistence": sps_active,             # NDH-SPS persistent same-resource collision (spec §3.4)
             "resource_conflict_graph": sps_active,     # same-bucket G_int contention drives collision
+            # mu_j is inert when the queue is disabled -> gate on not disable_queueing (mirrors mode2_collision)
+            "heterogeneous_capacity": node_capacity is not None and full_phys and not disable_queueing,
             "half_duplex": (not disable_half_duplex) and full_phys,
             "queueing": (not disable_queueing) and full_phys,
             "request_response": True,

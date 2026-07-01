@@ -175,7 +175,14 @@ MC, not just tests** (plan §6 acceptance).
 | `rsu_capacity_multiplier` | 5 | {3, 5, 10} | — | RSU μ = mult·μ_veh (RSU stronger); spec §4.4 | DEPLOYMENT |
 | `rsu_capacity_logstd` σ_rsu | 0.1 | {0.1, 0.25} | — | RSU capacity spread; spec §4.4 | DEPLOYMENT |
 | `capacity_proxy_noise` σ_obs | 0.2 | {0.0, 0.2, 0.5} | 0.5 | noisy proxy `μ̂_j=μ_j·exp(σ_obs·ξ)`; spec §4.4/§4.5 | DEPLOYMENT |
-| `background_load` b_j | 0.0 | {0.0, …} | — | extra processing load; 0 in Phase 1, reserved (spec §4.4) | DEPLOYMENT |
+| `background_load` b_j | 0.0 | {0.0, …} | — | extra processing load; **Phase-1 ABSENT** (not plumbed) — enabling it is a physics-hash-changing edit; spec §4.4 | DEPLOYMENT |
+
+> **Operating band (EV20).** At `μ_veh=8` the receiver queue binds via **DELAY** on typical vehicle
+> load (ρ≈0.75<1 → the DROP branch is dormant); the drop channel is a `μ_veh=4` **STRESS**-band effect.
+> Measured non-degenerate at the deployment deadline R_d=20 (P_correct 0.742 homog → 0.725 hetero, no
+> collapse). The oracle-frontier gate should run capacity at R_d=20 (the test's R_d=6 is deadline-
+> degenerate). `μ̂_j=μ·exp(σ_obs·ξ)` is **log-unbiased** but level-biased upward by `exp(σ_obs²/2)`
+> (+2% at σ=0.2) → the deployable FEATURE is `capacity_proxy_log = log μ̂_j` (unbiased in log space).
 
 **Deployable proxy:** `capacity_proxy_log = log μ̂_j`, `capacity_proxy_uncertainty`,
 `response_latency_ema`, `ack_success_ema`, `queue_delay_ema`, `local_rsu_density`; edge:

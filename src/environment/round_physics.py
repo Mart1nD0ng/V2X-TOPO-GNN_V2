@@ -332,6 +332,7 @@ def round_physics(
     disable_queueing: bool = False,
     link_override: float | None = None,
     resource_bucket: torch.Tensor | None = None,
+    node_capacity: torch.Tensor | None = None,
 ) -> RoundPhysicsResult:
     """One round of the full physical chain (spec §7.3, steps 1-9 + tau/energy 11-12).
 
@@ -471,7 +472,17 @@ def round_physics(
         p_hd_req = (req_tx[dst_c] / W).clamp(0.0, 1.0)
 
     # ---- §7.3.8: queueing at the receiver (M/M/1), driven by the ADDRESSED load Lambda_j ----
-    rho_node = recv_load / cfg.service_rate               # [N, B] = Lambda_j / mu
+    # NDH heterogeneous capacity (spec §4.4): per-node service rate mu_j replaces the global scalar.
+    # node_capacity=None recovers the scalar service_rate EXACTLY (homogeneous byte-identity).
+    if node_capacity is not None:
+        if node_capacity.ndim != 1 or node_capacity.shape[0] != N:
+            raise ValueError("node_capacity must be a 1-D [N] tensor of per-node service rates")
+        if not torch.isfinite(node_capacity).all() or bool((node_capacity <= 0).any()):
+            raise ValueError("node_capacity must be finite and > 0 (per-node service rates)")
+        mu = node_capacity.to(device=active.device, dtype=active.dtype).unsqueeze(-1)  # [N, 1]
+        rho_node = recv_load / mu.clamp_min(1e-9)         # [N, B] = Lambda_j / mu_j
+    else:
+        rho_node = recv_load / cfg.service_rate           # [N, B] = Lambda_j / mu (global)
     rho_j = rho_node[dst_c]                               # [E_comm, B] at the receiver j
     if disable_queueing:
         p_queue_drop = torch.zeros_like(gamma_req)

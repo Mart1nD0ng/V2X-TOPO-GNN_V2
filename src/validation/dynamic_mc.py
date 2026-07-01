@@ -178,6 +178,7 @@ def run_dynamic_mc(
     if resource_bucket is not None:
         from src.environment.sps_resource import assert_sps_pool_consistent
         assert_sps_pool_consistent(scene, phy_cfg)              # SPS bucket pool == physics resource_pool
+    node_capacity = getattr(scene, "node_capacity", None)       # NDH per-node mu_j (None = homogeneous)
 
     # source padding for per-(trial,node) subset sampling
     pad = build_source_padding(gc.src_index, gc.dst_index, N)
@@ -262,7 +263,8 @@ def run_dynamic_mc(
         else:
             active_phys = active.to(dtype).mean(dim=0, keepdim=True).transpose(0, 1)  # [N, 1] mean active
         phys = round_physics(gc, gi, pi, active_phys, phy_cfg, geom_comm=geom_c, geom_int=geom_i,
-                             link_override=link_override, resource_bucket=resource_bucket)
+                             link_override=link_override, resource_bucket=resource_bucket,
+                             node_capacity=node_capacity)
         ell = phys.ell_poll                                # [E, Bphys]
         ell_slot = ell[slot_edge]                          # [N, nmax, Bphys]
         if physics_per_trial:

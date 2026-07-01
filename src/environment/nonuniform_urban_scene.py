@@ -54,6 +54,7 @@ class NonuniformUrbanScene:
     hotspot_intersections: torch.Tensor   # [H] long, indices into intersection_xy
     segment_intersections: torch.Tensor   # [G, 2] long, (start_int, end_int) per present segment
     resource_bucket: torch.Tensor | None = None   # [N] long SPS bucket (None = SPS off); read by round_physics
+    node_capacity: torch.Tensor | None = None      # [N] TRUE per-node mu_j (None = homogeneous); physics-only
     params: dict = field(default_factory=dict)   # the generating NDH parameters (for the manifest)
 
     @property
@@ -89,6 +90,8 @@ class NonuniformUrbanScene:
         import hashlib
         import json
         keys = ("enable_sps", "sps_n_buckets", "sps_tau_res", "sps_sensing_noise_std",
+                "enable_heterogeneous_capacity", "mu_vehicle_base", "vehicle_capacity_logstd",
+                "rsu_capacity_multiplier", "rsu_capacity_logstd",
                 "enable_hotspots", "num_hotspots_effective", "hotspot_radius_m",
                 "hotspot_vehicle_fraction", "queue_length_m", "num_hotspot_vehicles",
                 "enable_rsu", "p_intersection_rsu", "p_hotspot_rsu_boost", "max_rsu_fraction",
@@ -208,6 +211,12 @@ def build_nonuniform_urban_scene(
     sps_n_buckets: int = 100,
     sps_tau_res: float = 4.0,
     sps_sensing_noise_std: float = 0.1,
+    # heterogeneous receiver capacity (spec §4.4; assignment in receiver_capacity.assign_receiver_capacity)
+    enable_heterogeneous_capacity: bool = False,
+    mu_vehicle_base: float = 8.0,
+    vehicle_capacity_logstd: float = 0.5,
+    rsu_capacity_multiplier: float = 5.0,
+    rsu_capacity_logstd: float = 0.1,
     generator: torch.Generator | None = None,
     dtype: torch.dtype = torch.float64,
 ) -> NonuniformUrbanScene:
@@ -338,6 +347,15 @@ def build_nonuniform_urban_scene(
             positions, float(int_radius), sps_n_buckets, tau_res=sps_tau_res,
             sensing_noise_std=sps_sensing_noise_std, generator=gen, dtype=dtype)
 
+    # ---- heterogeneous receiver capacity (true mu_j; physics-only, spec §4.4) ----
+    node_capacity = None
+    if enable_heterogeneous_capacity:
+        from .receiver_capacity import assign_receiver_capacity
+        node_capacity = assign_receiver_capacity(
+            node_type, mu_vehicle_base=mu_vehicle_base, vehicle_capacity_logstd=vehicle_capacity_logstd,
+            rsu_capacity_multiplier=rsu_capacity_multiplier, rsu_capacity_logstd=rsu_capacity_logstd,
+            generator=gen, dtype=dtype)
+
     # ---- hotspot score (all nodes): max_h exp(-dist/radius) in [0,1] ----
     if hotspot_idx:
         d_hot = _min_dist_to(positions, inter_xy[hotspot_idx])
@@ -366,14 +384,18 @@ def build_nonuniform_urban_scene(
               "max_rsu_fraction": max_rsu_fraction, "min_rsu_spacing_m": min_rsu_spacing_m,
               "rsu_roadside_offset_m": rsu_roadside_offset_m, "num_vehicles": n_veh, "num_rsu": n_rsu,
               "enable_sps": enable_sps, "sps_n_buckets": sps_n_buckets, "sps_tau_res": sps_tau_res,
-              "sps_sensing_noise_std": sps_sensing_noise_std}
+              "sps_sensing_noise_std": sps_sensing_noise_std,
+              "enable_heterogeneous_capacity": enable_heterogeneous_capacity,
+              "mu_vehicle_base": mu_vehicle_base, "vehicle_capacity_logstd": vehicle_capacity_logstd,
+              "rsu_capacity_multiplier": rsu_capacity_multiplier, "rsu_capacity_logstd": rsu_capacity_logstd}
 
     return NonuniformUrbanScene(
         positions=positions, region_of=region_of, segment_endpoints=endpoints,
         comm_radius=float(comm_radius), int_radius=float(int_radius), block_m=float(block_m),
         grid=(gx, gy), node_type=node_type, hotspot_score=hotspot_score, intersection_xy=inter_xy,
         hotspot_intersections=torch.tensor(hotspot_idx, dtype=torch.long),
-        segment_intersections=seg_int, resource_bucket=resource_bucket, params=params)
+        segment_intersections=seg_int, resource_bucket=resource_bucket, node_capacity=node_capacity,
+        params=params)
 
 
 def _min_dist_to(points: torch.Tensor, centres: torch.Tensor) -> torch.Tensor:
