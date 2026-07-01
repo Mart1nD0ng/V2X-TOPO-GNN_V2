@@ -181,6 +181,10 @@ def run_consensus_episode(
     gi = build_interference_graph(scene.positions, scene.int_radius)
     geom_c = edge_geometry(gc, phy_cfg)
     geom_i = edge_geometry(gi, phy_cfg)
+    resource_bucket = getattr(scene, "resource_bucket", None)   # NDH-SPS static bucket (None = SPS off)
+    if resource_bucket is not None:
+        from .sps_resource import assert_sps_pool_consistent
+        assert_sps_pool_consistent(scene, phy_cfg)              # SPS bucket pool == physics resource_pool
     padding = build_bucketed_padding(gc.src_index, gc.dst_index, N)
     if bool(torch.any(padding.out_degree < k).cpu()):
         raise ValueError(
@@ -248,7 +252,7 @@ def run_consensus_episode(
         c_t, w_t, undec = terminal_outcomes(p, layout)              # [N, Q]
         u, v = readout_preference(p, layout)                        # [N, Q] answer when polled
         phys = round_physics(gc, gi, pi, undec, phy_cfg,
-                             geom_comm=geom_c, geom_int=geom_i, **abl)
+                             geom_comm=geom_c, geom_int=geom_i, resource_bucket=resource_bucket, **abl)
         if query_law == "cdq":
             h_plus, h_minus, h_zero = cdq_bucketed_quorum(
                 padding, quality, diversity, phys.ell_poll, u, v, k, alpha)
@@ -284,6 +288,10 @@ def run_consensus_episode(
         # the live path only when the full chain actually ran (constraint #9 — no flag may claim a
         # mechanism executed when it did not).
         full_phys = link_override is None
+        # NDH-SPS runtime sentinel (plan §4 acceptance / Contract C5): proves the persistent
+        # same-resource collision actually executed on the canonical path (not just in a test).
+        sps_active = (resource_bucket is not None and phy_cfg.resource_collision_kappa > 0.0
+                      and not disable_collision and full_phys)
         trace = {
             "protocol": "binary_snowball",
             "query_policy": getattr(query_policy, "name", type(query_policy).__name__),
@@ -297,7 +305,10 @@ def run_consensus_episode(
             "cross_destination_interference": (gi.num_edges > gc.num_edges
                                                and not disable_interference and full_phys),
             "interference_graph": (not disable_interference) and full_phys,
-            "mode2_collision": (not disable_collision) and full_phys,
+            # memoryless 1/S collision runs only when SPS is NOT active; else the persistent model does
+            "mode2_collision": (not disable_collision) and full_phys and not sps_active,
+            "sps_persistence": sps_active,             # NDH-SPS persistent same-resource collision (spec §3.4)
+            "resource_conflict_graph": sps_active,     # same-bucket G_int contention drives collision
             "half_duplex": (not disable_half_duplex) and full_phys,
             "queueing": (not disable_queueing) and full_phys,
             "request_response": True,

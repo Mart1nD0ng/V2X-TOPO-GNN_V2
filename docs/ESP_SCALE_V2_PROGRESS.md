@@ -509,7 +509,7 @@ RSU density capped; no legacy GRU/emission as current evidence.
 |---|---|---|
 | **G-NDH-PARAM-AUDIT** | **DONE** | `docs/NDH_PARAMETER_REGISTRY.md` (EV16) |
 | **G-NDH-SCENE-RSU-HOTSPOT** | **DONE** | `src/environment/nonuniform_urban_scene.py` + `vehicle_only_participation` (EV17) |
-| G-NDH-SPS-PERSISTENCE | pending | — |
+| **G-NDH-SPS-PERSISTENCE** | **DONE** | `src/environment/sps_resource.py` + `round_physics` SPS collision (EV18) |
 | G-NDH-CSI-AGING | pending | — |
 | G-NDH-HETEROGENEOUS-CAPACITY | pending | — |
 | G-NDH-FEATURE-SCHEMA | pending | — |
@@ -587,3 +587,50 @@ RSU density capped; no legacy GRU/emission as current evidence.
 * **Next:** G-NDH-SPS-PERSISTENCE — `src/environment/sps_resource.py` sensing-based resource persistence
   surrogate (persistent bucket + reselection; same-resource `G_int` neighbours collide repeatedly), deployable
   proxies only, entering the canonical collision physics.
+
+* **[EV17 addendum] Pre-existing ESP failure CONFIRMED on the clean tree.** Ran
+  `test_oracle_upper_bounds_distance` in a worktree at the pre-NDH commit 2d18a6f (clean
+  `overlapping_evidence._band`): **byte-identical failure** (oracle 0.4218519185894899 vs distance
+  0.42336056859843313). Definitively pre-existing and independent of all NDH work; fix flagged separately.
+
+## EV18 — G-NDH-SPS-PERSISTENCE (2026-07-01)
+
+* **Deliverable:** sensing-based SPS resource-persistence surrogate + same-resource collision physics,
+  on the canonical path (train==eval).
+  - `src/environment/sps_resource.py`: `assign_sps_buckets` (static sensing-avoidance assignment,
+    `P(r)∝exp(−τ_res·sensed_occ_r)+noise`), deployable proxies `same_resource_conflict_degree` /
+    `sensed_channel_busy_ratio`, and `assert_sps_pool_consistent`.
+  - `round_physics`: `resource_collision_kappa` in `RoundPhysicsConfig` (binds `config_hash`),
+    `resource_bucket` arg + `_sps_same_resource_collision` helper — same-bucket `G_int` contention
+    `p=1−exp(−κ·(L−a_self)_+)` REPLACES the memoryless `1/S` for BOTH request and response phases;
+    self-exclusion preserved; SINR interference untouched.
+  - Static-bucket rationale (reselection ~1 s ≫ episode ~60–200 ms → frozen within a decision) ⇒ NO
+    mutable state through the judge; threaded via `getattr(scene,'resource_bucket',None)` into both the
+    analytic episode and the dynamic-MC judge. Scene gains `resource_bucket` + `mechanism_config_hash`.
+* **Two-pool model (corrected mid-gate):** `S_phys = subchannels·slots_per_window` (memoryless `1/S` +
+  SINR) vs `S_sps = sps_n_buckets` (persistent reservations). Reservations are a *subset* of the
+  instantaneous pool ⇒ invariant `1 ≤ S_sps ≤ S_phys` (guard-enforced on both paths). Smaller `S_sps`
+  is the congestion knob; the campaign's non-degenerate base needs `S_phys=400`, so `S_sps=40` at
+  `S_phys=400` is the valid congestion regime (an earlier `S_sps==S_phys` guard was wrong — it killed
+  the congestion regime; a review finding that mis-diagnosed the subset relation as inconsistency).
+* **MC evidence (mechanism active + non-degenerate default):** congested + poor sensing (`S_sps=40`,
+  τ=1, κ=0.5, `S_phys=400`) → persistent collision **collapses** Pc (0.32→~0.01); DEPLOYMENT band
+  (`S_sps=100`, τ=4) → conflict ≈0, SPS **removes** the memoryless floor (Pc up, non-degenerate). The
+  collapse corner is a labelled STRESS regime (R4), not a deployment default.
+* **Verification:** 14 SPS tests (both-phase collision brute-forced to 1e-16, request+response
+  self-exclusion=0, SPS-off byte-identical, `config_hash` binds κ, pool-consistency guard, dtype guard,
+  mechanism-trace sentinels, `mechanism_config_hash`, sensing<random, canonical-MC active) + physics
+  regression green.
+* **Adversarial 3-lens review (physics-correctness / train==eval-grad / leak-faithfulness):** confirmed
+  the physics is CORRECT (brute-force 1e-16, self-exclusion exact, no leakage, gradients flow, SINR
+  untouched, train==eval bucket identity). Fixes applied from findings: (1) **mechanism-trace sentinels**
+  `sps_persistence`/`resource_conflict_graph` emitted + `mode2_collision` correctly OFF under SPS (plan §4
+  acceptance) + test; (2) direct **response-phase** collision test (roles were only exercised end-to-end);
+  (3) **two-pool guard** `S_sps ≤ S_phys` + documented (replacing the wrong `==`); (4) **NDH-mechanism
+  hash** `scene.mechanism_config_hash` (physics hash omits bucket-structure params); (5) `resource_bucket`
+  dtype/ndim guard; (6) registry: κ_res relabelled DEPLOYMENT-modelling (non-degenerate at the default
+  band), two-pool note, RRI/reselection/keep_prob marked **Phase-2 (temporal)**, collapse-band R4 note,
+  NDH-DEPLOYMENT/STRESS now name the SPS values; (7) spec-§3.4 age-weight→tx-mass Phase-1 deviation
+  documented in the helper docstring.
+* **Next:** G-NDH-CSI-AGING — stale-CSI features (`stale_sinr_db`, `csi_age`, `csi_uncertainty`,
+  `stale_vs_distance_residual`); physics uses current γ, model sees stale (no train/eval mismatch).

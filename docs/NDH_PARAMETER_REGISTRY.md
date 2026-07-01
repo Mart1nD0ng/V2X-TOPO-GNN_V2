@@ -105,15 +105,32 @@ the audit is complete and any drift is detectable via `config_hash`.
 `d_ij↓ ⇏ conflict↓`. Control = bucket re-randomised every round (no persistence) ⇒ recovers
 `~1/S` i.i.d. collisions.
 
+> **Two distinct resource pools (do not conflate).** `S_phys = subchannels·slots_per_window`
+> (`RoundPhysicsConfig.resource_pool`) is the INSTANTANEOUS per-window pool driving the memoryless
+> `1/S` collision + SINR floor. `sps_n_buckets` (`S_sps`) is the number of distinct PERSISTENT SPS
+> *reservations*; a reservation occupies one subchannel on a periodic slot pattern, so `S_sps ≤ S_phys`
+> (fewer distinct reservations than instantaneous resources). `S_sps` is the **congestion knob**:
+> smaller `S_sps` forces same-reservation neighbours → persistent collision (the non-distance
+> structure). The invariant `1 ≤ S_sps ≤ S_phys` is enforced by `assert_sps_pool_consistent` on both
+> canonical paths. Implemented (EV18): `sps.py` bucket assignment + `round_physics` collision (Phase-1
+> static buckets; `RRI_ms`/`reselection_interval_ms`/`keep_probability` govern *temporal* reselection
+> and are **deferred to Phase 2** — unused in the static Phase-1 assignment).
+
 | parameter | default | sweep | stress | source / rationale | label |
 |---|---|---|---|---|---|
-| `resource_pool_size` S | 100 | {40, 60, 100} | 40, 60 (congestion) | matches repo S=100 (§1.1); spec §3.3 | STRESS-ONLY (low S) |
-| `RRI_ms` (resource-reservation interval) | 100 | {50, 100, 200} | 50 (dense traffic) | BSM/CAM 10 Hz ⇒ 100 ms typical; spec §2.3 refs 3,4 | DEPLOYMENT |
-| `reselection_interval_ms` | 1000 | {500, 1000, 2000} | 500 (more churn) | SPS reselection-counter range; spec §3.3 | DEPLOYMENT |
-| `keep_probability` (prob_resource_keep) | 0.8 | {0.5, 0.8} | 0.5 | 3GPP SPS `probResourceKeep` typical 0.8; spec §3.3 | DEPLOYMENT |
-| `sensing_noise_std` σ_sense | 0.1 | {0.0, 0.1, 0.2} | 0.2 | imperfect sensing surrogate; spec §3.3 | DEPLOYMENT |
-| `tau_res` (selection temperature) | 4.0 | {2, 4, 8} | — | softmax sharpness of sensing-based selection `P(r)∝exp(−τ·occ_r)`; surrogate (spec §3.3 eq.) | DEPLOYMENT (modelling) |
-| `kappa_res` (collision rate κ_res) | 0.5 | {0.25, 0.5, 1.0} | 1.0 | maps same-bucket contention load → collision prob `1−exp(−κ·(L−a)_+)`; surrogate (spec §3.4) | STRESS-ONLY (high κ) |
+| `sps_n_buckets` S_sps (reservation pool) | 100 | {40, 60, 100} | 40, 60 (congestion) | ≤ `S_phys`; S_sps=100 matches repo S_phys default (§1.1); spec §3.3 | DEPLOYMENT (100); STRESS (40/60) |
+| `RRI_ms` (resource-reservation interval) | 100 | {50, 100, 200} | 50 (dense traffic) | BSM/CAM 10 Hz ⇒ 100 ms typical; spec §2.3 refs 3,4 — **Phase-2 (temporal)** | DEPLOYMENT |
+| `reselection_interval_ms` | 1000 | {500, 1000, 2000} | 500 (more churn) | SPS reselection-counter range; spec §3.3 — **Phase-2 (temporal)** | DEPLOYMENT |
+| `keep_probability` (prob_resource_keep) | 0.8 | {0.5, 0.8} | 0.5 | 3GPP SPS `probResourceKeep` typical 0.8 — **Phase-2 (temporal)** | DEPLOYMENT |
+| `sps_sensing_noise_std` σ_sense | 0.1 | {0.0, 0.1, 0.2} | 0.2 | imperfect sensing surrogate; spec §3.3 | DEPLOYMENT |
+| `sps_tau_res` (selection temperature) | 4.0 | {1, 2, 4, 8} | 1 (poor sensing) | softmax sharpness of sensing selection `P(r)∝exp(−τ·occ_r)`; surrogate | DEPLOYMENT (modelling) |
+| `resource_collision_kappa` κ_res | 0.5 | {0.25, 0.5, 1.0} | 1.0 (high κ) | same-bucket load → `p=1−exp(−κ·(L−a)_+)`; surrogate (spec §3.4). At the DEPLOYMENT band (S_sps=100, τ=4) κ=0.5 is mild/non-degenerate (EV18) | DEPLOYMENT (modelling) |
+
+> **Collapse band (R4, measured EV18).** The DEPLOYMENT band (S_sps=100, τ_res=4, κ=0.5) is
+> **non-degenerate**: good sensing drives same-reservation conflict ≈0, so SPS *removes* the memoryless
+> floor (Pc up, not collapsed). The STRESS band (S_sps=40, τ_res=1: conflict ≈0.28) **collapses** Pc→~0
+> — a legitimate congestion stress, **not** a deployment default. The oracle-frontier gate must pick a
+> NON-collapse operating band (some conflict, not total collapse) so headroom is measurable.
 
 **Deployable proxies (model + heuristics, spec §3.5):** `resource_bucket_embedding`,
 `resource_age_norm`, `sensed_CBR`, `same_resource_conflict_degree`, `recent_collision_ema`,
@@ -223,16 +240,17 @@ Two named, hash-bound profiles. **Headline runs use `NDH-DEPLOYMENT`.** Stress r
 
 ### `NDH-DEPLOYMENT` (deployment-realistic; headline)
 
-All parameters at their **`default`** column value. R_d = 20 (non-stressed deadline). S = 100.
-μ_veh = 8, σ_μ = 0.5, rsu_mult = 5. csi_age = 100 ms. 2 hotspots, ≤30% hotspot vehicles. RSU
-`p_int = 0.25`, fraction-cap 0.10, `omega_RSU = 0`.
+All parameters at their **`default`** column value. R_d = 20 (non-stressed deadline). SPS:
+`S_sps = 100`, `τ_res = 4`, `κ_res = 0.5`, `σ_sense = 0.1` (non-degenerate band, EV18); physics
+`S_phys = subchannels·slots_per_window`. μ_veh = 8, σ_μ = 0.5, rsu_mult = 5. csi_age = 100 ms.
+2 hotspots, ≤30% hotspot vehicles. RSU `p_int = 0.25`, fraction-cap 0.10, `omega_RSU = 0`.
 
 ### `NDH-STRESS` (hard regime; reported separately, never a deployment default)
 
-S = 40 (congestion), κ_res = 1.0, keep_prob = 0.5; μ_veh = 4 (queue stress); csi_age = 500 ms,
-shadow_decorr = 1 s; road_presence = 0.8; 3 hotspots, 30% hotspot vehicles, radius 80; R_d = 6
-(stressed deadline). Used to *find* whether constrained-oracle equal-reliability headroom appears,
-not to claim deployment behaviour.
+SPS: `S_sps = 40` (congestion), `κ_res = 1.0`, `τ_res = 1` (poor sensing), keep_prob = 0.5;
+μ_veh = 4 (queue stress); csi_age = 500 ms, shadow_decorr = 1 s; road_presence = 0.8; 3 hotspots,
+30% hotspot vehicles, radius 80; R_d = 6 (stressed deadline). Used to *find* whether
+constrained-oracle equal-reliability headroom appears, not to claim deployment behaviour.
 
 > Single-mechanism regimes (`NDH-SPS`, `NDH-RSU-CAPACITY`, `NDH-CSI-AGING`, `NDH-HOTSPOT`) turn on
 > exactly one mechanism over the `NDH-DEPLOYMENT` base (others at their structure-absent control),

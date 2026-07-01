@@ -53,6 +53,7 @@ class NonuniformUrbanScene:
     intersection_xy: torch.Tensor    # [I, 2] float, intersection coordinates
     hotspot_intersections: torch.Tensor   # [H] long, indices into intersection_xy
     segment_intersections: torch.Tensor   # [G, 2] long, (start_int, end_int) per present segment
+    resource_bucket: torch.Tensor | None = None   # [N] long SPS bucket (None = SPS off); read by round_physics
     params: dict = field(default_factory=dict)   # the generating NDH parameters (for the manifest)
 
     @property
@@ -74,6 +75,27 @@ class NonuniformUrbanScene:
     @property
     def is_rsu(self) -> torch.Tensor:
         return self.node_type == 1
+
+    @property
+    def mechanism_config_hash(self) -> str:
+        """SHA-256 of the NDH-mechanism structural params (SPS/hotspot/RSU/road) for provenance.
+
+        The physics ``config_hash`` binds ``resource_collision_kappa`` but NOT the bucket-assignment /
+        hotspot / RSU knobs that generate this scene's structure; this hash captures them so an
+        experiment JSON can record it alongside the physics hash (registry §0.2, Contract C5) and
+        train==eval structural divergence is detectable. Combined with the scene seed (in the manifest
+        ``scene_distribution_hash``) it pins the exact ``resource_bucket`` / hotspot / RSU realisation.
+        """
+        import hashlib
+        import json
+        keys = ("enable_sps", "sps_n_buckets", "sps_tau_res", "sps_sensing_noise_std",
+                "enable_hotspots", "num_hotspots_effective", "hotspot_radius_m",
+                "hotspot_vehicle_fraction", "queue_length_m", "num_hotspot_vehicles",
+                "enable_rsu", "p_intersection_rsu", "p_hotspot_rsu_boost", "max_rsu_fraction",
+                "min_rsu_spacing_m", "rsu_roadside_offset_m", "block_length_logstd",
+                "intersection_jitter_m", "road_presence_probability")
+        payload = json.dumps({k: self.params.get(k) for k in keys}, sort_keys=True, default=str)
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def _rand(gen, shape, dtype):
@@ -181,6 +203,11 @@ def build_nonuniform_urban_scene(
     max_rsu_fraction: float = 0.10,
     min_rsu_spacing_m: float = 300.0,
     rsu_roadside_offset_m: float = 5.0,
+    # SPS resource buckets (spec §3; assignment surrogate in sps_resource.assign_sps_buckets)
+    enable_sps: bool = False,
+    sps_n_buckets: int = 100,
+    sps_tau_res: float = 4.0,
+    sps_sensing_noise_std: float = 0.1,
     generator: torch.Generator | None = None,
     dtype: torch.dtype = torch.float64,
 ) -> NonuniformUrbanScene:
@@ -303,6 +330,14 @@ def build_nonuniform_urban_scene(
         positions, region_of, node_type = veh_pos, veh_region, torch.zeros(n_veh, dtype=torch.long)
     N = positions.shape[0]
 
+    # ---- SPS resource buckets (static, sensing-based surrogate; spec §3.3) over ALL nodes ----
+    resource_bucket = None
+    if enable_sps:
+        from .sps_resource import assign_sps_buckets
+        resource_bucket = assign_sps_buckets(
+            positions, float(int_radius), sps_n_buckets, tau_res=sps_tau_res,
+            sensing_noise_std=sps_sensing_noise_std, generator=gen, dtype=dtype)
+
     # ---- hotspot score (all nodes): max_h exp(-dist/radius) in [0,1] ----
     if hotspot_idx:
         d_hot = _min_dist_to(positions, inter_xy[hotspot_idx])
@@ -329,14 +364,16 @@ def build_nonuniform_urban_scene(
               "num_hotspot_vehicles": n_queued, "enable_rsu": enable_rsu,
               "p_intersection_rsu": p_intersection_rsu, "p_hotspot_rsu_boost": p_hotspot_rsu_boost,
               "max_rsu_fraction": max_rsu_fraction, "min_rsu_spacing_m": min_rsu_spacing_m,
-              "rsu_roadside_offset_m": rsu_roadside_offset_m, "num_vehicles": n_veh, "num_rsu": n_rsu}
+              "rsu_roadside_offset_m": rsu_roadside_offset_m, "num_vehicles": n_veh, "num_rsu": n_rsu,
+              "enable_sps": enable_sps, "sps_n_buckets": sps_n_buckets, "sps_tau_res": sps_tau_res,
+              "sps_sensing_noise_std": sps_sensing_noise_std}
 
     return NonuniformUrbanScene(
         positions=positions, region_of=region_of, segment_endpoints=endpoints,
         comm_radius=float(comm_radius), int_radius=float(int_radius), block_m=float(block_m),
         grid=(gx, gy), node_type=node_type, hotspot_score=hotspot_score, intersection_xy=inter_xy,
         hotspot_intersections=torch.tensor(hotspot_idx, dtype=torch.long),
-        segment_intersections=seg_int, params=params)
+        segment_intersections=seg_int, resource_bucket=resource_bucket, params=params)
 
 
 def _min_dist_to(points: torch.Tensor, centres: torch.Tensor) -> torch.Tensor:

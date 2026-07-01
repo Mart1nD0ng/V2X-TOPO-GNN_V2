@@ -174,6 +174,10 @@ def run_dynamic_mc(
     gi = build_interference_graph(scene.positions, scene.int_radius)
     geom_c = edge_geometry(gc, phy_cfg)
     geom_i = edge_geometry(gi, phy_cfg)
+    resource_bucket = getattr(scene, "resource_bucket", None)   # NDH-SPS static bucket (None = SPS off)
+    if resource_bucket is not None:
+        from src.environment.sps_resource import assert_sps_pool_consistent
+        assert_sps_pool_consistent(scene, phy_cfg)              # SPS bucket pool == physics resource_pool
 
     # source padding for per-(trial,node) subset sampling
     pad = build_source_padding(gc.src_index, gc.dst_index, N)
@@ -258,7 +262,7 @@ def run_dynamic_mc(
         else:
             active_phys = active.to(dtype).mean(dim=0, keepdim=True).transpose(0, 1)  # [N, 1] mean active
         phys = round_physics(gc, gi, pi, active_phys, phy_cfg, geom_comm=geom_c, geom_int=geom_i,
-                             link_override=link_override)
+                             link_override=link_override, resource_bucket=resource_bucket)
         ell = phys.ell_poll                                # [E, Bphys]
         ell_slot = ell[slot_edge]                          # [N, nmax, Bphys]
         if physics_per_trial:

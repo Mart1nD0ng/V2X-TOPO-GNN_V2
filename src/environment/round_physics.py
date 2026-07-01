@@ -83,6 +83,11 @@ class RoundPhysicsConfig:
     request_slots: float = 1.0          # base slots for the request phase
     response_slots: float = 1.0         # base slots for the response phase
     service_rate: float = 12.0          # M/M/1 receiver service rate (requests/round)
+    # NDH-SPS (G-NDH-SPS-PERSISTENCE, spec §3.4): when > 0 AND a per-node resource_bucket is supplied
+    # to round_physics, the memoryless 1/S Mode-2 collision is REPLACED by persistent same-resource
+    # contention -- p_col = 1 - exp(-kappa*(L_{j,r}-a_i)_+) over same-bucket G_int neighbours. 0 = off
+    # (unchanged memoryless physics). In cfg so config_hash binds it (train==eval physics, constraint #4).
+    resource_collision_kappa: float = 0.0
     poll_window_s: float = 0.01         # Delta_poll: the fixed polling-epoch window (matches the
     #                                     ConsensusServiceProfile default 10 ms; spec §5.1-5.2)
     # LOS proxy
@@ -98,6 +103,8 @@ class RoundPhysicsConfig:
             raise ValueError("max_harq_attempts must be >= 1")
         if self.service_rate <= 0:
             raise ValueError("service_rate must be > 0")
+        if self.resource_collision_kappa < 0:
+            raise ValueError("resource_collision_kappa must be >= 0 (0 = SPS off)")
         if self.poll_window_s <= 0:
             raise ValueError("poll_window_s (Delta_poll) must be > 0")
         if self.harq_combining not in ("chase", "ir"):
@@ -271,6 +278,45 @@ def _harq_success_at_budget(succ_by_m: list[torch.Tensor], budget: torch.Tensor)
     return (1.0 - frac) * S_lo + frac * S_hi
 
 
+def _sps_same_resource_collision(
+    graph_int: RadiusGraph, tx: torch.Tensor, bucket: torch.Tensor, kappa: float,
+    resource_node: torch.Tensor, receiver_node: torch.Tensor, self_node: torch.Tensor, N: int,
+) -> torch.Tensor:
+    """Persistent same-resource (SPS) collision per comm edge (NDH spec §3.4).
+
+    Replaces the memoryless ``1/S`` Mode-2 collision. A transmission on edge ``(i->j)`` uses the
+    *persistent* bucket ``r = bucket[resource_node]`` (the source's bucket for the request phase, the
+    responder's for the response phase) and collides only with SAME-bucket contenders in the
+    interference neighbourhood of the receiver:
+
+        L_{recv, r} = sum_{u in N_int(recv)} tx_u * 1{bucket_u = r},
+        p_col = 1 - exp(-kappa * (L_{recv, r} - tx_self)_+).
+
+    The desired transmission excludes itself (``tx_self``), so a single active same-bucket transmitter
+    has collision probability EXACTLY 0 (constraint #7, mirrors the memoryless self-exclusion). Static
+    buckets are a faithful Phase-1 surrogate: the SPS reselection interval (~1 s) >> a consensus episode
+    (~60-200 ms), so buckets are effectively frozen within one decision. Differentiable in ``tx``
+    (buckets are constant / no grad); ``O(S_used * E_int)`` with ``S_used`` = distinct buckets present.
+
+    Phase-1 deviation from spec §3.4: the spec weights each same-bucket contender by its resource age
+    ``a_u(t)``; Phase 1 (static buckets, no temporal reselection) uses the **active transmit mass**
+    ``tx_u`` as the contention weight and self-excludes ``tx_self`` (the resource-age weighting is
+    deferred to the temporal Phase 2). ``kappa`` (``resource_collision_kappa``) absorbs the units.
+    """
+    Bp = tx.shape[1]
+    E = receiver_node.shape[0]
+    L = torch.zeros((E, Bp), dtype=tx.dtype, device=tx.device)
+    edge_bucket = bucket[resource_node]                    # [E] resource bucket governing each edge
+    for b in torch.unique(bucket).tolist():
+        txb = tx * (bucket == b).to(tx.dtype).unsqueeze(-1)             # [N, B] tx of bucket-b nodes
+        Lb = scatter_destination(graph_int, txb[graph_int.src_index], N)  # [N, B] same-bucket load at each node
+        sel = edge_bucket == b
+        if bool(sel.any()):
+            L[sel] = Lb[receiver_node][sel]
+    L_excl = (L - tx[self_node]).clamp_min(0.0)            # self-exclude the desired transmission
+    return 1.0 - torch.exp(-float(kappa) * L_excl)
+
+
 def round_physics(
     graph_comm: RadiusGraph,
     graph_int: RadiusGraph,
@@ -285,6 +331,7 @@ def round_physics(
     disable_half_duplex: bool = False,
     disable_queueing: bool = False,
     link_override: float | None = None,
+    resource_bucket: torch.Tensor | None = None,
 ) -> RoundPhysicsResult:
     """One round of the full physical chain (spec §7.3, steps 1-9 + tau/energy 11-12).
 
@@ -354,6 +401,15 @@ def round_physics(
     S = cfg.resource_pool
     W = float(cfg.slots_per_window)
     noise = cfg.noise_mw
+    # NDH-SPS: persistent same-resource collision replaces the memoryless 1/S when a per-node bucket
+    # is supplied AND kappa > 0 (spec §3.4). SINR interference is unchanged -- only COLLISION persists.
+    sps_on = resource_bucket is not None and cfg.resource_collision_kappa > 0.0
+    if sps_on:
+        if resource_bucket.ndim != 1 or resource_bucket.shape[0] != N:
+            raise ValueError("resource_bucket must be a 1-D tensor with one entry per node (N)")
+        if resource_bucket.dtype not in (torch.long, torch.int64, torch.int32):
+            raise ValueError("resource_bucket must be an integer dtype (bucket ids)")
+        bucket = resource_bucket.to(device=active.device)
     src_c, dst_c = graph_comm.src_index, graph_comm.dst_index
     src_i, dst_i = graph_int.src_index, graph_int.dst_index
     pi = inclusion_prob.unsqueeze(-1)                       # [E_comm, 1]
@@ -398,6 +454,11 @@ def round_physics(
     load_req_excl = (load_req_at_j - req_tx[src_c]).clamp_min(0.0)  # L_{j,-ij}^req (self-excluded)
     if disable_collision:
         p_col_req = torch.zeros_like(gamma_req)
+    elif sps_on:
+        # request bucket = the SOURCE i's persistent bucket; contenders near receiver j (spec §3.4)
+        p_col_req = _sps_same_resource_collision(
+            graph_int, req_tx, bucket, cfg.resource_collision_kappa,
+            resource_node=src_c, receiver_node=dst_c, self_node=src_c, N=N)
     else:
         base = 1.0 - 1.0 / S
         p_col_req = 1.0 - torch.pow(torch.as_tensor(base, dtype=active.dtype, device=active.device),
@@ -465,6 +526,11 @@ def round_physics(
     load_resp_excl = (load_resp_at_i - response_tx[dst_c]).clamp_min(0.0)
     if disable_collision:
         p_col_resp = torch.zeros_like(gamma_resp)
+    elif sps_on:
+        # response bucket = the RESPONDER j's persistent bucket; contenders near receiver i (spec §3.4)
+        p_col_resp = _sps_same_resource_collision(
+            graph_int, response_tx, bucket, cfg.resource_collision_kappa,
+            resource_node=dst_c, receiver_node=src_c, self_node=dst_c, N=N)
     else:
         base = 1.0 - 1.0 / S
         p_col_resp = 1.0 - torch.pow(torch.as_tensor(base, dtype=active.dtype, device=active.device),
