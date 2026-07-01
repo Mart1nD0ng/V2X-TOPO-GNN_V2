@@ -510,7 +510,7 @@ RSU density capped; no legacy GRU/emission as current evidence.
 | **G-NDH-PARAM-AUDIT** | **DONE** | `docs/NDH_PARAMETER_REGISTRY.md` (EV16) |
 | **G-NDH-SCENE-RSU-HOTSPOT** | **DONE** | `src/environment/nonuniform_urban_scene.py` + `vehicle_only_participation` (EV17) |
 | **G-NDH-SPS-PERSISTENCE** | **DONE** | `src/environment/sps_resource.py` + `round_physics` SPS collision (EV18) |
-| G-NDH-CSI-AGING | pending | — |
+| **G-NDH-CSI-AGING** | **DONE** | `src/environment/csi_aging.py` (feature-only; physics keeps current γ) (EV19) |
 | G-NDH-HETEROGENEOUS-CAPACITY | pending | — |
 | G-NDH-FEATURE-SCHEMA | pending | — |
 | G-NDH-BASELINE-ENVELOPE | pending | — |
@@ -634,3 +634,26 @@ RSU density capped; no legacy GRU/emission as current evidence.
   documented in the helper docstring.
 * **Next:** G-NDH-CSI-AGING — stale-CSI features (`stale_sinr_db`, `csi_age`, `csi_uncertainty`,
   `stale_vs_distance_residual`); physics uses current γ, model sees stale (no train/eval mismatch).
+
+## EV19 — G-NDH-CSI-AGING (2026-07-01)
+
+* **Deliverable:** `src/environment/csi_aging.py` — per-edge stale-CSI **deployable** features
+  (`stale_sinr_db`, `stale_delivery`, `csi_age_ms`, `csi_uncertainty`, `stale_vs_distance_residual`)
+  + `csi_uncertainty_db(age)`. Feature-ONLY: the physics link (`edge_geometry`) is untouched; the model
+  sees a stale estimate while physics uses the current channel ⇒ **no train/eval physics mismatch**
+  (constraint #4, spec §5.1).
+* **Model:** `stale_sinr_db = true_sinr_db + N(0, σ(a))` with AR(1) shadow-decorrelation uncertainty
+  `σ(a) = sqrt(csi_noise² + shadow_ar² · (1 − exp(−2a/τ_decorr)))` — monotone in age, `= csi_noise` at
+  age 0, asymptotes to `sqrt(csi_noise² + shadow_ar²)`. This is the faithful Phase-1 *static* surrogate
+  for spec §5.2's `γ̂(t−a)+ε`: with a static scene `γ(t−a)=γ(t)`, so an unbiased estimate with
+  age-growing variance is exactly right (a genuinely shifted `γ(t−a)` needs temporal Phase 2).
+* **Deployability (C2):** features use only geometry + age + observation noise — no `Y*`, no future CSI,
+  no MC outcome. A source-inspection test asserts the module imports no evidence/protocol/validation/MC.
+* **Verification (6 tests):** age=0 + zero-noise recovers current CSI exactly; `csi_uncertainty` monotone
+  in age (0→50→100→200→500 ms) with the correct age-0 value and asymptote; larger age ⇒ larger mean
+  feature error vs the true link; reproducible from seed + correct shapes + `stale_delivery ∈ [0,1]`;
+  no-leak source audit; physics link byte-unchanged by CSI aging. Purely additive (new module + exports)
+  ⇒ no regression surface.
+* **Next:** G-NDH-HETEROGENEOUS-CAPACITY — per-node receiver capacity `μ_j` in the round-physics queue
+  (`ρ_j=(Λ_j+b_j)/μ_j`, vehicle/RSU lognormal, noisy proxy) — a real physics change (enters full physics
+  + dynamic MC), so it warrants the tests-first + adversarial-review treatment like SPS.
