@@ -1,0 +1,240 @@
+{
+  "metric_namespace_version": "macrostate_v2",
+  "experiment_family": "esp_performance_scale_v2",
+  "experiment": "ndh_oracle_frontier",
+  "query_family": "ESP",
+  "smoke": false,
+  "git_commit": "ac756ef",
+  "node_count": 120,
+  "scenario": "matched_marginal_high",
+  "base_node_err": 0.35,
+  "corr_strength": 0.25,
+  "scene_seeds": [
+    30,
+    31
+  ],
+  "wrong_penalties": [
+    0.0,
+    5.0
+  ],
+  "eval_trials": 1000,
+  "oracle_steps": 40,
+  "delta_w": 0.005,
+  "note": "does any physics-changing NDH mechanism (SPS/capacity/hotspot) open matched-reliability headroom over distance AND the heuristic envelope? CSI is feature-only -> excluded (oracle optimises physics). Per-scene oracle = UPPER BOUND, excluded from deployable claims.",
+  "per_regime": {
+    "capacity_rd20": {
+      "per_scene": {
+        "30": {
+          "distance": {
+            "Pc": 0.738,
+            "Fw": 0.12,
+            "Fs": 0.021,
+            "Fd": 0.121,
+            "Fw_ucb": 0.1416094999472798
+          },
+          "envelope": {
+            "winner": "resource_aware",
+            "Pc": 0.746,
+            "Fw": 0.12,
+            "Fs": 0.02,
+            "Fd": 0.114
+          },
+          "frontier": {
+            "0.0": {
+              "Pc": 0.745,
+              "Fw": 0.126,
+              "Fs": 0.022,
+              "Fd": 0.107,
+              "Fw_ucb": 0.14800993557094794,
+              "gap_vs_distance": 0.007000000000000006,
+              "gap_vs_envelope": -0.0010000000000000009,
+              "Fw_minus_distance": 0.006000000000000005
+            },
+            "5.0": {
+              "Pc": 0.747,
+              "Fw": 0.126,
+              "Fs": 0.021,
+              "Fd": 0.106,
+              "Fw_ucb": 0.14800993557094794,
+              "gap_vs_distance": 0.009000000000000008,
+              "gap_vs_envelope": 0.0010000000000000009,
+              "Fw_minus_distance": 0.006000000000000005
+            }
+          },
+          "iso_reliability": null
+        },
+        "31": {
+          "distance": {
+            "Pc": 0.661,
+            "Fw": 0.08600000000000001,
+            "Fs": 0.049,
+            "Fd": 0.20400000000000001,
+            "Fw_ucb": 0.1050004106899709
+          },
+          "envelope": {
+            "winner": "distance",
+            "Pc": 0.68,
+            "Fw": 0.092,
+            "Fs": 0.056,
+            "Fd": 0.17200000000000001
+          },
+          "frontier": {
+            "0.0": {
+              "Pc": 0.659,
+              "Fw": 0.092,
+              "Fs": 0.047,
+              "Fd": 0.202,
+              "Fw_ucb": 0.11150912353576668,
+              "gap_vs_distance": -0.0020000000000000018,
+              "gap_vs_envelope": -0.02100000000000002,
+              "Fw_minus_distance": 0.0059999999999999915
+            },
+            "5.0": {
+              "Pc": 0.666,
+              "Fw": 0.091,
+              "Fs": 0.045,
+              "Fd": 0.198,
+              "Fw_ucb": 0.11042597082137927,
+              "gap_vs_distance": 0.0050000000000000044,
+              "gap_vs_envelope": -0.014000000000000012,
+              "Fw_minus_distance": 0.0049999999999999906
+            }
+          },
+          "iso_reliability": null
+        }
+      },
+      "mean_iso_gap_vs_distance": null,
+      "mean_iso_gap_vs_envelope": null
+    },
+    "sps_rd10": {
+      "per_scene": {
+        "30": {
+          "distance": {
+            "Pc": 0.682,
+            "Fw": 0.101,
+            "Fs": 0.009000000000000001,
+            "Fd": 0.20800000000000002,
+            "Fw_ucb": 0.12123014316182433
+          },
+          "envelope": {
+            "winner": "distance",
+            "Pc": 0.662,
+            "Fw": 0.08600000000000001,
+            "Fs": 0.006,
+            "Fd": 0.246
+          },
+          "frontier": {
+            "0.0": {
+              "Pc": 0.706,
+              "Fw": 0.114,
+              "Fs": 0.025,
+              "Fd": 0.155,
+              "Fw_ucb": 0.1351930174551179,
+              "gap_vs_distance": 0.02399999999999991,
+              "gap_vs_envelope": 0.04399999999999993,
+              "Fw_minus_distance": 0.012999999999999998
+            },
+            "5.0": {
+              "Pc": 0.611,
+              "Fw": 0.079,
+              "Fs": 0.003,
+              "Fd": 0.307,
+              "Fw_ucb": 0.09737528356720543,
+              "gap_vs_distance": -0.07100000000000006,
+              "gap_vs_envelope": -0.051000000000000045,
+              "Fw_minus_distance": -0.022000000000000006
+            }
+          },
+          "iso_reliability": {
+            "lambda": 5.0,
+            "gap_vs_distance": -0.07100000000000006,
+            "gap_vs_envelope": -0.051000000000000045,
+            "oracle_Fw": 0.079
+          }
+        },
+        "31": {
+          "distance": {
+            "Pc": 0.6910000000000001,
+            "Fw": 0.097,
+            "Fs": 0.006,
+            "Fd": 0.20600000000000002,
+            "Fw_ucb": 0.11691560070208036
+          },
+          "envelope": {
+            "winner": "stale_link_quality",
+            "Pc": 0.6960000000000001,
+            "Fw": 0.108,
+            "Fs": 0.014,
+            "Fd": 0.182
+          },
+          "frontier": {
+            "0.0": {
+              "Pc": 0.729,
+              "Fw": 0.113,
+              "Fs": 0.018000000000000002,
+              "Fd": 0.14,
+              "Fw_ucb": 0.13412196854065,
+              "gap_vs_distance": 0.03799999999999992,
+              "gap_vs_envelope": 0.03299999999999992,
+              "Fw_minus_distance": 0.016
+            },
+            "5.0": {
+              "Pc": 0.65,
+              "Fw": 0.084,
+              "Fs": 0.004,
+              "Fd": 0.262,
+              "Fw_ucb": 0.10282542581270594,
+              "gap_vs_distance": -0.041000000000000036,
+              "gap_vs_envelope": -0.04600000000000004,
+              "Fw_minus_distance": -0.012999999999999998
+            }
+          },
+          "iso_reliability": {
+            "lambda": 5.0,
+            "gap_vs_distance": -0.041000000000000036,
+            "gap_vs_envelope": -0.04600000000000004,
+            "oracle_Fw": 0.084
+          }
+        }
+      },
+      "mean_iso_gap_vs_distance": -0.05600000000000005,
+      "mean_iso_gap_vs_envelope": -0.04850000000000004
+    }
+  },
+  "headline": {
+    "regimes": [
+      "capacity_rd20",
+      "sps_rd10"
+    ],
+    "iso_gap_vs_distance": {
+      "capacity_rd20": null,
+      "sps_rd10": -0.05600000000000005
+    },
+    "iso_gap_vs_envelope": {
+      "capacity_rd20": null,
+      "sps_rd10": -0.04850000000000004
+    },
+    "regimes_with_matched_reliability_headroom": [],
+    "train_gnn": false,
+    "verdict": "NO matched-reliability headroom in any physics-changing NDH regime -> the mechanisms do NOT create legal superiority over distance/best-heuristic for a diagonal ESP policy; the honest conclusion is PARITY (as in the old-physics EV12-15). STOP: do NOT train the GNN."
+  },
+  "manifest": {
+    "physics_hash": "a6ecd9c4bb37183c25e4cf1312806b3282e0189d25d75c6d573981087da8a927",
+    "service_profile_hash": "5cb87def41a1e724bb0a3a5c860b4278abe0fbc7d8ec662a9f59083449b60155",
+    "evidence_hash": "6f1b0f00fcf8a57d7e28517b8d90f8b8a5fc9f1e5404b55ca5f2cb9859b14e3c",
+    "scene_distribution_hash": "c2f3478df8694082fea96c48620cd784f95f0b416e51a921069067eb66ea15a0",
+    "protocol_hash": "6c803085831222d9ea2cd9c7d22ff2dc5acc113743ba8c12c57de448a74905f5",
+    "policy_hash": "ndh_oracle_frontier",
+    "checkpoint_hash": "ndh-oracle",
+    "experiment_config_hash": "3e0510dbefca7dff9f7a6ff902dd0610110e3499186941215a2f33b72577d935",
+    "query_law": "esp",
+    "full_physics": true,
+    "git_commit": "ac756ef",
+    "manifest_id": "NDH-oracle-frontier",
+    "model_seeds": [
+      30,
+      31
+    ]
+  },
+  "runtime_total_s": 4683.3
+}
