@@ -512,7 +512,7 @@ RSU density capped; no legacy GRU/emission as current evidence.
 | **G-NDH-SPS-PERSISTENCE** | **DONE** | `src/environment/sps_resource.py` + `round_physics` SPS collision (EV18) |
 | **G-NDH-CSI-AGING** | **DONE** | `src/environment/csi_aging.py` (feature-only; physics keeps current γ) (EV19) |
 | **G-NDH-HETEROGENEOUS-CAPACITY** | **DONE** | `src/environment/receiver_capacity.py` + `round_physics` per-node μ_j queue (EV20) |
-| G-NDH-FEATURE-SCHEMA | pending | — |
+| **G-NDH-FEATURE-SCHEMA** | **DONE** | `src/models/scene_features_v2.py` + `esd_gnn_v2.py` (leak-clean) (EV21) |
 | G-NDH-BASELINE-ENVELOPE | pending | — |
 | G-NDH-ORACLE-FRONTIER | pending (oracle-first gate) | — |
 | G-NDH-STATIC-ESDGNN-V2 | conditional | only if oracle headroom exists |
@@ -691,3 +691,39 @@ RSU density capped; no legacy GRU/emission as current evidence.
   (SPS conflict, **noisy** capacity proxy — never true μ, CSI-aging, hotspot, node_type) into the GNN with
   a feature-availability mask; leak-critical (tests-first: assert true `node_capacity` NOT in the feature
   tensor; old features reproducible when mechanisms off; baselines get the same observable features).
+
+## EV21 — G-NDH-FEATURE-SCHEMA (2026-07-01)
+
+* **Deliverable:** the expanded DEPLOYABLE feature schema wiring every NDH mechanism's proxy into one
+  tensor for the GNN + heuristics.
+  - `src/models/scene_features_v2.py`: `build_scene_features_v2(scene, phy_cfg, …) -> SceneFeaturesV2`
+    (13 node + 14 edge columns + per-column availability mask). `NODE_FEATURE_NAMES`/`EDGE_FEATURE_NAMES`
+    define the schema; base structural columns (log-degrees, region size, distance/comm_radius, LOS,
+    same_region) are a STRICT PREFIX so `build_scene_features` is reproduced exactly.
+  - `src/models/esd_gnn_v2.py`: `ESDGNNStaticV2` (the ESDGNN encoder sized to the wider schema; keeps
+    source/dest/interference/region/load channels; no legacy GRU) + `ESDGNNStaticV2QueryPolicy`.
+* **Leak contract (Contract C2) — VERIFIED CLEAN by a 3-lens leak-focused review (0 critical/0 leaks):**
+  every column traces to a deployable source. Capacity via `noisy_capacity_proxy` (log μ̂) — the true
+  `node_capacity` is read ONLY by the proxy call, NEVER as a feature (node AND edge columns tested);
+  CSI is the geometry-mean SINR + age-noise (edge_geometry is deterministic — no current-channel
+  realization; age=0+noise=0 → geometry mean, tested); degrees are candidate-graph (policy-independent,
+  not the policy-driven Λ); no import of evidence/dynamic-MC/validation; no Y*/vote/MC/future.
+* **Availability mask:** per-column, keyed on the mechanism ENABLE flag (rsu/hotspot gate on
+  `params.enable_*` since a NonuniformUrbanScene always carries node_type/hotspot_score; capacity/SPS
+  gate on field-None-unless-enabled). Off mechanism → column 0 + mask 0 (tested, incl. the asymmetry).
+* **Verification (11 tests):** no-true-μ-leak (node + edge), CSI stale-not-current, source-imports-no-truth,
+  base features reproduced exactly, mask flips with mechanism + gating asymmetry, shapes/O(E)/determinism,
+  `ESDGNNStaticV2` forward on all 4 regimes returns positive per-edge quality, differentiable. 20 models
+  tests green (additive, no regression).
+* **Review fixes applied (6 major/4 minor/3 nit, none a leak):** (1) `intersection_distance` was O(N²)
+  `cdist(positions, all-intersections)` → now O(N) via the node's own segment endpoints (nearest
+  intersection to a node on segment s IS an endpoint of s); (2) `local_density`/`sensed_cbr` per-scene
+  `_norm01` → scene-INVARIANT `1−exp(−x/scale)` (fixed scale; transferable across scales); (3) added the
+  edge-capacity + CSI leak tests (were untested — the exact surfaces a future truth-swap could break);
+  (4) documented the four Phase-2 EMA/history omissions (`resource_age_norm`, `resource_busy_ratio`,
+  `ack_success_ema`, `queue_delay_ema` — need multi-frame state) + the mask semantics (metadata; encoder
+  need not consume it under Phase-1 train==eval). The "baselines consume the same proxies" requirement is
+  the NEXT gate (G-NDH-BASELINE-ENVELOPE) — the shared builder is provided here.
+* **Next:** G-NDH-BASELINE-ENVELOPE — strong heuristics as ESP policies reading the SAME `SceneFeaturesV2`
+  columns (stale_link_quality, capacity_aware, resource_aware, distance_plus_*, load_balanced, rsu_nearest,
+  rsu_capacity_aware, local_density_aware, best_heuristic_envelope) through the canonical dynamic-MC path.
