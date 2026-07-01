@@ -507,8 +507,8 @@ RSU density capped; no legacy GRU/emission as current evidence.
 
 | Gate | Status | Evidence |
 |---|---|---|
-| **G-NDH-PARAM-AUDIT** | **DONE** | `docs/NDH_PARAMETER_REGISTRY.md` (this gate) |
-| G-NDH-SCENE-RSU-HOTSPOT | pending | — |
+| **G-NDH-PARAM-AUDIT** | **DONE** | `docs/NDH_PARAMETER_REGISTRY.md` (EV16) |
+| **G-NDH-SCENE-RSU-HOTSPOT** | **DONE** | `src/environment/nonuniform_urban_scene.py` + `vehicle_only_participation` (EV17) |
 | G-NDH-SPS-PERSISTENCE | pending | — |
 | G-NDH-CSI-AGING | pending | — |
 | G-NDH-HETEROGENEOUS-CAPACITY | pending | — |
@@ -543,3 +543,47 @@ RSU density capped; no legacy GRU/emission as current evidence.
 * **Next:** G-NDH-SCENE-RSU-HOTSPOT (smallest next gate that unblocks everything): nonuniform urban scene +
   sparse intersection hotspots + capped RSU placement, with failing tests first (caps, connectivity,
   `omega_RSU=0`, reproducibility).
+
+## EV17 — G-NDH-SCENE-RSU-HOTSPOT (2026-07-01)
+
+* **Deliverable:** `src/environment/nonuniform_urban_scene.py` (`NonuniformUrbanScene` +
+  `build_nonuniform_urban_scene`) — a **drop-in** replacement for `ManhattanScene` (identical 7 fields +
+  `num_nodes`/`num_regions`) adding: lognormal block lengths + intersection jitter + optional road dropout,
+  **sparse static intersection-queue hotspots**, and **capped RSU** placement. Plus canonical
+  `vehicle_only_participation(scene)` in `src/metrics/participation.py` (`omega_RSU=0`, exogenous role label).
+  Wired into `src/environment/__init__.py`.
+* **Hard caps enforced (registry §3/§6, constraints #9/#10):** `p_intersection_rsu ≤ 0.5` and
+  `max_rsu_fraction ≤ 0.15` (input-guarded); `#RSU ≤ max_rsu_fraction·N`; hotspots ≤ 10% of intersections,
+  non-overlapping (centres ≥ 2·radius); **injected queue mass ≤ 30% of vehicles** (bounds the mechanism, not
+  incidental grid density); road graph guaranteed connected (spanning-tree backbone); region coverage dense.
+* **RSU = responder/witness only:** RSU are ordinary graph nodes (no special-casing in the graph builders);
+  their non-participation lives ONLY in `node_type` + `vehicle_only_participation` (`omega_RSU=0`). Basin judge
+  unchanged; omega-weighted `basin_*` exclude RSU exactly.
+* **Verification:** 14 unit tests (drop-in interface, containment, caps, connectivity under road dropout,
+  reproducibility, canonical-path smoke through `build_overlapping_scenario → run_dynamic_mc`); a **1500-scene
+  exhaustive fuzz over the full registry sweep grid** (incl. coarse 2×2 × radius=80 cells) — 0 cap/interface/
+  omega/NaN violations; full `tests/` suite green except one pre-existing unrelated failure (below).
+* **Adversarial review (4-lens workflow) → 5 fixes applied, 1 documented:**
+  - MAJOR (crash): the 30% hotspot cap was asserted against uncontrollable base-grid density → crashed on
+    coarse-grid + radius=80. **Fixed:** cap now bounds only the *injected* queue mass (always satisfiable).
+  - MAJOR (control-confound): RSU roadside positions extended coordinate extrema → `overlapping_evidence._band`
+    moved the **vehicle–vehicle** correlation (the matched-marginal causal lever). **Fixed:** band edges now
+    derived from **vehicle positions only** (ManhattanScene behaviour byte-identical); RSU-evidence-invariance
+    verified = 0 over 40 seed-pairs.
+  - MAJOR (dead param): `queue_length_m` was neutered by `min(…, hotspot_radius_m, …)`. **Fixed:** extent =
+    `min(queue_length_m, seg_len)`; test asserts it drives reach.
+  - MINOR: `max_rsu_fraction ≤ 0.15` guard added; dataclass `eq=False` (hashable parity with ManhattanScene).
+    Also fixed a latent `_greedy_spaced(max_count=0)` off-by-one (tiny grids got 1 RSU when the cap floored to 0).
+  - MINOR (documented, not coded): the *legacy node-union* diagnostics (`F_wrong`/`S_allcorrect`/`F_disagree`)
+    count RSU when `eligible_mask=None`. The **basin judge already excludes RSU via omega**; legacy node-union
+    metrics are FORBIDDEN as headline (shortcut #9). Judge file left untouched (do not weaken/perturb the judge)
+    — RSU-enabled scenes report only `basin_*`.
+* **Pre-existing unrelated failure (NOT introduced here):** `tests/evaluation/test_esp_baselines.py::
+  test_oracle_upper_bounds_distance` fails by a hair (oracle analytic P_correct 0.42185 vs distance 0.42336;
+  the 25-step ascent misses the 1e-3 slack by 5e-4). Provably independent of this gate: it uses the
+  `ManhattanScene` path where the `_band` change is a literal no-op (`veh_mask is None → cv = coord`), so `ev`
+  and the oracle result are byte-identical to pre-NDH. Flagged for separate fix (raise oracle steps or document
+  the tolerance in the ESP module); confirmed on the clean tree in parallel.
+* **Next:** G-NDH-SPS-PERSISTENCE — `src/environment/sps_resource.py` sensing-based resource persistence
+  surrogate (persistent bucket + reselection; same-resource `G_int` neighbours collide repeatedly), deployable
+  proxies only, entering the canonical collision physics.

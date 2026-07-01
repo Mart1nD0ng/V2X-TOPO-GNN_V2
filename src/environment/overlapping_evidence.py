@@ -249,8 +249,19 @@ def build_overlapping_scenario(
     road = scene.region_of.clone()
     Gr = int(road.max()) + 1
 
+    # Crosscutting spatial bands must be invariant to RSU geometry: RSU (responder/witness)
+    # roadside positions can extend the coordinate extrema and silently shift the band edges,
+    # which would perturb the VEHICLE-VEHICLE covariance -- the exact quantity the matched-marginal
+    # control isolates (spec §C1). So derive the band edges from VEHICLE positions only (the
+    # exogenous node_type role label, 0=vehicle), then bucketize ALL nodes against those fixed
+    # edges. With no node_type (the ManhattanScene path) every node is a vehicle -> identical to
+    # the previous all-node binning (behaviour-preserving).
+    node_type = getattr(scene, "node_type", None)
+    veh_mask = (node_type == 0) if node_type is not None else None
+
     def _band(coord: torch.Tensor, k: int) -> torch.Tensor:
-        lo, hi = float(coord.min()), float(coord.max())
+        cv = coord if veh_mask is None else coord[veh_mask]
+        lo, hi = float(cv.min()), float(cv.max())
         if hi <= lo:
             return torch.zeros(N, dtype=torch.long)
         edges = torch.linspace(lo, hi, k + 1, dtype=coord.dtype)[1:-1].contiguous()

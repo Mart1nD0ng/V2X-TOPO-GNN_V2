@@ -31,7 +31,8 @@ from __future__ import annotations
 
 import torch
 
-__all__ = ["uniform_participation", "application_participation", "participation_measure"]
+__all__ = ["uniform_participation", "application_participation", "participation_measure",
+           "vehicle_only_participation"]
 
 
 def uniform_participation(
@@ -41,6 +42,31 @@ def uniform_participation(
     if num_nodes < 1:
         raise ValueError("num_nodes must be >= 1")
     w = torch.full((num_nodes,), 1.0 / num_nodes, dtype=dtype, device=device)
+    return w.detach()
+
+
+def vehicle_only_participation(
+    scene, *, dtype: torch.dtype = torch.float64, device=None
+) -> torch.Tensor:
+    """``ω_i = 1/N_veh`` for vehicles, ``0`` for RSU/responder-only nodes (NDH spec §4.2).
+
+    RSU nodes are responders/witnesses, NOT macrostate consensus participants, so they carry
+    ``ω_RSU = 0`` (NDH non-degradable constraint #9). Reads the EXOGENOUS role label
+    ``scene.node_type`` (0 = vehicle, 1 = RSU) — an admissible exogenous role input (spec §2,
+    rule 2); never ``Y*``, votes, or future information, so the exogeneity contract holds. The
+    measure still sums to 1 (over the vehicles) and carries no gradient.
+    """
+    node_type = getattr(scene, "node_type", None)
+    if node_type is None:
+        raise ValueError(
+            "vehicle_only_participation requires scene.node_type (exogenous role labels: "
+            "0=vehicle, 1=RSU)")
+    is_vehicle = node_type == 0
+    n_veh = int(is_vehicle.sum())
+    if n_veh < 1:
+        raise ValueError("no vehicle nodes -> degenerate participation")
+    w = torch.zeros(int(node_type.numel()), dtype=dtype, device=device)
+    w[is_vehicle.to(w.device)] = 1.0 / n_veh
     return w.detach()
 
 
@@ -100,5 +126,10 @@ def participation_measure(scene, rule: str, **kwargs) -> torch.Tensor:
         return uniform_participation(scene.num_nodes, dtype=dtype, device=device)
     if rule == "application":
         return application_participation(scene, **kwargs)
+    if rule == "vehicle_uniform":
+        dtype = kwargs.get("dtype", scene.positions.dtype)
+        device = kwargs.get("device", scene.positions.device)
+        return vehicle_only_participation(scene, dtype=dtype, device=device)
     raise ValueError(
-        f"unknown participation rule {rule!r}; expected one of ('uniform', 'application')")
+        f"unknown participation rule {rule!r}; expected one of "
+        "('uniform', 'application', 'vehicle_uniform')")
